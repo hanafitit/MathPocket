@@ -1,23 +1,32 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.IO;
-using System.Threading;
 using System.Threading.Tasks;
 using Telegram.Bot;
-using Telegram.Bot.Types;
-using Telegram.Bot.Types.ReplyMarkups;
-using Telegram.Bot.Polling;
+using Telegram.Bot.Types.Enums;
 
+var builder = WebApplication.CreateBuilder(args);
+var app = builder.Build();
+
+// Этот URL будет пинговать сервис, чтобы Dyno не засыпал
+app.MapGet("/", () => "MathPocket Bot is alive!");
+
+// Запуск веб-сервера в отдельном таске
+var webServerTask = Task.Run(() => app.Run());
 namespace MathPocket
 {
+
     class Program
+
     {
+
         private static TelegramBotClient _bot;
         private static BotHandler _handler;
 
         static async Task Main()
+
         {
+            
+
+            
             Console.OutputEncoding = System.Text.Encoding.UTF8;
             var token = System.IO.File.ReadAllText("token.txt");
             _bot = new TelegramBotClient(token);
