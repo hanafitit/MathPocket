@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.10.34916.146
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MathPocket", "MathPocket.csproj", "{A136BF55-1C8B-42D1-AD8A-77CF1E1A2511}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{A136BF55-1C8B-42D1-AD8A-77CF1E1A2511}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A136BF55-1C8B-42D1-AD8A-77CF1E1A2511}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A136BF55-1C8B-42D1-AD8A-77CF1E1A2511}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A136BF55-1C8B-42D1-AD8A-77CF1E1A2511}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {60BD6CD4-6EC6-41E0-B063-87C06DDA4BB5}
+	EndGlobalSection
+EndGlobal
