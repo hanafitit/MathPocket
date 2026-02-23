@@ -16,7 +16,6 @@ FROM mcr.microsoft.com/dotnet/runtime:8.0
 WORKDIR /app
 COPY --from=build /app/out .
 CMD ["dotnet", "MathPocket.dll"]
-=======
 # Сборка проекта
 FROM mcr.microsoft.comdotnetsdk8.0 AS build
 WORKDIR app
