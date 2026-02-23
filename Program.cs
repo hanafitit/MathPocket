@@ -1,5 +1,4 @@
 ﻿using System;
-using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using Telegram.Bot;
@@ -17,41 +16,50 @@ namespace MathPocket
 
             try
             {
-                // Чтение токена из файла
-                var token = File.ReadAllText("token.txt");
-                if (string.IsNullOrEmpty(token))
-                    throw new Exception("Файл token.txt пустой или токен не задан.");
+                // Токен бота
+                var токен = "8023118563:AAFfqJ4IE4CxEiSovDmsUJheBHBxD6S7RGw";
 
-                // Инициализация бота
-                _bot = new TelegramBotClient(token);
+                // Инициализация бота и обработчика
+                _bot = new TelegramBotClient(токен);
                 _handler = new BotHandler(_bot);
 
-                var me = await _bot.GetMe();
-                Console.WriteLine($"@{me.Username} работает... Нажми Enter для выхода");
+                // Проверка подключения
+                var я = await _bot.GetMe();
+                Console.WriteLine($"Бот @{я.Username} успешно запущен и работает...");
 
-                using var cts = new CancellationTokenSource();
+                // Токен отмены для корректного завершения
+                using var источникОтмены = new CancellationTokenSource();
 
+                // Запуск получения обновлений
                 _bot.StartReceiving(
                     updateHandler: _handler.HandleUpdateAsync,
                     errorHandler: _handler.HandleErrorAsync,
                     receiverOptions: new Telegram.Bot.Polling.ReceiverOptions
                     {
-                        AllowedUpdates = { } // все типы обновлений
-                    }
+                        AllowedUpdates = { }
+                    },
+                    cancellationToken: источникОтмены.Token
                 );
 
-                Console.ReadLine();
-                cts.Cancel();
+                Console.WriteLine("Для остановки бота нажмите Ctrl+C");
+
+                Console.CancelKeyPress += (отправитель, аргументы) =>
+                {
+                    аргументы.Cancel = true;
+                    Console.WriteLine("Получен сигнал остановки. Завершение работы...");
+                    источникОтмены.Cancel();
+                };
+
+                await Task.Delay(Timeout.Infinite, источникОтмены.Token);
             }
-            catch (FileNotFoundException ex)
+            catch (TaskCanceledException)
             {
-                Console.WriteLine("Ошибка: файл token.txt не найден!");
-                Console.WriteLine(ex.Message);
+                Console.WriteLine("Бот остановлен.");
             }
-            catch (Exception ex)
+            catch (Exception ошибка)
             {
                 Console.WriteLine("Произошла ошибка при запуске бота:");
-                Console.WriteLine(ex.Message);
+                Console.WriteLine(ошибка.Message);
             }
         }
     }
