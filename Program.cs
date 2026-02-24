@@ -13,8 +13,7 @@ namespace MathPocket
 
         static async Task Main()
         {
-            Directory.CreateDirectory(Path.Combine(Environment.CurrentDirectory, "logs")); // <- добавьте эту строку
-            Console.OutputEncoding = System.Text.Encoding.UTF8;
+            
             Console.OutputEncoding = System.Text.Encoding.UTF8;
 
             try
