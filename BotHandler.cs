@@ -244,6 +244,89 @@ namespace MathPocket
             return Task.CompletedTask;
         }
 
+        // ─────────────────────────────────────────────────────────
+        //  Логирование пошагового ввода → файл
+        //
+        //  Файл: logs/steps_YYYY-MM-DD.log  (рядом с exe)
+        //  Каждый день создаётся новый файл автоматически.
+        //  Запись thread-safe через lock.
+        // ─────────────────────────────────────────────────────────
+
+        private static readonly object _logLock = new();
+
+        private static string LogFilePath()
+        {
+            var dir = Path.Combine(AppContext.BaseDirectory, "logs");
+            Directory.CreateDirectory(dir);
+            var date = DateTime.Now.ToString("yyyy-MM-dd");
+            return Path.Combine(dir, $"steps_{date}.log");
+        }
+
+        private static void WriteLog(string line)
+        {
+            lock (_logLock)
+            {
+                try
+                {
+                    File.AppendAllText(LogFilePath(), line + Environment.NewLine,
+                        System.Text.Encoding.UTF8);
+                }
+                catch (Exception ex)
+                {
+                    // Если запись в файл не удалась — хотя бы в консоль
+                    Console.WriteLine($"[LOG_ERROR] Не удалось записать лог: {ex.Message}");
+                    Console.WriteLine(line);
+                }
+            }
+        }
+
+        private static void LogStep(string tag, long chatId, FunctionBase func,
+            StepInputSession session, string? userAnswer = null, string? extra = null)
+        {
+            var timestamp = DateTime.Now.ToString("HH:mm:ss");
+            var stepNum   = session.CurrentStep + 1;
+            var total     = func.Steps?.Length ?? 0;
+
+            var sb = new System.Text.StringBuilder();
+            sb.Append($"[{timestamp}] [{tag}] user={chatId} | func=\"{func.Name}\"");
+
+            if (userAnswer != null)
+                sb.Append($" | шаг {stepNum}/{total} | ответ=\"{userAnswer}\"");
+            else
+                sb.Append($" | шаг {stepNum}/{total}");
+
+            if (session.Answers.Count > 0)
+            {
+                var answersFormatted = string.Join(", ",
+                    session.Answers.Select((a, i) => $"[{i + 1}]=\"{a}\""));
+                sb.Append($" | накоплено: [{answersFormatted}]");
+            }
+
+            if (extra != null)
+                sb.Append($" | {extra}");
+
+            WriteLog(sb.ToString());
+        }
+
+        private static void LogSessionEnd(string tag, long chatId, FunctionBase func,
+            List<string> answers, string? result = null, string? error = null)
+        {
+            var timestamp = DateTime.Now.ToString("HH:mm:ss");
+            var answersFormatted = string.Join(", ",
+                answers.Select((a, i) => $"[{i + 1}]=\"{a}\""));
+
+            var sb = new System.Text.StringBuilder();
+            sb.Append($"[{timestamp}] [{tag}] user={chatId} | func=\"{func.Name}\"");
+            sb.Append($" | ЗАВЕРШЕНО | ответы: [{answersFormatted}]");
+
+            if (result != null)
+                sb.Append($" | результат=\"{result}\"");
+            if (error != null)
+                sb.Append($" | ОШИБКА: {error}");
+
+            WriteLog(sb.ToString());
+        }
+
         // ═══════════════════════════════════════════════════════════
         //  Роутинг сообщений
         // ═══════════════════════════════════════════════════════════
@@ -328,11 +411,18 @@ namespace MathPocket
                         if (session.Answers.Count > 0)
                             session.Answers.RemoveAt(session.Answers.Count - 1);
 
+                        WriteLog($"[{DateTime.Now:HH:mm:ss}] [ОТКАТ] user={chatId} | func=\"{funcForBack.Name}\" | возврат к шагу {session.CurrentStep + 1} | накоплено ответов={session.Answers.Count}");
+
                         await AskCurrentStep(chatId, funcForBack, session);
                         return;
                     }
 
                     // Иначе — выходим к списку функций
+                    if (InputSession.TryGetValue(chatId, out var abortedSession) &&
+                        SelectedFunction.TryGetValue(chatId, out var abortedFunc))
+                    {
+                        WriteLog($"[{DateTime.Now:HH:mm:ss}] [ОТМЕНА] user={chatId} | func=\"{abortedFunc.Name}\" | прервано на шаге {abortedSession.CurrentStep + 1} | накоплено ответов={abortedSession.Answers.Count}");
+                    }
                     InputSession.TryRemove(chatId, out _);
                     SelectedFunction.TryRemove(chatId, out _);
                     UserState[chatId] = "choose_function";
@@ -408,6 +498,8 @@ namespace MathPocket
             {
                 var session = new StepInputSession();
                 InputSession[msg.Chat.Id] = session;
+
+                WriteLog($"[{DateTime.Now:HH:mm:ss}] [СТАРТ] user={msg.Chat.Id} | func=\"{func.Name}\" | шагов={func.Steps.Length}");
 
                 // Показываем формулу и сразу задаём первый вопрос
                 await _bot.SendMessage(msg.Chat.Id,
@@ -502,6 +594,8 @@ namespace MathPocket
                 var error = step.Validate(msg.Text.Trim());
                 if (error != null)
                 {
+                    LogStep("ОШИБКА_ВАЛИДАЦИИ", msg.Chat.Id, func, session,
+                        userAnswer: msg.Text.Trim(), extra: $"причина=\"{error}\"");
                     await _bot.SendMessage(msg.Chat.Id,
                         $"⚠️ {error}\n\nПопробуй ещё раз:",
                         replyMarkup: BackKeyboard());
@@ -509,6 +603,7 @@ namespace MathPocket
                 }
 
                 // Сохраняем ответ и переходим к следующему шагу
+                LogStep("ОТВЕТ", msg.Chat.Id, func, session, userAnswer: msg.Text.Trim());
                 session.Answers.Add(msg.Text.Trim());
                 session.CurrentStep++;
 
@@ -521,9 +616,11 @@ namespace MathPocket
                     try
                     {
                         result = func.CalculateFromAnswers(session.Answers);
+                        LogSessionEnd("ИТОГ", msg.Chat.Id, func, session.Answers, result: result);
                     }
                     catch (Exception ex)
                     {
+                        LogSessionEnd("ИТОГ", msg.Chat.Id, func, session.Answers, error: ex.Message);
                         await _bot.SendMessage(msg.Chat.Id,
                             $"⚠️ Что-то пошло не так: {ex.Message}",
                             replyMarkup: BackKeyboard());
@@ -540,6 +637,7 @@ namespace MathPocket
                 }
 
                 // Задаём следующий вопрос
+                LogStep("СЛЕДУЮЩИЙ_ШАГ", msg.Chat.Id, func, session);
                 await AskCurrentStep(msg.Chat.Id, func, session);
                 return;
             }
