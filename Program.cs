@@ -12,7 +12,16 @@ namespace MathPocket
         private static BotHandler _handler;
 
         static async Task Main()
-        {
+{
+    Console.OutputEncoding = System.Text.Encoding.UTF8;
+    Console.Out.Flush();
+    // отключаем буферизацию — логи появятся сразу
+    var writer = new System.IO.StreamWriter(Console.OpenStandardOutput()) 
+    { 
+        AutoFlush = true 
+    };
+    Console.SetOut(writer);
+    // ... остальной код
             
             Console.OutputEncoding = System.Text.Encoding.UTF8;
 
