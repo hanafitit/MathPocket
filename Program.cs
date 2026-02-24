@@ -8,92 +8,62 @@ namespace MathPocket
 {
     class Program
     {
-        private static TelegramBotClient _bot;
-        private static BotHandler _handler;
-
         static async Task Main()
-
         {
-            var timestamp = TimeZoneInfo.ConvertTimeBySystemTimeZoneId(
-    DateTime.UtcNow, "Asia/Almaty").ToString("HH:mm:ss");
             Console.OutputEncoding = System.Text.Encoding.UTF8;
-            Console.Out.Flush();
-            // отключаем буферизацию — логи появятся сразу
-            var writer = new System.IO.StreamWriter(Console.OpenStandardOutput())
-            {
-                AutoFlush = true
-            };
+            var writer = new System.IO.StreamWriter(Console.OpenStandardOutput()) { AutoFlush = true };
             Console.SetOut(writer);
-            // ... остальной код
 
-
+            try
             {
-                Console.OutputEncoding = System.Text.Encoding.UTF8;
-                Console.Out.Flush();
-                // отключаем буферизацию — логи появятся сразу
-                writer = new System.IO.StreamWriter(Console.OpenStandardOutput())
-                {
-                    AutoFlush = true
-                };
-                Console.SetOut(writer);
-                // ... остальной код
+                var токен = Environment.GetEnvironmentVariable("TELEGRAM_BOT_TOKEN")
+                            ?? "8023118563:AAFfqJ4IE4CxEiSovDmsUJheBHBxD6S7RGw";
 
-                Console.OutputEncoding = System.Text.Encoding.UTF8;
+                if (string.IsNullOrWhiteSpace(токен))
+                    throw new Exception("Токен не задан.");
 
-                try
-                {
-                    var токен = "8023118563:AAFfqJ4IE4CxEiSovDmsUJheBHBxD6S7RGw";
+                var bot = new TelegramBotClient(токен);
+                var handler = new BotHandler(bot);
 
-                    if (string.IsNullOrWhiteSpace(токен))
-                        throw new Exception("Токен не задан.");
+                var я = await bot.GetMe();
+                Console.WriteLine($"Бот @{я.Username} успешно запущен и работает...");
 
-                    _bot = new TelegramBotClient(токен);
-                    _handler = new BotHandler(_bot);
+                using var источникОтмены = new CancellationTokenSource();
 
-                    var я = await _bot.GetMe();
-                    Console.WriteLine($"Бот @{я.Username} успешно запущен и работает...");
-
-                    using var источникОтмены = new CancellationTokenSource();
-
-                    // Запуск Telegram-бота
-                    _bot.StartReceiving(
-                        updateHandler: _handler.HandleUpdateAsync,
-                        errorHandler: _handler.HandleErrorAsync,
-                        receiverOptions: new Telegram.Bot.Polling.ReceiverOptions
-                        {
-                            AllowedUpdates = { }
-                        },
-                        cancellationToken: источникОтмены.Token
-                    );
-
-                    // Запуск простого HTTP-сервера для Render
-                    _ = Task.Run(() => ЗапуститьВебСервер(источникОтмены.Token));
-
-                    Console.WriteLine("Для остановки нажмите Ctrl+C");
-
-                    Console.CancelKeyPress += (отправитель, аргументы) =>
+                bot.StartReceiving(
+                    updateHandler: handler.HandleUpdateAsync,
+                    errorHandler: handler.HandleErrorAsync,
+                    receiverOptions: new Telegram.Bot.Polling.ReceiverOptions
                     {
-                        аргументы.Cancel = true;
-                        Console.WriteLine("Остановка...");
-                        источникОтмены.Cancel();
-                    };
+                        AllowedUpdates = Array.Empty<Telegram.Bot.Types.Enums.UpdateType>()
+                    },
+                    cancellationToken: источникОтмены.Token
+                );
 
-                    await Task.Delay(Timeout.Infinite, источникОтмены.Token);
-                }
-                catch (TaskCanceledException)
+                _ = Task.Run(() => ЗапуститьВебСервер(источникОтмены.Token));
+
+                Console.WriteLine("Для остановки нажмите Ctrl+C");
+                Console.CancelKeyPress += (_, аргументы) =>
                 {
-                    Console.WriteLine("Бот остановлен.");
-                }
-                catch (Exception ошибка)
-                {
-                    Console.WriteLine("Ошибка при запуске бота:");
-                    Console.WriteLine(ошибка.Message);
-                }
+                    аргументы.Cancel = true;
+                    Console.WriteLine("Остановка...");
+                    источникОтмены.Cancel();
+                };
+
+                await Task.Delay(Timeout.Infinite, источникОтмены.Token);
+            }
+            catch (TaskCanceledException)
+            {
+                Console.WriteLine("Бот остановлен.");
+            }
+            catch (Exception ошибка)
+            {
+                Console.WriteLine($"Ошибка при запуске бота: {ошибка.Message}");
             }
 
+            // Локальная функция — объявлена ВНУТРИ Main, после основного кода
             static async Task ЗапуститьВебСервер(CancellationToken токенОтмены)
             {
-                // Render передаёт порт через переменную окружения PORT
                 var порт = Environment.GetEnvironmentVariable("PORT") ?? "8080";
                 var слушатель = new HttpListener();
                 слушатель.Prefixes.Add($"http://*:{порт}/");
