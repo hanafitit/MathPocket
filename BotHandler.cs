@@ -252,9 +252,33 @@ namespace MathPocket
         //  Запись thread-safe через lock.
         // ─────────────────────────────────────────────────────────
 
-        // Render сохраняет весь вывод консоли в разделе Logs —
-        // файлы не нужны, пишем прямо в stdout.
-        private static void WriteLog(string line) => Console.WriteLine(line);
+        private static readonly object _logLock = new();
+
+        private static string LogFilePath()
+        {
+            var dir = Path.Combine(AppContext.BaseDirectory, "logs");
+            Directory.CreateDirectory(dir);
+            var date = DateTime.Now.ToString("yyyy-MM-dd");
+            return Path.Combine(dir, $"steps_{date}.log");
+        }
+
+        private static void WriteLog(string line)
+        {
+            lock (_logLock)
+            {
+                try
+                {
+                    File.AppendAllText(LogFilePath(), line + Environment.NewLine,
+                        System.Text.Encoding.UTF8);
+                }
+                catch (Exception ex)
+                {
+                    // Если запись в файл не удалась — хотя бы в консоль
+                    Console.WriteLine($"[LOG_ERROR] Не удалось записать лог: {ex.Message}");
+                    Console.WriteLine(line);
+                }
+            }
+        }
 
         private static void LogStep(string tag, long chatId, FunctionBase func,
             StepInputSession session, string? userAnswer = null, string? extra = null)
