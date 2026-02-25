@@ -30,7 +30,7 @@ namespace MathPocket
 
                 bot.StartReceiving(
                     updateHandler: handler.HandleUpdateAsync,
-                    errorHandler: async (botClient, exception, token) =>
+                    errorHandler: async (botClient, exception, source, token) =>
                     {
                         // При конфликте (два экземпляра бота) — ждём перед повтором,
                         // чтобы дать старому контейнеру на Render время завершиться
@@ -41,7 +41,7 @@ namespace MathPocket
                         }
                         else
                         {
-                            await handler.HandleErrorAsync(botClient, exception, token);
+                            await handler.HandleErrorAsync(botClient, exception, source, token);
                         }
                     },
                     receiverOptions: new Telegram.Bot.Polling.ReceiverOptions
