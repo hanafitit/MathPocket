@@ -341,6 +341,9 @@ namespace MathPocket
             var text   = msg.Text.Trim();
             var chatId = msg.Chat.Id;
 
+            // Логируем все входящие сообщения
+            Console.WriteLine($"[{DateTime.Now:HH:mm:ss}] [СООБЩЕНИЕ] user={chatId} (@{msg.Chat.Username ?? "no_username"}) | текст=\"{text}\"");
+
             if (text.StartsWith("/start"))
             {
                 ClearState(chatId);
