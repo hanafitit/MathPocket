@@ -1,8 +1,9 @@
-﻿using System;
+using System;
 using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
 using Telegram.Bot;
+using Telegram.Bot.Exceptions;
 
 namespace MathPocket
 {
@@ -17,10 +18,7 @@ namespace MathPocket
             try
             {
                 var токен = Environment.GetEnvironmentVariable("TELEGRAM_BOT_TOKEN")
-                            ?? "8023118563:AAFfqJ4IE4CxEiSovDmsUJheBHBxD6S7RGw";
-
-                if (string.IsNullOrWhiteSpace(токен))
-                    throw new Exception("Токен не задан.");
+                            ?? throw new Exception("Токен не задан. Укажите переменную окружения TELEGRAM_BOT_TOKEN.");
 
                 var bot = new TelegramBotClient(токен);
                 var handler = new BotHandler(bot);
@@ -32,7 +30,20 @@ namespace MathPocket
 
                 bot.StartReceiving(
                     updateHandler: handler.HandleUpdateAsync,
-                    errorHandler: handler.HandleErrorAsync,
+                    errorHandler: async (botClient, exception, token) =>
+                    {
+                        // При конфликте (два экземпляра бота) — ждём перед повтором,
+                        // чтобы дать старому контейнеру на Render время завершиться
+                        if (exception is ApiRequestException apiEx && apiEx.Message.Contains("Conflict"))
+                        {
+                            Console.WriteLine($"[Конфликт] Другой экземпляр бота ещё активен. Ожидание 10 сек...");
+                            await Task.Delay(10_000, token);
+                        }
+                        else
+                        {
+                            await handler.HandleErrorAsync(botClient, exception, token);
+                        }
+                    },
                     receiverOptions: new Telegram.Bot.Polling.ReceiverOptions
                     {
                         AllowedUpdates = Array.Empty<Telegram.Bot.Types.Enums.UpdateType>()
