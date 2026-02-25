@@ -17,7 +17,7 @@ namespace MathPocket
 
             try
             {
-                var токен = Environment.GetEnvironmentVariable("TELEGRAM_BOT_TOKEN")
+                var токен = Environment.GetEnvironmentVariable("8023118563:AAFfqJ4IE4CxEiSovDmsUJheBHBxD6S7RGw")
                             ?? throw new Exception("Токен не задан. Укажите переменную окружения TELEGRAM_BOT_TOKEN.");
 
                 var bot = new TelegramBotClient(токен);
@@ -103,4 +103,5 @@ namespace MathPocket
         }
     }
 }
+
 
