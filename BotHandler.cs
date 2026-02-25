@@ -264,6 +264,7 @@ namespace MathPocket
 
         private static void WriteLog(string line)
         {
+            Console.WriteLine(line);
             lock (_logLock)
             {
                 try
@@ -271,11 +272,9 @@ namespace MathPocket
                     File.AppendAllText(LogFilePath(), line + Environment.NewLine,
                         System.Text.Encoding.UTF8);
                 }
-                catch (Exception ex)
+                catch
                 {
-                    // Если запись в файл не удалась — хотя бы в консоль
-                    Console.WriteLine($"[LOG_ERROR] Не удалось записать лог: {ex.Message}");
-                    Console.WriteLine(line);
+                    // игнорируем ошибки записи в файл
                 }
             }
         }
