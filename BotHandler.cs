@@ -106,6 +106,13 @@ namespace MathPocket
         // §11.10–11.12
         new PolynomialValueFunction(),
         new PolynomialValueTwoVarsFunction(),
+        // §12.1–12.4
+        new PolynomialSumManyFunction(),
+        new PolynomialDiffManyFunction(),
+        // §12.7
+        new PolynomialIdentityCheckFunction(),
+        // §12.8
+        new PolynomialSimplifyAndEvalFunction(),
     }
 },
 
@@ -170,8 +177,7 @@ namespace MathPocket
                     Name = "🎲 Комбинаторика",
                     Functions = new FunctionBase[]
                     {
-                        new Nod(),
-                        new Nok(),
+                        // TODO: добавьте функции для комбинаторики
                     }
                 },
 
@@ -198,7 +204,7 @@ namespace MathPocket
                     Name = "🎯 Теория вероятностей",
                     Functions = new FunctionBase[]
                     {
-                        new PercentOfNumberFunction(),
+                        // TODO: добавьте функции для теории вероятностей
                     }
                 },
 
@@ -545,9 +551,13 @@ namespace MathPocket
             int total   = GetTotalSteps(func, session);
             int current = session.CurrentStep + 1;
 
-            await _bot.SendMessage(chatId,
-                $"Шаг {current} из {total}\n\n{step.Question}",
-                replyMarkup: BackKeyboard());
+            // Показываем превью текущего состояния (если есть)
+            var preview = func.GetPreview(session.Answers);
+            var text    = preview != null
+                ? $"{preview}\n\n─────────────────\nШаг {current} из {total}\n\n{step.Question}"
+                : $"Шаг {current} из {total}\n\n{step.Question}";
+
+            await _bot.SendMessage(chatId, text, replyMarkup: BackKeyboard());
         }
 
         // ─────────────────────────────────────────────────────────
@@ -578,9 +588,11 @@ namespace MathPocket
 
         private static int GetTotalSteps(FunctionBase func, StepInputSession session)
         {
-            if (func is MonomialStandardFormFunction sf) return sf.ActiveStepCount(session.Answers);
-            if (func is MonomialPowerFunction pf)       return pf.ActiveStepCount(session.Answers);
-            if (func is MonomialMultiplyFunction mf)    return mf.ActiveStepCount(session.Answers);
+            if (func is MonomialStandardFormFunction sf)  return sf.ActiveStepCount(session.Answers);
+            if (func is MonomialPowerFunction pf)         return pf.ActiveStepCount(session.Answers);
+            if (func is MonomialMultiplyFunction mf)      return mf.ActiveStepCount(session.Answers);
+            if (func is PolynomialSumManyFunction smf)    return smf.ActiveStepCount(session.Answers);
+            if (func is PolynomialDiffManyFunction dmf)   return dmf.ActiveStepCount(session.Answers);
             return func.Steps?.Length ?? 0;
         }
 
