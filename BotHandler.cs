@@ -20,6 +20,20 @@ namespace MathPocket
         public FunctionBase[] Functions { get; init; } = Array.Empty<FunctionBase>();
     }
 
+    /// <summary>
+    /// Категория верхнего уровня. Может содержать подразделы (SubSections)
+    /// или напрямую функции (Functions) — но не то и другое одновременно.
+    /// </summary>
+    public class MathCategory
+    {
+        public string Name { get; init; } = string.Empty;
+        /// <summary>Подразделы (вложенное меню). Если не пусто — Functions игнорируются.</summary>
+        public MathSection[] SubSections { get; init; } = Array.Empty<MathSection>();
+        /// <summary>Функции напрямую (без подразделов).</summary>
+        public FunctionBase[] Functions { get; init; } = Array.Empty<FunctionBase>();
+        public bool HasSubSections => SubSections.Length > 0;
+    }
+
     // ═══════════════════════════════════════════════════════════════
     //  BotHandler
     // ═══════════════════════════════════════════════════════════════
@@ -28,15 +42,16 @@ namespace MathPocket
     {
         private readonly ITelegramBotClient _bot;
 
-        // ── Каталог разделов ──────────────────────────────────────
-        private readonly MathSection[] Sections;
+        // ── Каталог категорий ─────────────────────────────────────
+        private readonly MathCategory[] Categories;
 
         // ── Материалы ─────────────────────────────────────────────
         private readonly Material[] Materials;
 
         // ── Состояние пользователей ───────────────────────────────
         private readonly ConcurrentDictionary<long, string>            UserState        = new();
-        private readonly ConcurrentDictionary<long, MathSection>       SelectedSection  = new();
+        private readonly ConcurrentDictionary<long, MathCategory>     SelectedCategory   = new();
+        private readonly ConcurrentDictionary<long, MathSection>       SelectedSection    = new();
         private readonly ConcurrentDictionary<long, FunctionBase>      SelectedFunction = new();
 
         // Пошаговый ввод: сессия хранит текущий шаг и накопленные ответы
@@ -58,25 +73,56 @@ namespace MathPocket
             //
             //  Разделы с пустым Functions[] показывают «пока пуст».
             // ══════════════════════════════════════════════════════
-            Sections = new MathSection[]
+            Categories = new MathCategory[]
             {
-                new MathSection
+                // ── ⚡ Степень (с подразделами) ───────────────────
+                new MathCategory
                 {
                     Name = "⚡ Степень",
-                    Functions = new FunctionBase[]
+                    SubSections = new MathSection[]
                     {
-                        new PowerFunction(),
-                        new PowerProductFunction(),
-                        new PowerQuotientFunction(),
-                        new PowerOfPowerFunction(),
-                        new PowerOfProductFunction(),
-                        new PowerOfFractionFunction(),
-                        new ComparePowersFunction(),
-                        new FindBaseOrExponentFunction(),
+                        new MathSection
+                        {
+                            Name = "🔢 Степень числа",
+                            Functions = new FunctionBase[]
+                            {
+                                new PowerFunction(),
+                                new EvaluateAtValueFunction(),
+                            }
+                        },
+                        new MathSection
+                        {
+                            Name = "✖️ Умножение и деление",
+                            Functions = new FunctionBase[]
+                            {
+                                new PowerProductFunction(),
+                                new PowerQuotientFunction(),
+                            }
+                        },
+                        new MathSection
+                        {
+                            Name = "📐 Возведение в степень",
+                            Functions = new FunctionBase[]
+                            {
+                                new PowerOfPowerFunction(),
+                                new PowerOfProductFunction(),
+                                new PowerOfFractionFunction(),
+                            }
+                        },
+                        new MathSection
+                        {
+                            Name = "🔍 Задачи",
+                            Functions = new FunctionBase[]
+                            {
+                                new ComparePowersFunction(),
+                                new FindBaseOrExponentFunction(),
+                            }
+                        },
                     }
                 },
 
-                new MathSection
+                // ── 🔢 Одночлены (без подразделов) ───────────────
+                new MathCategory
                 {
                     Name = "🔢 Одночлены",
                     Functions = new FunctionBase[]
@@ -87,85 +133,56 @@ namespace MathPocket
                     }
                 },
 
-                new MathSection
-{
-    Name = "🔣 Многочлены",
-    Functions = new FunctionBase[]
-    {
-        // §11.1–11.3
-        new PolynomialFromMonomialsFunction(),
-        new PolynomialStandardMembersFunction(),
-        new PolynomialNameMembersFunction(),
-        // §11.4–11.6
-        new PolynomialLikeTermsFunction(),
-        new PolynomialAddFunction(),
-        new PolynomialSubtractFunction(),
-        // §11.7–11.9
-        new PolynomialStandardFormFunction(),
-        new PolynomialDegreeFunction(),
-        // §11.10–11.12
-        new PolynomialValueFunction(),
-        new PolynomialValueTwoVarsFunction(),
-    }
-},
+                // ── 🔣 Многочлены (с подразделами) ───────────────
+                new MathCategory
+                {
+                    Name = "🔣 Многочлены",
+                    SubSections = new MathSection[]
+                    {
+                        new MathSection
+                        {
+                            Name = "🔣 Основы многочленов",
+                            Functions = new FunctionBase[]
+                            {
+                                new PolynomialFromMonomialsFunction(),
+                                new PolynomialStandardMembersFunction(),
+                                new PolynomialNameMembersFunction(),
+                                new PolynomialDegreeFunction(),
+                                new PolynomialStandardFormFunction(),
+                                new PolynomialValueFunction(),
+                                new PolynomialValueTwoVarsFunction(),
+                            }
+                        },
+                        new MathSection
+                        {
+                            Name = "➕ Сложение и вычитание",
+                            Functions = new FunctionBase[]
+                            {
+                                new PolynomialLikeTermsFunction(),
+                                new PolynomialAddFunction(),
+                                new PolynomialSubtractFunction(),
+                            }
+                        },
+                        new MathSection
+                        {
+                            Name = "✖️ Умножение многочленов",
+                            Functions = new FunctionBase[]
+                            {
+                                // TODO: добавить функции умножения
+                            }
+                        },
+                    }
+                },
 
                 
 
-                new MathSection
-                {
-                    Name = "✂️ Формулы сокращённого умножения",
-                    Functions = new FunctionBase[]
-                    {
-                        // TODO: добавьте функции для ФСУ
-                    }
-                },
-
-                new MathSection
-                {
-                    Name = "➗ Алгебраические дроби",
-                    Functions = new FunctionBase[]
-                    {
-                        // TODO: добавьте функции для алгебраических дробей
-                    }
-                },
-
-                new MathSection
-                {
-                    Name = "√ Квадратные корни",
-                    Functions = new FunctionBase[]
-                    {
-                        // TODO: добавьте функции для квадратных корней
-                    }
-                },
-
-                new MathSection
-                {
-                    Name = "🔲 Квадратные уравнения",
-                    Functions = new FunctionBase[]
-                    {
-                        // TODO: добавьте функции для квадратных уравнений
-                    }
-                },
-
-                new MathSection
-                {
-                    Name = "⚖️ Неравенства",
-                    Functions = new FunctionBase[]
-                    {
-                        // TODO: добавьте функции для неравенств
-                    }
-                },
-
-                new MathSection
-                {
-                    Name = "🔀 Системы уравнений и неравенств",
-                    Functions = new FunctionBase[]
-                    {
-                        // TODO: добавьте функции
-                    }
-                },
-
-                new MathSection
+                new MathCategory { Name = "✂️ Формулы сокращённого умножения" },
+                new MathCategory { Name = "➗ Алгебраические дроби" },
+                new MathCategory { Name = "√ Квадратные корни" },
+                new MathCategory { Name = "🔲 Квадратные уравнения" },
+                new MathCategory { Name = "⚖️ Неравенства" },
+                new MathCategory { Name = "🔀 Системы уравнений и неравенств" },
+                new MathCategory
                 {
                     Name = "🎲 Комбинаторика",
                     Functions = new FunctionBase[]
@@ -174,42 +191,14 @@ namespace MathPocket
                         new Nok(),
                     }
                 },
-
-                new MathSection
-                {
-                    Name = "🔢 Последовательности",
-                    Functions = new FunctionBase[]
-                    {
-                        // TODO: добавьте функции
-                    }
-                },
-
-                new MathSection
-                {
-                    Name = "📐 Тригонометрия",
-                    Functions = new FunctionBase[]
-                    {
-                        // TODO: добавьте функции
-                    }
-                },
-
-                new MathSection
+                new MathCategory { Name = "🔢 Последовательности" },
+                new MathCategory { Name = "📐 Тригонометрия" },
+                new MathCategory
                 {
                     Name = "🎯 Теория вероятностей",
-                    Functions = new FunctionBase[]
-                    {
-                        new PercentOfNumberFunction(),
-                    }
+                    Functions = new FunctionBase[] { new PercentOfNumberFunction() }
                 },
-
-                new MathSection
-                {
-                    Name = "📊 Элементы статистики",
-                    Functions = new FunctionBase[]
-                    {
-                        // TODO: добавьте статистические функции
-                    }
-                },
+                new MathCategory { Name = "📊 Элементы статистики" },
             };
             // ══════════════════════════════════════════════════════
 
@@ -225,10 +214,11 @@ namespace MathPocket
 
             StateHandlers = new Dictionary<string, Func<Message, Task>>
             {
-                ["choose_section"]  = HandleChooseSection,
-                ["choose_function"] = HandleChooseFunction,
-                ["input_data"]      = HandleInputData,
-                ["universal_calc"]  = HandleUniversalCalculator,
+                ["choose_category"]   = HandleChooseCategory,
+                ["choose_subsection"] = HandleChooseSubSection,
+                ["choose_function"]   = HandleChooseFunction,
+                ["input_data"]        = HandleInputData,
+                ["universal_calc"]    = HandleUniversalCalculator,
             };
         }
 
@@ -371,8 +361,8 @@ namespace MathPocket
             if (text == "📂 Разделы")
             {
                 ClearState(chatId);
-                UserState[chatId] = "choose_section";
-                await SendSectionMenu(chatId);
+                UserState[chatId] = "choose_category";
+                await SendCategoryMenu(chatId);
                 return;
             }
 
@@ -401,9 +391,10 @@ namespace MathPocket
         //  Логика кнопки «Назад»
         //
         //  Главное меню
-        //    └─ choose_section
-        //         └─ choose_function
-        //              └─ input_data  (пошаговый или однострочный)
+        //    └─ choose_category
+        //         └─ choose_subsection (только если есть подразделы)
+        //              └─ choose_function
+        //                   └─ input_data  (пошаговый или однострочный)
         // ═══════════════════════════════════════════════════════════
 
         private async Task HandleBack(long chatId)
@@ -446,9 +437,27 @@ namespace MathPocket
                     break;
 
                 case "choose_function":
+                    SelectedFunction.TryRemove(chatId, out _);
+                    // Если у категории есть подразделы — назад к подразделам
+                    if (SelectedCategory.TryGetValue(chatId, out var catForFunc) && catForFunc.HasSubSections)
+                    {
+                        SelectedSection.TryRemove(chatId, out _);
+                        UserState[chatId] = "choose_subsection";
+                        await SendSubSectionMenu(chatId, catForFunc);
+                    }
+                    else
+                    {
+                        SelectedSection.TryRemove(chatId, out _);
+                        UserState[chatId] = "choose_category";
+                        await SendCategoryMenu(chatId);
+                    }
+                    break;
+
+                case "choose_subsection":
                     SelectedSection.TryRemove(chatId, out _);
-                    UserState[chatId] = "choose_section";
-                    await SendSectionMenu(chatId);
+                    SelectedCategory.TryRemove(chatId, out _);
+                    UserState[chatId] = "choose_category";
+                    await SendCategoryMenu(chatId);
                     break;
 
                 default:
@@ -462,22 +471,65 @@ namespace MathPocket
         //  Обработчики состояний
         // ═══════════════════════════════════════════════════════════
 
-        private async Task HandleChooseSection(Message msg)
+        private async Task HandleChooseCategory(Message msg)
         {
-            var section = Sections.FirstOrDefault(s =>
-                s.Name.Equals(msg.Text, StringComparison.OrdinalIgnoreCase));
+            var category = Categories.FirstOrDefault(c =>
+                c.Name.Equals(msg.Text, StringComparison.OrdinalIgnoreCase));
 
-            if (section is null)
+            if (category is null)
             {
                 await _bot.SendMessage(msg.Chat.Id, "Выберите раздел из предложенных кнопок.");
                 return;
             }
 
-            if (section.Functions.Length == 0)
+            SelectedCategory[msg.Chat.Id] = category;
+
+            // Если есть подразделы — показываем подменю
+            if (category.HasSubSections)
+            {
+                UserState[msg.Chat.Id] = "choose_subsection";
+                await SendSubSectionMenu(msg.Chat.Id, category);
+                return;
+            }
+
+            // Иначе — напрямую к функциям
+            if (!category.Functions.Any())
             {
                 await _bot.SendMessage(msg.Chat.Id,
-                    $"📭 Раздел «{section.Name}» пока не содержит функций.\n" +
+                    $"📭 Раздел «{category.Name}» пока не содержит функций.\n" +
                     "Выберите другой раздел или нажмите «◀️ Назад».");
+                return;
+            }
+
+            // Создаём временный MathSection из функций категории
+            var section = new MathSection { Name = category.Name, Functions = category.Functions };
+            SelectedSection[msg.Chat.Id] = section;
+            UserState[msg.Chat.Id]       = "choose_function";
+            await SendFunctionMenu(msg.Chat.Id, section);
+        }
+
+        private async Task HandleChooseSubSection(Message msg)
+        {
+            if (!SelectedCategory.TryGetValue(msg.Chat.Id, out var category))
+            {
+                await _bot.SendMessage(msg.Chat.Id, "Произошла ошибка. Попробуйте /start");
+                return;
+            }
+
+            var section = category.SubSections.FirstOrDefault(s =>
+                s.Name.Equals(msg.Text, StringComparison.OrdinalIgnoreCase));
+
+            if (section is null)
+            {
+                await _bot.SendMessage(msg.Chat.Id, "Выберите подраздел из предложенных кнопок.");
+                return;
+            }
+
+            if (!section.Functions.Any())
+            {
+                await _bot.SendMessage(msg.Chat.Id,
+                    $"📭 Подраздел «{section.Name}» пока не содержит функций.\n" +
+                    "Выберите другой или нажмите «◀️ Назад».");
                 return;
             }
 
@@ -719,14 +771,25 @@ namespace MathPocket
                 replyMarkup: keyboard);
         }
 
-        private async Task SendSectionMenu(long chatId)
+        private async Task SendCategoryMenu(long chatId)
         {
-            var rows = Sections
-                .Select(s => new KeyboardButton[] { s.Name })
-                .Concat(new[] { new KeyboardButton[] { "◀️ Назад" } })
+            var rows = Categories
+                .Select(c => new KeyboardButton[] { c.Name })
+                .Append(new KeyboardButton[] { "◀️ Назад" })
                 .ToArray();
 
             await _bot.SendMessage(chatId, "📂 Выберите раздел:",
+                replyMarkup: new ReplyKeyboardMarkup(rows) { ResizeKeyboard = true });
+        }
+
+        private async Task SendSubSectionMenu(long chatId, MathCategory category)
+        {
+            var rows = category.SubSections
+                .Select(s => new KeyboardButton[] { s.Name })
+                .Append(new KeyboardButton[] { "◀️ Назад" })
+                .ToArray();
+
+            await _bot.SendMessage(chatId, $"📂 {category.Name} — выберите подраздел:",
                 replyMarkup: new ReplyKeyboardMarkup(rows) { ResizeKeyboard = true });
         }
 
@@ -755,6 +818,7 @@ namespace MathPocket
         private void ClearState(long chatId)
         {
             UserState.TryRemove(chatId, out _);
+            SelectedCategory.TryRemove(chatId, out _);
             SelectedSection.TryRemove(chatId, out _);
             SelectedFunction.TryRemove(chatId, out _);
             InputSession.TryRemove(chatId, out _);
