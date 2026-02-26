@@ -1132,4 +1132,571 @@ namespace MathPocket
                 .TrimEnd('0').TrimEnd('.');
         }
     }
+
+// ═══════════════════════════════════════════════════════════════
+//  §13.1–13.6  Многочлен × одночлен
+// ═══════════════════════════════════════════════════════════════
+    public class PolyTimesMonomial : FunctionBase
+    {
+        public override string   Name       => "Многочлен × одночлен";
+        public override string   Formula    => "k·xⁿ · P(x)";
+        public override string[] Parameters => Array.Empty<string>();
+        public override string[] Keywords   => new[] { "умножить", "многочлен одночлен", "раскрыть скобки" };
+        public override double   Calculate(double[] _) => throw new NotSupportedException();
+
+        public override InputStep[] Steps => new[]
+        {
+            new InputStep
+            {
+                Question =
+                    "📘 Умножение многочлена на одночлен\n\n" +
+                    "Правило: каждый член многочлена умножается на одночлен.\n\n" +
+                    "Пример: 3x · (2x² − 5x + 1)\n" +
+                    "  · 3x · 2x² = 6x³\n" +
+                    "  · 3x · (−5x) = −15x²\n" +
+                    "  · 3x · 1 = 3x\n" +
+                    "  Ответ: 6x³ − 15x² + 3x\n\n" +
+                    "Запись одночлена: коэффициент и степень x через ^.\n" +
+                    "Например: 3x → 3x^1, 2x² → 2x^2, −5 → -5\n\n" +
+                    "✏️ Введи одночлен (например: 3x^1 или -2x^2 или 5):",
+                Validate = s => {
+                    try { PolyParser.Parse(s); return null; }
+                    catch { return $"Не могу разобрать «{s}». Пример: 3x^1 или -2x^2 или 5"; }
+                }
+            },
+            new InputStep
+            {
+                Question = "✏️ Введи многочлен (например: 2x^2 - 5x + 1):",
+                Validate = s => {
+                    try { PolyParser.Parse(s); return null; }
+                    catch { return $"Не могу разобрать «{s}». Пример: 2x^2 - 5x + 1"; }
+                }
+            }
+        };
+
+        public override string? GetPreview(List<string> answers)
+        {
+            if (answers.Count == 1) return $"🔍 Одночлен: {answers[0]}";
+            return null;
+        }
+
+        public override string CalculateFromAnswers(List<string> answers)
+        {
+            var mono   = PolyParser.Parse(answers[0]);
+            var poly   = PolyParser.Parse(answers[1]);
+            var sb     = new StringBuilder();
+
+            // одночлен должен быть одним членом
+            var m = mono[0];
+
+            sb.AppendLine($"📌 ({answers[0]}) · ({answers[1]})");
+            sb.AppendLine();
+            sb.AppendLine("Умножаем каждый член:");
+
+            var result = new List<PolyTerm>();
+            foreach (var t in poly)
+            {
+                var r = new PolyTerm(m.Coeff * t.Coeff, m.Degree + t.Degree);
+                sb.AppendLine($"  {m.ToStringFirst()} · {t.ToStringFirst()} = {r.ToStringFirst()}");
+                result.Add(r);
+            }
+
+            var reduced = PolyParser.Reduce(result);
+            sb.AppendLine();
+            sb.AppendLine($"✅ Ответ: {PolyParser.Format(reduced)}");
+            return sb.ToString().TrimEnd();
+        }
+    }
+
+// ═══════════════════════════════════════════════════════════════
+//  §13.2–13.6  Многочлен × многочлен
+// ═══════════════════════════════════════════════════════════════
+    public class PolyTimesPolyFunction : FunctionBase
+    {
+        public override string   Name       => "Многочлен × многочлен";
+        public override string   Formula    => "P(x) · Q(x)";
+        public override string[] Parameters => Array.Empty<string>();
+        public override string[] Keywords   => new[] { "умножить многочлены", "произведение многочленов" };
+        public override double   Calculate(double[] _) => throw new NotSupportedException();
+
+        public override InputStep[] Steps => new[]
+        {
+            new InputStep
+            {
+                Question =
+                    "📘 Умножение многочлена на многочлен\n\n" +
+                    "Правило: каждый член первого умножается на каждый член второго.\n\n" +
+                    "Пример: (x + 2)(x − 3)\n" +
+                    "  · x · x = x²\n" +
+                    "  · x · (−3) = −3x\n" +
+                    "  · 2 · x = 2x\n" +
+                    "  · 2 · (−3) = −6\n" +
+                    "  Собираем: x² − 3x + 2x − 6 = x² − x − 6\n\n" +
+                    "✏️ Введи первый многочлен (например: x + 2):",
+                Validate = s => {
+                    try { PolyParser.Parse(s); return null; }
+                    catch { return $"Не могу разобрать «{s}». Пример: x^2 - 3x + 1"; }
+                }
+            },
+            new InputStep
+            {
+                Question = "✏️ Введи второй многочлен (например: x - 3):",
+                Validate = s => {
+                    try { PolyParser.Parse(s); return null; }
+                    catch { return $"Не могу разобрать «{s}». Пример: x - 3"; }
+                }
+            }
+        };
+
+        public override string? GetPreview(List<string> answers)
+        {
+            if (answers.Count == 1) return $"🔍 Первый: {answers[0]}";
+            return null;
+        }
+
+        public override string CalculateFromAnswers(List<string> answers)
+        {
+            var p1 = PolyParser.Parse(answers[0]);
+            var p2 = PolyParser.Parse(answers[1]);
+            var sb = new StringBuilder();
+
+            sb.AppendLine($"📌 ({answers[0]}) · ({answers[1]})");
+            sb.AppendLine();
+            sb.AppendLine("Умножаем каждый член первого на каждый член второго:");
+
+            var raw = new List<PolyTerm>();
+            foreach (var a in p1)
+                foreach (var b in p2)
+                {
+                    var r = new PolyTerm(a.Coeff * b.Coeff, a.Degree + b.Degree);
+                    sb.AppendLine($"  {a.ToStringFirst()} · {b.ToStringFirst()} = {r.ToStringFirst()}");
+                    raw.Add(r);
+                }
+
+            sb.AppendLine();
+            sb.AppendLine("Собираем и приводим подобные:");
+            sb.AppendLine($"  {PolyParser.Format(raw)}");
+
+            var reduced = PolyParser.Reduce(raw);
+            if (reduced.Count != raw.Count || PolyParser.Format(reduced) != PolyParser.Format(raw))
+            {
+                sb.AppendLine();
+                sb.AppendLine($"✅ Ответ: {PolyParser.Format(reduced)}");
+            }
+            else
+            {
+                sb.AppendLine();
+                sb.AppendLine($"✅ Ответ: {PolyParser.Format(reduced)}");
+            }
+            return sb.ToString().TrimEnd();
+        }
+    }
+
+// ═══════════════════════════════════════════════════════════════
+//  §13.7–13.8  Упростить выражение с несколькими произведениями
+// ═══════════════════════════════════════════════════════════════
+    public class PolySimplifyExpression : FunctionBase
+    {
+        public override string   Name       => "Упростить выражение";
+        public override string   Formula    => "A·B − C·D + ...";
+        public override string[] Parameters => Array.Empty<string>();
+        public override string[] Keywords   => new[] { "упростить", "раскрыть", "привести" };
+        public override double   Calculate(double[] _) => throw new NotSupportedException();
+
+        public override InputStep[] Steps => new[]
+        {
+            new InputStep
+            {
+                Question =
+                    "📘 Упрощение выражения\n\n" +
+                    "Введи выражение вида A·(B) + C·(D) — т.е. суммы произведений.\n" +
+                    "Каждое произведение пиши через *:\n\n" +
+                    "Пример 13.7: 8(3n − 2m) − 5(2n − m)\n" +
+                    "Вводи так: 8*(3x^1 - 2) - 5*(2x^1 - 1)  (используй x как переменную)\n\n" +
+                    "Или просто введи первый множитель (число или одночлен):",
+                Validate = s => {
+                    try { PolyParser.Parse(s); return null; }
+                    catch { return $"Не могу разобрать «{s}». Введи число или одночлен: 8 или 3x^1"; }
+                }
+            },
+            new InputStep
+            {
+                Question = "✏️ Введи первый многочлен в скобках:",
+                Validate = s => {
+                    try { PolyParser.Parse(s); return null; }
+                    catch { return $"Не могу разобрать «{s}»."; }
+                }
+            },
+            new InputStep
+            {
+                Question = "Добавить ещё одно слагаемое?\n✏️ Введи знак и коэффициент (например: +5 или -5), или «нет» если готово:",
+                Validate = s => {
+                    if (s.ToLower() == "нет" || s.ToLower() == "no") return null;
+                    try { PolyParser.Parse(s); return null; }
+                    catch { return "Введи число (например: +3 или -5) или «нет»"; }
+                }
+            },
+            new InputStep
+            {
+                Question = "✏️ Введи многочлен в скобках для этого слагаемого:",
+                Validate = s => {
+                    try { PolyParser.Parse(s); return null; }
+                    catch { return $"Не могу разобрать «{s}»."; }
+                }
+            }
+        };
+
+        public override string CalculateFromAnswers(List<string> answers)
+        {
+            var sb = new StringBuilder();
+            var total = new List<PolyTerm>();
+
+            // Первое произведение
+            var k1   = PolyParser.Parse(answers[0]);
+            var p1   = PolyParser.Parse(answers[1]);
+            var prod1 = Multiply(k1, p1);
+            sb.AppendLine($"Шаг 1. {answers[0]} · ({answers[1]}) = {PolyParser.Format(prod1)}");
+            total.AddRange(prod1);
+
+            // Второе произведение если не "нет"
+            if (answers.Count >= 4 && answers[2].ToLower() != "нет" && answers[2].ToLower() != "no")
+            {
+                var k2   = PolyParser.Parse(answers[2]);
+                var p2   = PolyParser.Parse(answers[3]);
+                var prod2 = Multiply(k2, p2);
+                sb.AppendLine($"Шаг 2. ({answers[2]}) · ({answers[3]}) = {PolyParser.Format(prod2)}");
+                total.AddRange(prod2);
+            }
+
+            sb.AppendLine();
+            sb.AppendLine("Собираем:");
+            sb.AppendLine($"  {PolyParser.Format(total)}");
+            var reduced = PolyParser.Reduce(total);
+            sb.AppendLine();
+            sb.AppendLine($"✅ Ответ: {PolyParser.Format(reduced)}");
+            return sb.ToString().TrimEnd();
+        }
+
+        private static List<PolyTerm> Multiply(List<PolyTerm> mono, List<PolyTerm> poly)
+        {
+            var res = new List<PolyTerm>();
+            foreach (var m in mono)
+                foreach (var t in poly)
+                    res.Add(new PolyTerm(m.Coeff * t.Coeff, m.Degree + t.Degree));
+            return res;
+        }
+    }
+
+// ═══════════════════════════════════════════════════════════════
+//  §13.9  Найти значение выражения P(x)·Q(x) при x = a
+// ═══════════════════════════════════════════════════════════════
+    public class PolyEvalProduct : FunctionBase
+    {
+        public override string   Name       => "Значение произведения при x";
+        public override string   Formula    => "P(x)·Q(x) при x = a";
+        public override string[] Parameters => Array.Empty<string>();
+        public override string[] Keywords   => new[] { "значение произведения", "подставить в произведение" };
+        public override double   Calculate(double[] _) => throw new NotSupportedException();
+
+        public override InputStep[] Steps => new[]
+        {
+            new InputStep
+            {
+                Question =
+                    "📘 Найти значение произведения многочленов\n\n" +
+                    "Пример: найти значение (x − 4)(x² + 2x − 5) − x³ при x = −4/5\n\n" +
+                    "Способ: сначала упростить (перемножить и привести подобные),\n" +
+                    "затем подставить x.\n\n" +
+                    "✏️ Введи первый многочлен:",
+                Validate = s => {
+                    try { PolyParser.Parse(s); return null; }
+                    catch { return $"Не могу разобрать «{s}»."; }
+                }
+            },
+            new InputStep
+            {
+                Question = "✏️ Введи второй многочлен:",
+                Validate = s => {
+                    try { PolyParser.Parse(s); return null; }
+                    catch { return $"Не могу разобрать «{s}»."; }
+                }
+            },
+            new InputStep
+            {
+                Question = "✏️ Введи значение x (например: 3 или -2 или 0.5):",
+                Validate = s => {
+                    if (double.TryParse(s.Replace(',','.'),
+                        System.Globalization.NumberStyles.Any,
+                        System.Globalization.CultureInfo.InvariantCulture, out _)) return null;
+                    return $"«{s}» — не число.";
+                }
+            }
+        };
+
+        public override string? GetPreview(List<string> answers)
+        {
+            if (answers.Count == 1) return $"🔍 Первый: {answers[0]}";
+            if (answers.Count == 2) return $"🔍 ({answers[0]}) · ({answers[1]})";
+            return null;
+        }
+
+        public override string CalculateFromAnswers(List<string> answers)
+        {
+            var p1 = PolyParser.Parse(answers[0]);
+            var p2 = PolyParser.Parse(answers[1]);
+            double xVal = double.Parse(answers[2].Replace(',','.'),
+                System.Globalization.NumberStyles.Any,
+                System.Globalization.CultureInfo.InvariantCulture);
+
+            // Перемножаем
+            var raw = new List<PolyTerm>();
+            foreach (var a in p1)
+                foreach (var b in p2)
+                    raw.Add(new PolyTerm(a.Coeff * b.Coeff, a.Degree + b.Degree));
+            var reduced = PolyParser.Reduce(raw);
+
+            double result = reduced.Sum(t => t.Coeff * Math.Pow(xVal, t.Degree));
+
+            var sb = new StringBuilder();
+            sb.AppendLine($"📌 ({answers[0]}) · ({answers[1]}) при x = {answers[2]}");
+            sb.AppendLine();
+            sb.AppendLine("Шаг 1. Перемножаем:");
+            sb.AppendLine($"  = {PolyParser.Format(reduced)}");
+            sb.AppendLine();
+            sb.AppendLine($"Шаг 2. Подставляем x = {answers[2]}:");
+
+            string xStr = Fmt(xVal);
+            foreach (var t in reduced.OrderByDescending(t => t.Degree))
+            {
+                if (t.Coeff == 0) continue;
+                double tv = t.Coeff * Math.Pow(xVal, t.Degree);
+                string term = t.Degree == 0 ? $"{t.Coeff}"
+                    : t.Degree == 1 ? $"{t.Coeff} · {xStr} = {Fmt(tv)}"
+                    : $"{t.Coeff} · {xStr}{PolyTerm.Sup(t.Degree)} = {Fmt(tv)}";
+                sb.AppendLine($"  {t.ToStringFirst()}: {term}");
+            }
+            sb.AppendLine();
+            sb.AppendLine($"✅ Ответ: {Fmt(result)}");
+            return sb.ToString().TrimEnd();
+        }
+
+        private static string Fmt(double v) =>
+            v == Math.Floor(v) && Math.Abs(v) < 1e15
+                ? ((long)v).ToString()
+                : v.ToString("G10", System.Globalization.CultureInfo.InvariantCulture).TrimEnd('0').TrimEnd('.');
+    }
+
+// ═══════════════════════════════════════════════════════════════
+//  §13.10  Решить уравнение вида P(x)·Q(x) = R(x)
+// ═══════════════════════════════════════════════════════════════
+    public class PolyEquation : FunctionBase
+    {
+        public override string   Name       => "Уравнение с произведением";
+        public override string   Formula    => "P(x)·Q(x) = R(x)";
+        public override string[] Parameters => Array.Empty<string>();
+        public override string[] Keywords   => new[] { "уравнение произведение", "решить уравнение многочлены" };
+        public override double   Calculate(double[] _) => throw new NotSupportedException();
+
+        public override InputStep[] Steps => new[]
+        {
+            new InputStep
+            {
+                Question =
+                    "📘 Уравнение с произведением многочленов\n\n" +
+                    "Пример: 3x(x² − 8) − 3x³ = 12\n" +
+                    "  Шаг 1. Раскрываем: 3x³ − 24x − 3x³ = 12\n" +
+                    "  Шаг 2. Приводим: −24x = 12\n" +
+                    "  Шаг 3. x = 12 ÷ (−24) = −0.5\n\n" +
+                    "✏️ Введи левую часть уравнения — первый множитель:",
+                Validate = s => {
+                    try { PolyParser.Parse(s); return null; }
+                    catch { return $"Не могу разобрать «{s}»."; }
+                }
+            },
+            new InputStep
+            {
+                Question = "✏️ Введи второй множитель (в скобках):",
+                Validate = s => {
+                    try { PolyParser.Parse(s); return null; }
+                    catch { return $"Не могу разобрать «{s}»."; }
+                }
+            },
+            new InputStep
+            {
+                Question = "✏️ Введи правую часть уравнения:",
+                Validate = s => {
+                    try { PolyParser.Parse(s); return null; }
+                    catch { return $"Не могу разобрать «{s}»."; }
+                }
+            }
+        };
+
+        public override string? GetPreview(List<string> answers)
+        {
+            if (answers.Count == 1) return $"🔍 Левая часть: ({answers[0]}) · (...)";
+            if (answers.Count == 2) return $"🔍 ({answers[0]}) · ({answers[1]}) = ...";
+            return null;
+        }
+
+        public override string CalculateFromAnswers(List<string> answers)
+        {
+            var p1    = PolyParser.Parse(answers[0]);
+            var p2    = PolyParser.Parse(answers[1]);
+            var right = PolyParser.Parse(answers[2]);
+
+            // Перемножаем левую часть
+            var lhs = new List<PolyTerm>();
+            foreach (var a in p1)
+                foreach (var b in p2)
+                    lhs.Add(new PolyTerm(a.Coeff * b.Coeff, a.Degree + b.Degree));
+
+            // Переносим правую часть в левую (с минусом)
+            foreach (var t in right)
+                lhs.Add(new PolyTerm(-t.Coeff, t.Degree));
+
+            var reduced = PolyParser.Reduce(lhs);
+
+            var sb = new StringBuilder();
+            sb.AppendLine($"📌 ({answers[0]}) · ({answers[1]}) = {answers[2]}");
+            sb.AppendLine();
+            sb.AppendLine("Шаг 1. Раскрываем левую часть:");
+            var leftExpanded = new List<PolyTerm>();
+            foreach (var a in p1)
+                foreach (var b in p2)
+                    leftExpanded.Add(new PolyTerm(a.Coeff * b.Coeff, a.Degree + b.Degree));
+            sb.AppendLine($"  {PolyParser.Format(PolyParser.Reduce(leftExpanded))}");
+            sb.AppendLine();
+            sb.AppendLine("Шаг 2. Переносим всё в левую часть:");
+            sb.AppendLine($"  {PolyParser.Format(reduced)} = 0");
+            sb.AppendLine();
+
+            // Пытаемся решить линейное уравнение ax + b = 0
+            var nonZero = reduced.Where(t => t.Coeff != 0).ToList();
+            if (nonZero.Count == 0)
+            {
+                sb.AppendLine("✅ Уравнение обращается в тождество 0 = 0 — любое x является решением.");
+            }
+            else if (nonZero.Count == 1 && nonZero[0].Degree == 0)
+            {
+                sb.AppendLine("❌ Уравнение не имеет решений (противоречие).");
+            }
+            else if (nonZero.All(t => t.Degree <= 1))
+            {
+                long a = reduced.FirstOrDefault(t => t.Degree == 1).Coeff;
+                long b = reduced.FirstOrDefault(t => t.Degree == 0).Coeff;
+                if (a == 0)
+                    sb.AppendLine(b == 0 ? "✅ Любое x — решение." : "❌ Решений нет.");
+                else
+                {
+                    double x = -(double)b / a;
+                    sb.AppendLine($"Шаг 3. {a}x = {-b}");
+                    sb.AppendLine($"  x = {-b} ÷ {a} = {FmtD(x)}");
+                    sb.AppendLine();
+                    sb.AppendLine($"✅ Ответ: x = {FmtD(x)}");
+                }
+            }
+            else
+            {
+                sb.AppendLine($"Получили: {PolyParser.Format(reduced)} = 0");
+                sb.AppendLine("⚠️ Это уравнение выше первой степени — решается методами старших классов.");
+            }
+            return sb.ToString().TrimEnd();
+        }
+
+        private static string FmtD(double v) =>
+            v == Math.Floor(v) && Math.Abs(v) < 1e15
+                ? ((long)v).ToString()
+                : v.ToString("G10", System.Globalization.CultureInfo.InvariantCulture).TrimEnd('0').TrimEnd('.');
+    }
+
+// ═══════════════════════════════════════════════════════════════
+//  §13.12  Доказать тождество
+// ═══════════════════════════════════════════════════════════════
+    public class PolyProveIdentity : FunctionBase
+    {
+        public override string   Name       => "Доказать тождество";
+        public override string   Formula    => "P(x) = Q(x)  (проверка)";
+        public override string[] Parameters => Array.Empty<string>();
+        public override string[] Keywords   => new[] { "тождество", "доказать", "проверить равенство" };
+        public override double   Calculate(double[] _) => throw new NotSupportedException();
+
+        public override InputStep[] Steps => new[]
+        {
+            new InputStep
+            {
+                Question =
+                    "📘 Доказательство тождества\n\n" +
+                    "Тождество — это равенство, верное при любом значении переменной.\n\n" +
+                    "Способ: упростим левую часть и убедимся что она равна правой.\n\n" +
+                    "Пример: доказать (7x − 3)(4 − 8x) + 2x(28x − 26) = −12\n\n" +
+                    "✏️ Введи первый множитель левой части:",
+                Validate = s => {
+                    try { PolyParser.Parse(s); return null; }
+                    catch { return $"Не могу разобрать «{s}»."; }
+                }
+            },
+            new InputStep
+            {
+                Question = "✏️ Введи второй множитель:",
+                Validate = s => {
+                    try { PolyParser.Parse(s); return null; }
+                    catch { return $"Не могу разобрать «{s}»."; }
+                }
+            },
+            new InputStep
+            {
+                Question = "✏️ Введи правую часть тождества:",
+                Validate = s => {
+                    try { PolyParser.Parse(s); return null; }
+                    catch { return $"Не могу разобрать «{s}»."; }
+                }
+            }
+        };
+
+        public override string? GetPreview(List<string> answers)
+        {
+            if (answers.Count == 1) return $"🔍 Левая часть: ({answers[0]}) · (...)";
+            if (answers.Count == 2) return $"🔍 ({answers[0]}) · ({answers[1]}) = ?";
+            return null;
+        }
+
+        public override string CalculateFromAnswers(List<string> answers)
+        {
+            var p1    = PolyParser.Parse(answers[0]);
+            var p2    = PolyParser.Parse(answers[1]);
+            var right = PolyParser.Parse(answers[2]);
+
+            var lhs = new List<PolyTerm>();
+            foreach (var a in p1)
+                foreach (var b in p2)
+                    lhs.Add(new PolyTerm(a.Coeff * b.Coeff, a.Degree + b.Degree));
+
+            var reducedL = PolyParser.Reduce(lhs);
+            var reducedR = PolyParser.Reduce(right);
+
+            bool equal = PolyParser.Format(reducedL) == PolyParser.Format(reducedR);
+
+            var sb = new StringBuilder();
+            sb.AppendLine($"📌 Доказать: ({answers[0]}) · ({answers[1]}) = {answers[2]}");
+            sb.AppendLine();
+            sb.AppendLine("Шаг 1. Раскрываем левую часть:");
+            foreach (var a in p1)
+                foreach (var b in p2)
+                {
+                    var r = new PolyTerm(a.Coeff * b.Coeff, a.Degree + b.Degree);
+                    sb.AppendLine($"  {a.ToStringFirst()} · {b.ToStringFirst()} = {r.ToStringFirst()}");
+                }
+            sb.AppendLine();
+            sb.AppendLine("Шаг 2. Приводим подобные:");
+            sb.AppendLine($"  {PolyParser.Format(reducedL)}");
+            sb.AppendLine();
+
+            if (equal)
+                sb.AppendLine($"✅ Левая часть = {PolyParser.Format(reducedR)} = правая часть. Тождество доказано!");
+            else
+                sb.AppendLine($"⚠️ Левая часть = {PolyParser.Format(reducedL)}, правая = {PolyParser.Format(reducedR)}. Тождество НЕ верно — проверь данные.");
+
+            return sb.ToString().TrimEnd();
+        }
+    }
 }

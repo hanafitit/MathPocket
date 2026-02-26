@@ -168,7 +168,12 @@ namespace MathPocket
                             Name = "✖️ Умножение многочленов",
                             Functions = new FunctionBase[]
                             {
-                                // TODO: добавить функции умножения
+                                new PolyTimesMonomial(),
+                                new PolyTimesPolyFunction(),
+                                new PolySimplifyExpression(),
+                                new PolyEvalProduct(),
+                                new PolyEquation(),
+                                new PolyProveIdentity(),
                             }
                         },
                     }
