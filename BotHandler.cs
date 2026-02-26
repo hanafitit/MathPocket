@@ -92,9 +92,20 @@ namespace MathPocket
     Name = "🔣 Многочлены",
     Functions = new FunctionBase[]
     {
-        new PolynomialDegreeFunction(),
+        // §11.1–11.3
+        new PolynomialFromMonomialsFunction(),
+        new PolynomialStandardMembersFunction(),
+        new PolynomialNameMembersFunction(),
+        // §11.4–11.6
         new PolynomialLikeTermsFunction(),
+        new PolynomialAddFunction(),
+        new PolynomialSubtractFunction(),
+        // §11.7–11.9
+        new PolynomialStandardFormFunction(),
+        new PolynomialDegreeFunction(),
+        // §11.10–11.12
         new PolynomialValueFunction(),
+        new PolynomialValueTwoVarsFunction(),
     }
 },
 
