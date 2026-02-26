@@ -551,4 +551,585 @@ namespace MathPocket
                 .TrimEnd('0').TrimEnd('.');
         }
     }
+
+    // ═══════════════════════════════════════════════════════════════
+    //  §11.1–11.3: Составление многочлена из одночленов
+    //  Пользователь вводит одночлены через запятую,
+    //  бот записывает многочлен и называет его члены.
+    // ═══════════════════════════════════════════════════════════════
+    public class PolynomialFromMonomialsFunction : FunctionBase
+    {
+        public override string   Name       => "Составить многочлен из одночленов";
+        public override string   Formula    => "a₁ + a₂ + ... + aₙ";
+        public override string[] Keywords   => new[] { "составить", "многочлен", "одночлены" };
+        public override string[] Parameters => Array.Empty<string>();
+        public override double   Calculate(double[] inputs) => throw new NotSupportedException();
+
+        public override InputStep[] Steps => new[]
+        {
+            new InputStep
+            {
+                Question =
+                    "📘 Что такое многочлен?\n\n" +
+                    "Многочлен — это сумма одночленов. Каждый одночлен называется членом многочлена.\n\n" +
+                    "Примеры многочленов:\n" +
+                    "  · 3x² + 5x − 7   (три члена — трёхчлен)\n" +
+                    "  · a² + b²         (два члена — двучлен)\n" +
+                    "  · -4xy + 2x − y + 1  (четыре члена)\n\n" +
+                    "Как записывать одночлены:\n" +
+                    "  · Только с переменной x: 3x^2, -5x, 7\n" +
+                    "  · Числовой одночлен (без x): просто число\n\n" +
+                    "✏️ Введи одночлены через запятую.\n" +
+                    "Например: 3x^2, -5x, 7",
+                Validate = s =>
+                {
+                    if (string.IsNullOrWhiteSpace(s))
+                        return "Ты ничего не ввёл. Введи одночлены через запятую, например: 3x^2, -5x, 7";
+                    var parts = s.Split(',');
+                    if (parts.Length < 2)
+                        return "Нужно минимум 2 одночлена, разделённых запятой.\nНапример: 3x^2, -5x, 7";
+                    foreach (var p in parts)
+                    {
+                        try { PolyParser.Parse(p.Trim()); }
+                        catch (FormatException ex)
+                        {
+                            return $"Не могу разобрать «{p.Trim()}»: {ex.Message}\n\n" +
+                                   "Записывай степени через ^: x² → x^2, x³ → x^3";
+                        }
+                    }
+                    return null;
+                }
+            }
+        };
+
+        public override string CalculateFromAnswers(List<string> answers)
+        {
+            var parts   = answers[0].Split(',');
+            var allTerms = new List<PolyTerm>();
+            var monomials = new List<string>();
+
+            foreach (var p in parts)
+            {
+                var trimmed = p.Trim();
+                monomials.Add(trimmed);
+                allTerms.AddRange(PolyParser.Parse(trimmed));
+            }
+
+            var sb = new StringBuilder();
+            sb.AppendLine("✅ Многочлен составлен:");
+            sb.AppendLine();
+
+            // Собираем без приведения — просто запись суммы
+            string poly = BuildSum(allTerms);
+            sb.AppendLine($"  {poly}");
+            sb.AppendLine();
+            sb.AppendLine($"Количество членов: {parts.Length}");
+            sb.AppendLine();
+            sb.AppendLine("Члены многочлена:");
+            for (int i = 0; i < monomials.Count; i++)
+                sb.AppendLine($"  {i + 1}) {monomials[i]}");
+
+            // Степень
+            var reduced = PolyParser.Reduce(allTerms);
+            int deg = PolyParser.PolynomialDegree(reduced);
+            sb.AppendLine();
+            sb.AppendLine($"📌 Степень многочлена = {deg}");
+
+            return sb.ToString().TrimEnd();
+        }
+
+        private static string BuildSum(List<PolyTerm> terms)
+        {
+            if (!terms.Any()) return "0";
+            var sb = new StringBuilder(terms[0].ToStringFirst());
+            for (int i = 1; i < terms.Count; i++)
+            {
+                var t = terms[i];
+                if (t.Coeff == 0) continue;
+                sb.Append(t.Coeff < 0 ? " - " : " + ");
+                sb.Append(new PolyTerm(Math.Abs(t.Coeff), t.Degree).ToStringFirst());
+            }
+            return sb.ToString();
+        }
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    //  §11.2: Привести каждый член многочлена к стандартному виду
+    //  (многочлен уже есть, пользователь вводит его целиком)
+    // ═══════════════════════════════════════════════════════════════
+    public class PolynomialStandardMembersFunction : FunctionBase
+    {
+        public override string   Name       => "Стандартный вид каждого члена";
+        public override string   Formula    => "Каждый член → стандартный вид, затем степень многочлена";
+        public override string[] Keywords   => new[] { "стандартный", "вид", "член", "многочлен" };
+        public override string[] Parameters => Array.Empty<string>();
+        public override double   Calculate(double[] inputs) => throw new NotSupportedException();
+
+        public override InputStep[] Steps => new[]
+        {
+            new InputStep
+            {
+                Question =
+                    "📘 Стандартный вид члена многочлена\n\n" +
+                    "Каждый член многочлена — это одночлен. Его стандартный вид:\n" +
+                    "  число (коэффициент) · переменные в степенях\n\n" +
+                    "Примеры:\n" +
+                    "  · 3x² — уже в стандартном виде\n" +
+                    "  · -5x³ — уже в стандартном виде\n" +
+                    "  · 7 — числовой член, степень 0\n\n" +
+                    "После приведения каждого члена к стандартному виду\n" +
+                    "определяем степень многочлена — наибольший показатель.\n\n" +
+                    "Как записывать:\n" +
+                    "  · x² → x^2,  x³ → x^3\n" +
+                    "  · члены разделяй знаками + или −\n\n" +
+                    "✏️ Введи многочлен:",
+                Validate = PolyValidate.CheckPoly
+            }
+        };
+
+        public override string CalculateFromAnswers(List<string> answers)
+        {
+            var terms   = PolyParser.Parse(answers[0]);
+            var reduced = PolyParser.Reduce(terms);
+            int deg     = PolyParser.PolynomialDegree(reduced);
+
+            var sb = new StringBuilder();
+            sb.AppendLine($"✅ Многочлен: {PolyParser.Format(terms)}");
+            sb.AppendLine();
+            sb.AppendLine("Члены в стандартном виде:");
+
+            int stepN = 1;
+            foreach (var t in terms)
+            {
+                if (t.Coeff == 0) continue;
+                string xPart  = t.Degree == 0 ? "" : t.Degree == 1 ? "x" : "x" + PolyTerm.Sup(t.Degree);
+                string coeff  = t.Degree > 0 && Math.Abs(t.Coeff) == 1 ? "" : Math.Abs(t.Coeff).ToString();
+                string sign   = t.Coeff < 0 ? "-" : "";
+                string std    = t.Degree == 0 ? t.Coeff.ToString() : $"{sign}{coeff}{xPart}";
+                sb.AppendLine($"  {stepN}) {t.ToStringFirst()}  →  степень {t.Degree}");
+                stepN++;
+            }
+
+            sb.AppendLine();
+            sb.AppendLine($"Наибольшая степень среди всех членов = {deg}");
+            sb.AppendLine();
+            sb.AppendLine($"📌 Степень многочлена = {deg}");
+
+            return sb.ToString().TrimEnd();
+        }
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    //  §11.3: Назвать члены многочлена (свободный, линейный и т.д.)
+    // ═══════════════════════════════════════════════════════════════
+    public class PolynomialNameMembersFunction : FunctionBase
+    {
+        public override string   Name       => "Назвать члены многочлена";
+        public override string   Formula    => "Определить тип и степень каждого члена";
+        public override string[] Keywords   => new[] { "назвать", "члены", "многочлен" };
+        public override string[] Parameters => Array.Empty<string>();
+        public override double   Calculate(double[] inputs) => throw new NotSupportedException();
+
+        public override InputStep[] Steps => new[]
+        {
+            new InputStep
+            {
+                Question =
+                    "📘 Как называть члены многочлена?\n\n" +
+                    "Каждый член многочлена — одночлен. По степени они называются:\n" +
+                    "  · степень 0 → свободный член (число без x)\n" +
+                    "  · степень 1 → линейный член (содержит x)\n" +
+                    "  · степень 2 → квадратный член (содержит x²)\n" +
+                    "  · степень 3 → кубический член (содержит x³)\n" +
+                    "  · степень n → член n-й степени\n\n" +
+                    "Пример: 5x³ − 6x² + 0,8y³\n" +
+                    "  · 5x³  → член 3-й степени (кубический)\n" +
+                    "  · -6x² → член 2-й степени (квадратный)\n" +
+                    "  · 0,8y³ → член 3-й степени\n\n" +
+                    "Как записывать:\n" +
+                    "  · x² → x^2,  x³ → x^3\n" +
+                    "  · члены разделяй + или −\n\n" +
+                    "✏️ Введи многочлен:",
+                Validate = PolyValidate.CheckPoly
+            }
+        };
+
+        public override string CalculateFromAnswers(List<string> answers)
+        {
+            var terms = PolyParser.Parse(answers[0]);
+            var sb    = new StringBuilder();
+
+            sb.AppendLine($"✅ Многочлен: {PolyParser.Format(terms)}");
+            sb.AppendLine();
+            sb.AppendLine("Разбираем каждый член:");
+
+            int n = 1;
+            foreach (var t in terms)
+            {
+                if (t.Coeff == 0) continue;
+                string typeName = t.Degree switch
+                {
+                    0 => "свободный член",
+                    1 => "линейный член (степень 1)",
+                    2 => "квадратный член (степень 2)",
+                    3 => "кубический член (степень 3)",
+                    _ => $"член {t.Degree}-й степени"
+                };
+                sb.AppendLine($"  {n}) {t.ToStringFirst()}  →  {typeName}");
+                n++;
+            }
+
+            var reduced = PolyParser.Reduce(terms);
+            int deg = PolyParser.PolynomialDegree(reduced);
+            sb.AppendLine();
+            sb.AppendLine($"📌 Степень многочлена = {deg}");
+
+            string polyName = (terms.Where(t => t.Coeff != 0).Count()) switch
+            {
+                1 => "одночлен",
+                2 => "двучлен",
+                3 => "трёхчлен",
+                _ => $"многочлен ({terms.Where(t => t.Coeff != 0).Count()} членов)"
+            };
+            sb.AppendLine($"    Многочлен называется: {polyName}");
+
+            return sb.ToString().TrimEnd();
+        }
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    //  §11.4–11.6: Сложение многочленов
+    //  (приведение подобных при сложении двух многочленов)
+    // ═══════════════════════════════════════════════════════════════
+    public class PolynomialAddFunction : FunctionBase
+    {
+        public override string   Name       => "Сложение многочленов";
+        public override string   Formula    => "(A) + (B) = приведение подобных";
+        public override string[] Keywords   => new[] { "сложение", "многочлен", "сумма" };
+        public override string[] Parameters => Array.Empty<string>();
+        public override double   Calculate(double[] inputs) => throw new NotSupportedException();
+
+        public override InputStep[] Steps => new[]
+        {
+            new InputStep
+            {
+                Question =
+                    "📘 Сложение многочленов\n\n" +
+                    "Чтобы сложить многочлены, нужно раскрыть скобки и привести подобные члены.\n\n" +
+                    "Пример: (3a + 2b − 1) + (−a + 5b + 4)\n" +
+                    "  · Раскрываем скобки: 3a + 2b − 1 − a + 5b + 4\n" +
+                    "  · Приводим подобные:\n" +
+                    "      a: 3a − a = 2a\n" +
+                    "      b: 2b + 5b = 7b\n" +
+                    "      числа: −1 + 4 = 3\n" +
+                    "  · Результат: 2a + 7b + 3\n\n" +
+                    "Как записывать:\n" +
+                    "  · x² → x^2,  x³ → x^3\n" +
+                    "  · члены через + или −\n\n" +
+                    "✏️ Введи первый многочлен:",
+                Validate = PolyValidate.CheckPoly
+            },
+            new InputStep
+            {
+                Question = "✏️ Введи второй многочлен:",
+                Validate = PolyValidate.CheckPoly
+            }
+        };
+
+        public override string CalculateFromAnswers(List<string> answers)
+        {
+            var t1 = PolyParser.Parse(answers[0]);
+            var t2 = PolyParser.Parse(answers[1]);
+
+            var all     = t1.Concat(t2).ToList();
+            var reduced = PolyParser.Reduce(all);
+
+            var sb = new StringBuilder();
+            sb.AppendLine($"✅ ({PolyParser.Format(t1)}) + ({PolyParser.Format(t2)})");
+            sb.AppendLine();
+            sb.AppendLine("Шаг 1. Раскрываем скобки — знаки не меняются:");
+            sb.AppendLine($"  {PolyParser.Format(all)}");
+            sb.AppendLine();
+
+            var groups = all.GroupBy(t => t.Degree).Where(g => g.Count() > 1).ToList();
+            if (groups.Any())
+            {
+                sb.AppendLine("Шаг 2. Приводим подобные:");
+                foreach (var g in groups.OrderByDescending(g => g.Key))
+                {
+                    string label = g.Key == 0 ? "свободные члены"
+                                 : g.Key == 1 ? "члены с x"
+                                 : $"члены с x{PolyTerm.Sup(g.Key)}";
+                    string chain = string.Join(" + ", g.Select(t => t.Coeff.ToString()))
+                                        .Replace("+ -", "− ");
+                    sb.AppendLine($"  {label}: {chain} = {g.Sum(t => t.Coeff)}");
+                }
+                sb.AppendLine();
+            }
+
+            sb.AppendLine($"📌 Результат: {PolyParser.Format(reduced)}");
+            return sb.ToString().TrimEnd();
+        }
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    //  §11.4–11.6: Вычитание многочленов
+    // ═══════════════════════════════════════════════════════════════
+    public class PolynomialSubtractFunction : FunctionBase
+    {
+        public override string   Name       => "Вычитание многочленов";
+        public override string   Formula    => "(A) − (B) = знаки B меняются";
+        public override string[] Keywords   => new[] { "вычитание", "многочлен", "разность" };
+        public override string[] Parameters => Array.Empty<string>();
+        public override double   Calculate(double[] inputs) => throw new NotSupportedException();
+
+        public override InputStep[] Steps => new[]
+        {
+            new InputStep
+            {
+                Question =
+                    "📘 Вычитание многочленов\n\n" +
+                    "При вычитании многочлена меняем знаки всех его членов на противоположные.\n\n" +
+                    "Пример: (5x² − 3x + 1) − (2x² + x − 4)\n" +
+                    "  · Меняем знаки второго: 5x² − 3x + 1 − 2x² − x + 4\n" +
+                    "  · Приводим подобные:\n" +
+                    "      x²: 5x² − 2x² = 3x²\n" +
+                    "      x:  −3x − x   = −4x\n" +
+                    "      числа: 1 + 4  = 5\n" +
+                    "  · Результат: 3x² − 4x + 5\n\n" +
+                    "✏️ Введи первый многочлен (уменьшаемое):",
+                Validate = PolyValidate.CheckPoly
+            },
+            new InputStep
+            {
+                Question = "✏️ Введи второй многочлен (вычитаемое):",
+                Validate = PolyValidate.CheckPoly
+            }
+        };
+
+        public override string CalculateFromAnswers(List<string> answers)
+        {
+            var t1 = PolyParser.Parse(answers[0]);
+            var t2 = PolyParser.Parse(answers[1]);
+
+            // Меняем знаки второго
+            var t2neg   = t2.Select(t => new PolyTerm(-t.Coeff, t.Degree)).ToList();
+            var all     = t1.Concat(t2neg).ToList();
+            var reduced = PolyParser.Reduce(all);
+
+            var sb = new StringBuilder();
+            sb.AppendLine($"✅ ({PolyParser.Format(t1)}) − ({PolyParser.Format(t2)})");
+            sb.AppendLine();
+            sb.AppendLine("Шаг 1. Раскрываем скобки — меняем знаки второго многочлена:");
+            sb.AppendLine($"  {PolyParser.Format(all)}");
+            sb.AppendLine();
+
+            var groups = all.GroupBy(t => t.Degree).Where(g => g.Count() > 1).ToList();
+            if (groups.Any())
+            {
+                sb.AppendLine("Шаг 2. Приводим подобные:");
+                foreach (var g in groups.OrderByDescending(g => g.Key))
+                {
+                    string label = g.Key == 0 ? "свободные члены"
+                                 : g.Key == 1 ? "члены с x"
+                                 : $"члены с x{PolyTerm.Sup(g.Key)}";
+                    string chain = string.Join(" + ", g.Select(t => t.Coeff.ToString()))
+                                        .Replace("+ -", "− ");
+                    sb.AppendLine($"  {label}: {chain} = {g.Sum(t => t.Coeff)}");
+                }
+                sb.AppendLine();
+            }
+
+            sb.AppendLine($"📌 Результат: {PolyParser.Format(reduced)}");
+            return sb.ToString().TrimEnd();
+        }
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    //  §11.7–11.9: Представить в стандартном виде и назвать степень
+    //  (многочлен может иметь подобные — нужно привести и назвать)
+    // ═══════════════════════════════════════════════════════════════
+    public class PolynomialStandardFormFunction : FunctionBase
+    {
+        public override string   Name       => "Стандартный вид многочлена";
+        public override string   Formula    => "Привести подобные → записать по убыванию степеней";
+        public override string[] Keywords   => new[] { "стандартный", "вид", "многочлен", "степень" };
+        public override string[] Parameters => Array.Empty<string>();
+        public override double   Calculate(double[] inputs) => throw new NotSupportedException();
+
+        public override InputStep[] Steps => new[]
+        {
+            new InputStep
+            {
+                Question =
+                    "📘 Стандартный вид многочлена\n\n" +
+                    "Многочлен в стандартном виде записывается так:\n" +
+                    "  1. Подобные члены приведены (сложены)\n" +
+                    "  2. Члены расставлены по убыванию степеней x\n\n" +
+                    "Пример: 3 − 5x² + 2x + x²\n" +
+                    "  · Приводим подобные: x²: −5x² + x² = −4x²\n" +
+                    "  · Расставляем по убыванию: −4x² + 2x + 3\n" +
+                    "  · Степень = 2\n\n" +
+                    "Как записывать:\n" +
+                    "  · x² → x^2,  x³ → x^3\n" +
+                    "  · члены через + или −\n\n" +
+                    "✏️ Введи многочлен:",
+                Validate = PolyValidate.CheckPoly
+            }
+        };
+
+        public override string CalculateFromAnswers(List<string> answers)
+        {
+            var terms   = PolyParser.Parse(answers[0]);
+            var reduced = PolyParser.Reduce(terms);
+            int deg     = PolyParser.PolynomialDegree(reduced);
+
+            var sb = new StringBuilder();
+            sb.AppendLine($"✅ Исходный многочлен: {PolyParser.Format(terms)}");
+            sb.AppendLine();
+
+            bool hadLike = terms.GroupBy(t => t.Degree).Any(g => g.Count() > 1);
+            if (hadLike)
+            {
+                sb.AppendLine("Шаг 1. Приводим подобные члены:");
+                foreach (var g in terms.GroupBy(t => t.Degree)
+                                       .Where(g => g.Count() > 1)
+                                       .OrderByDescending(g => g.Key))
+                {
+                    string label = g.Key == 0 ? "свободные члены"
+                                 : g.Key == 1 ? "члены с x"
+                                 : $"члены с x{PolyTerm.Sup(g.Key)}";
+                    string chain = string.Join(" + ", g.Select(t => t.Coeff.ToString()))
+                                        .Replace("+ -", "− ");
+                    sb.AppendLine($"  {label}: {chain} = {g.Sum(t => t.Coeff)}");
+                }
+                sb.AppendLine();
+                sb.AppendLine("Шаг 2. Расставляем по убыванию степеней:");
+            }
+            else
+            {
+                sb.AppendLine("Подобных нет. Расставляем по убыванию степеней:");
+            }
+
+            sb.AppendLine($"  {PolyParser.Format(reduced)}");
+            sb.AppendLine();
+            sb.AppendLine($"📌 Стандартный вид: {PolyParser.Format(reduced)}");
+            sb.AppendLine($"   Степень многочлена = {deg}");
+
+            string name = deg switch
+            {
+                1 => "(линейный многочлен)",
+                2 => "(квадратный трёхчлен)",
+                3 => "(многочлен третьей степени)",
+                _ => $"(многочлен {deg}-й степени)"
+            };
+            if (deg >= 1) sb.AppendLine($"   {name}");
+
+            return sb.ToString().TrimEnd();
+        }
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    //  §11.10–11.12: Значение многочлена при двух значениях переменных
+    //  (расширение уже существующей PolynomialValueFunction)
+    //  Многочлен от двух переменных: подстановка a и b
+    // ═══════════════════════════════════════════════════════════════
+    public class PolynomialValueTwoVarsFunction : FunctionBase
+    {
+        public override string   Name       => "Значение многочлена (два числа)";
+        public override string   Formula    => "Подставить a и b, вычислить";
+        public override string[] Keywords   => new[] { "значение", "многочлен", "два", "числа" };
+        public override string[] Parameters => Array.Empty<string>();
+        public override double   Calculate(double[] inputs) => throw new NotSupportedException();
+
+        public override InputStep[] Steps => new[]
+        {
+            new InputStep
+            {
+                Question =
+                    "📘 Значение многочлена при заданных значениях переменных\n\n" +
+                    "Нужно подставить числа вместо переменных и вычислить.\n\n" +
+                    "Пример: многочлен 0,7ab − 49 + a − 1,2ab + 47\n" +
+                    "  При a = 2/3, b = 9/16:\n" +
+                    "  · Сначала приводим подобные: 0,7ab − 1,2ab = −0,5ab\n" +
+                    "  · Получаем: −0,5ab + a − 2\n" +
+                    "  · Подставляем a и b, вычисляем\n\n" +
+                    "✏️ Введи многочлен от одной переменной x:\n" +
+                    "(многочлены от нескольких переменных — в следующей версии)\n\n" +
+                    "Например: 5x^3 - 8x^2 + 44 - 10x^2 + 7x^3",
+                Validate = PolyValidate.CheckPoly
+            },
+            new InputStep
+            {
+                Question =
+                    "✏️ Введи первое значение x:\n\n" +
+                    "Например: -2 или 3 или 0.5",
+                Validate = PolyValidate.CheckNumber
+            },
+            new InputStep
+            {
+                Question =
+                    "✏️ Введи второе значение x\n" +
+                    "(бот посчитает для обоих значений сразу):\n\n" +
+                    "Например: 3 или -1",
+                Validate = PolyValidate.CheckNumber
+            }
+        };
+
+        public override string CalculateFromAnswers(List<string> answers)
+        {
+            var terms   = PolyParser.Parse(answers[0]);
+            var reduced = PolyParser.Reduce(terms);
+
+            double x1 = double.Parse(answers[1].Replace(',', '.'),
+                System.Globalization.NumberStyles.Any,
+                System.Globalization.CultureInfo.InvariantCulture);
+            double x2 = double.Parse(answers[2].Replace(',', '.'),
+                System.Globalization.NumberStyles.Any,
+                System.Globalization.CultureInfo.InvariantCulture);
+
+            var sb = new StringBuilder();
+            sb.AppendLine($"✅ P(x) = {PolyParser.Format(reduced)}");
+            sb.AppendLine();
+
+            // Покажем приведение если нужно
+            bool hadLike = terms.GroupBy(t => t.Degree).Any(g => g.Count() > 1);
+            if (hadLike)
+            {
+                sb.AppendLine("Шаг 1. Приводим подобные:");
+                sb.AppendLine($"  {PolyParser.Format(reduced)}");
+                sb.AppendLine();
+            }
+
+            foreach (double xVal in new[] { x1, x2 })
+            {
+                string xStr  = FmtNum(xVal);
+                double total = reduced.Sum(t => t.Coeff * Math.Pow(xVal, t.Degree));
+
+                sb.AppendLine($"При x = {xStr}:");
+                foreach (var t in reduced.OrderByDescending(t => t.Degree))
+                {
+                    if (t.Coeff == 0) continue;
+                    double tVal = t.Coeff * Math.Pow(xVal, t.Degree);
+                    string tStr = t.Degree == 0 ? $"{t.Coeff}"
+                                : t.Degree == 1 ? $"{t.Coeff} · {xStr} = {FmtNum(tVal)}"
+                                : $"{t.Coeff} · {xStr}{PolyTerm.Sup(t.Degree)} = {FmtNum(tVal)}";
+                    sb.AppendLine($"  {t.ToStringFirst()}: {tStr}");
+                }
+                sb.AppendLine($"  📌 P({xStr}) = {FmtNum(total)}");
+                sb.AppendLine();
+            }
+
+            return sb.ToString().TrimEnd();
+        }
+
+        private static string FmtNum(double v)
+        {
+            if (v == Math.Floor(v) && Math.Abs(v) < 1e15)
+                return ((long)v).ToString();
+            return v.ToString("G10",
+                System.Globalization.CultureInfo.InvariantCulture)
+                .TrimEnd('0').TrimEnd('.');
+        }
+    }
 }
