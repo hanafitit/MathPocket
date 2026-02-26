@@ -75,49 +75,21 @@ namespace MathPocket
             // ══════════════════════════════════════════════════════
             Categories = new MathCategory[]
             {
-                // ── ⚡ Степень (с подразделами) ───────────────────
+                // ── ⚡ Степень ────────────────────────────────────
                 new MathCategory
                 {
                     Name = "⚡ Степень",
-                    SubSections = new MathSection[]
+                    Functions = new FunctionBase[]
                     {
-                        new MathSection
-                        {
-                            Name = "🔢 Степень числа",
-                            Functions = new FunctionBase[]
-                            {
-                                new PowerFunction(),
-                                new EvaluateAtValueFunction(),
-                            }
-                        },
-                        new MathSection
-                        {
-                            Name = "✖️ Умножение и деление",
-                            Functions = new FunctionBase[]
-                            {
-                                new PowerProductFunction(),
-                                new PowerQuotientFunction(),
-                            }
-                        },
-                        new MathSection
-                        {
-                            Name = "📐 Возведение в степень",
-                            Functions = new FunctionBase[]
-                            {
-                                new PowerOfPowerFunction(),
-                                new PowerOfProductFunction(),
-                                new PowerOfFractionFunction(),
-                            }
-                        },
-                        new MathSection
-                        {
-                            Name = "🔍 Задачи",
-                            Functions = new FunctionBase[]
-                            {
-                                new ComparePowersFunction(),
-                                new FindBaseOrExponentFunction(),
-                            }
-                        },
+                        new PowerFunction(),
+                        new EvaluateAtValueFunction(),
+                        new PowerProductFunction(),
+                        new PowerQuotientFunction(),
+                        new PowerOfPowerFunction(),
+                        new PowerOfProductFunction(),
+                        new PowerOfFractionFunction(),
+                        new ComparePowersFunction(),
+                        new FindBaseOrExponentFunction(),
                     }
                 },
 
@@ -187,15 +159,7 @@ namespace MathPocket
                 new MathCategory { Name = "🔲 Квадратные уравнения" },
                 new MathCategory { Name = "⚖️ Неравенства" },
                 new MathCategory { Name = "🔀 Системы уравнений и неравенств" },
-                new MathCategory
-                {
-                    Name = "🎲 Комбинаторика",
-                    Functions = new FunctionBase[]
-                    {
-                        new Nod(),
-                        new Nok(),
-                    }
-                },
+                new MathCategory { Name = "🎲 Комбинаторика" },
                 new MathCategory { Name = "🔢 Последовательности" },
                 new MathCategory { Name = "📐 Тригонометрия" },
                 new MathCategory
