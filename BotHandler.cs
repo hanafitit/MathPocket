@@ -470,33 +470,36 @@ namespace MathPocket
 
         private async Task HandleChooseSection(Message msg)
         {
+            var chatId  = msg.Chat.Id;
             var section = Sections.FirstOrDefault(s =>
                 s.Name.Equals(msg.Text, StringComparison.OrdinalIgnoreCase));
 
             if (section is null)
             {
-                await _bot.SendMessage(msg.Chat.Id, "Выберите раздел из предложенных кнопок.");
+                await _bot.SendMessage(chatId, "Выберите раздел из предложенных кнопок.");
                 return;
             }
 
-            if (section.Functions.Length == 0)
+            if (!section.Functions.Any())
             {
-                await _bot.SendMessage(msg.Chat.Id,
+                await _bot.SendMessage(chatId,
                     $"📭 Раздел «{section.Name}» пока не содержит функций.\n" +
                     "Выберите другой раздел или нажмите «◀️ Назад».");
                 return;
             }
 
-            SelectedSection[msg.Chat.Id] = section;
-            UserState[msg.Chat.Id]       = "choose_function";
-            await SendFunctionMenu(msg.Chat.Id, section);
+            SelectedSection[chatId] = section;
+            UserState[chatId]       = "choose_function";
+            await SendFunctionMenu(chatId, section);
         }
 
         private async Task HandleChooseFunction(Message msg)
         {
-            if (!SelectedSection.TryGetValue(msg.Chat.Id, out var section))
+            var chatId = msg.Chat.Id;
+
+            if (!SelectedSection.TryGetValue(chatId, out var section))
             {
-                await _bot.SendMessage(msg.Chat.Id, "Произошла ошибка. Попробуйте /start");
+                await _bot.SendMessage(chatId, "Произошла ошибка. Попробуйте /start");
                 return;
             }
 
@@ -505,27 +508,26 @@ namespace MathPocket
 
             if (func is null)
             {
-                await _bot.SendMessage(msg.Chat.Id, "Выберите функцию из предложенных кнопок.");
+                await _bot.SendMessage(chatId, "Выберите функцию из предложенных кнопок.");
                 return;
             }
 
-            SelectedFunction[msg.Chat.Id] = func;
-            UserState[msg.Chat.Id]        = "input_data";
+            SelectedFunction[chatId] = func;
+            UserState[chatId]        = "input_data";
 
             // ── Пошаговый ввод ────────────────────────────────────
             if (func.Steps != null)
             {
                 var session = new StepInputSession();
-                InputSession[msg.Chat.Id] = session;
+                InputSession[chatId] = session;
 
-                WriteLog($"[{DateTime.Now:HH:mm:ss}] [СТАРТ] user={msg.Chat.Id} | func=\"{func.Name}\" | шагов={func.Steps.Length}");
+                WriteLog($"[{DateTime.Now:HH:mm:ss}] [СТАРТ] user={chatId} | func=\"{func.Name}\" | шагов={func.Steps.Length}");
 
-                // Показываем формулу и сразу задаём первый вопрос
-                await _bot.SendMessage(msg.Chat.Id,
+                await _bot.SendMessage(chatId,
                     $"✅ {func.Name}\nФормула: {func.Formula}",
                     replyMarkup: BackKeyboard());
 
-                await AskCurrentStep(msg.Chat.Id, func, session);
+                await AskCurrentStep(chatId, func, session);
                 return;
             }
 
@@ -535,7 +537,7 @@ namespace MathPocket
                 $"Формула: {func.Formula}\n\n" +
                 $"Введите через пробел: {string.Join(", ", func.Parameters)}";
 
-            await _bot.SendMessage(msg.Chat.Id, prompt, replyMarkup: BackKeyboard());
+            await _bot.SendMessage(chatId, prompt, replyMarkup: BackKeyboard());
         }
 
         // ─────────────────────────────────────────────────────────
@@ -735,7 +737,7 @@ namespace MathPocket
         {
             var rows = Sections
                 .Select(s => new KeyboardButton[] { s.Name })
-                .Concat(new[] { new KeyboardButton[] { "◀️ Назад" } })
+                .Append(new KeyboardButton[] { "◀️ Назад" })
                 .ToArray();
 
             await _bot.SendMessage(chatId, "📂 Выберите раздел:",
@@ -746,7 +748,7 @@ namespace MathPocket
         {
             var rows = section.Functions
                 .Select(f => new KeyboardButton[] { f.Name })
-                .Concat(new[] { new KeyboardButton[] { "◀️ Назад" } })
+                .Append(new KeyboardButton[] { "◀️ Назад" })
                 .ToArray();
 
             await _bot.SendMessage(chatId, $"📂 {section.Name} — выберите функцию:",

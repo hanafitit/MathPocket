@@ -153,14 +153,10 @@ namespace MathPocket
         public override string CalculateFromAnswers(List<string> answers)
         {
             bool twoVars = answers[0] == "2";
-            double.TryParse(answers[1].Replace(',', '.'),
-                System.Globalization.NumberStyles.Any,
-                System.Globalization.CultureInfo.InvariantCulture, out double k);
-            int.TryParse(answers[2], out int pa);
-            int pb = 0;
-            if (twoVars && answers.Count > 3) int.TryParse(answers[3], out pb);
-
-            var m  = new Monomial(k, pa, pb);
+            double k = Monomial.ParseDouble(answers[1]);
+            int    pa = Monomial.ParseInt(answers[2]);
+            int    pb = twoVars && answers.Count > 3 ? Monomial.ParseInt(answers[3]) : 0;
+            var    m  = new Monomial(k, pa, pb);
             var sb = new StringBuilder();
 
             sb.AppendLine($"✅ Стандартный вид: {m}");
@@ -315,14 +311,11 @@ namespace MathPocket
         public override string CalculateFromAnswers(List<string> answers)
         {
             bool twoVars = answers[0] == "2";
-            double.TryParse(answers[1].Replace(',', '.'),
-                System.Globalization.NumberStyles.Any,
-                System.Globalization.CultureInfo.InvariantCulture, out double k);
-            int.TryParse(answers[2], out int pa);
-            int pb = 0;
-            int nIdx = 3;
-            if (twoVars) { int.TryParse(answers[3], out pb); nIdx = 4; }
-            int.TryParse(answers[nIdx], out int n);
+            double k    = Monomial.ParseDouble(answers[1]);
+            int    pa   = Monomial.ParseInt(answers[2]);
+            int    nIdx = twoVars ? 4 : 3;
+            int    pb   = twoVars ? Monomial.ParseInt(answers[3]) : 0;
+            int    n    = Monomial.ParseInt(answers[nIdx]);
 
             var m      = new Monomial(k, pa, pb);
             var result = m.Pow(n);
@@ -502,20 +495,13 @@ namespace MathPocket
         {
             bool twoVars = answers[0] == "2";
 
-            int i = 1;
-            double.TryParse(answers[i++].Replace(',', '.'),
-                System.Globalization.NumberStyles.Any,
-                System.Globalization.CultureInfo.InvariantCulture, out double k1);
-            int.TryParse(answers[i++], out int pa1);
-            int pb1 = 0;
-            if (twoVars) int.TryParse(answers[i++], out pb1);
-
-            double.TryParse(answers[i++].Replace(',', '.'),
-                System.Globalization.NumberStyles.Any,
-                System.Globalization.CultureInfo.InvariantCulture, out double k2);
-            int.TryParse(answers[i++], out int pa2);
-            int pb2 = 0;
-            if (twoVars) int.TryParse(answers[i++], out pb2);
+            int    i   = 1;
+            double k1  = Monomial.ParseDouble(answers[i++]);
+            int    pa1 = Monomial.ParseInt(answers[i++]);
+            int    pb1 = twoVars ? Monomial.ParseInt(answers[i++]) : 0;
+            double k2  = Monomial.ParseDouble(answers[i++]);
+            int    pa2 = Monomial.ParseInt(answers[i++]);
+            int    pb2 = twoVars ? Monomial.ParseInt(answers[i++]) : 0;
 
             var m1     = new Monomial(k1, pa1, pb1);
             var m2     = new Monomial(k2, pa2, pb2);
@@ -541,7 +527,6 @@ namespace MathPocket
             sb.AppendLine($"Собираем вместе: {result}");
             sb.AppendLine($"Степень результата: {result.Degree}");
 
-            double kRes = k1 * k2;
             if (k1 < 0 && k2 < 0)
                 sb.AppendLine("Оба коэффициента отрицательные → минус на минус = плюс.");
             else if ((k1 < 0) != (k2 < 0))

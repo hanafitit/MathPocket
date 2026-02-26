@@ -184,6 +184,50 @@ namespace MathPocket
             var nz = terms.Where(t => t.Coeff != 0).ToList();
             return nz.Any() ? nz.Max(t => t.Degree) : 0;
         }
+
+        /// <summary>
+        /// Проверяет, есть ли подобные члены.
+        /// </summary>
+        public static bool HasLikeTerms(List<PolyTerm> terms) =>
+            terms.GroupBy(t => t.Degree).Any(g => g.Count() > 1);
+
+        /// <summary>
+        /// Генерирует пошаговый текст приведения подобных членов.
+        /// Возвращает null если подобных нет.
+        /// </summary>
+        public static string? ShowReduction(List<PolyTerm> terms)
+        {
+            var groups = terms.GroupBy(t => t.Degree)
+                              .Where(g => g.Count() > 1)
+                              .OrderByDescending(g => g.Key)
+                              .ToList();
+            if (!groups.Any()) return null;
+
+            var sb = new System.Text.StringBuilder();
+            foreach (var g in groups)
+            {
+                string label = g.Key == 0 ? "свободные члены"
+                             : g.Key == 1 ? "члены с x"
+                             : $"члены с x{PolyTerm.Sup(g.Key)}";
+                string chain = string.Join(" + ", g.Select(t => t.Coeff.ToString()))
+                                     .Replace("+ -", "− ");
+                sb.AppendLine($"  {label}: {chain} = {g.Sum(t => t.Coeff)}");
+            }
+            return sb.ToString().TrimEnd();
+        }
+
+        /// <summary>
+        /// Форматирует список слагаемых без сортировки (для вывода "как ввёл").
+        /// </summary>
+        public static string FormatRaw(IEnumerable<PolyTerm> terms)
+        {
+            var list = terms.Where(t => t.Coeff != 0).ToList();
+            if (!list.Any()) return "0";
+            var sb = new System.Text.StringBuilder(list[0].ToStringFirst());
+            foreach (var t in list.Skip(1))
+                sb.Append(t.ToStringNext());
+            return sb.ToString();
+        }
     }
 
     // ═══════════════════════════════════════════════════════════════
@@ -281,24 +325,11 @@ namespace MathPocket
             sb.AppendLine($"✅ Многочлен: {PolyParser.Format(terms)}");
             sb.AppendLine();
 
-            // Проверяем, были ли подобные
-            bool hadLike = terms.GroupBy(t => t.Degree).Any(g => g.Count() > 1);
-
-            if (hadLike)
+            var reductionText = PolyParser.ShowReduction(terms);
+            if (reductionText != null)
             {
                 sb.AppendLine("Шаг 1. Приводим подобные слагаемые:");
-                foreach (var g in terms.GroupBy(t => t.Degree).OrderByDescending(g => g.Key))
-                {
-                    if (g.Count() <= 1) continue;
-                    long sum     = g.Sum(t => t.Coeff);
-                    string xLbl  = g.Key == 0 ? "свободные члены"
-                                 : g.Key == 1 ? "слагаемые с x"
-                                 : $"слагаемые с x{PolyTerm.Sup(g.Key)}";
-                    string parts = string.Join(" + ",
-                        g.Select(t => t.Coeff.ToString()))
-                        .Replace("+ -", "− ");
-                    sb.AppendLine($"  {xLbl}: {parts} = {sum}");
-                }
+                sb.AppendLine(reductionText);
                 sb.AppendLine($"  После приведения: {PolyParser.Format(reduced)}");
                 sb.AppendLine();
                 sb.AppendLine("Шаг 2. Смотрим на показатели степени x:");
@@ -929,19 +960,11 @@ namespace MathPocket
             sb.AppendLine($"  {PolyParser.Format(all)}");
             sb.AppendLine();
 
-            var groups = all.GroupBy(t => t.Degree).Where(g => g.Count() > 1).ToList();
-            if (groups.Any())
+            var reductionText2 = PolyParser.ShowReduction(all);
+            if (reductionText2 != null)
             {
                 sb.AppendLine("Шаг 2. Приводим подобные:");
-                foreach (var g in groups.OrderByDescending(g => g.Key))
-                {
-                    string label = g.Key == 0 ? "свободные члены"
-                                 : g.Key == 1 ? "члены с x"
-                                 : $"члены с x{PolyTerm.Sup(g.Key)}";
-                    string chain = string.Join(" + ", g.Select(t => t.Coeff.ToString()))
-                                        .Replace("+ -", "− ");
-                    sb.AppendLine($"  {label}: {chain} = {g.Sum(t => t.Coeff)}");
-                }
+                sb.AppendLine(reductionText2);
                 sb.AppendLine();
             }
 
@@ -1017,19 +1040,11 @@ namespace MathPocket
             sb.AppendLine($"  {PolyParser.Format(all)}");
             sb.AppendLine();
 
-            var groups = all.GroupBy(t => t.Degree).Where(g => g.Count() > 1).ToList();
-            if (groups.Any())
+            var reductionText2 = PolyParser.ShowReduction(all);
+            if (reductionText2 != null)
             {
                 sb.AppendLine("Шаг 2. Приводим подобные:");
-                foreach (var g in groups.OrderByDescending(g => g.Key))
-                {
-                    string label = g.Key == 0 ? "свободные члены"
-                                 : g.Key == 1 ? "члены с x"
-                                 : $"члены с x{PolyTerm.Sup(g.Key)}";
-                    string chain = string.Join(" + ", g.Select(t => t.Coeff.ToString()))
-                                        .Replace("+ -", "− ");
-                    sb.AppendLine($"  {label}: {chain} = {g.Sum(t => t.Coeff)}");
-                }
+                sb.AppendLine(reductionText2);
                 sb.AppendLine();
             }
 
@@ -1092,21 +1107,11 @@ namespace MathPocket
             sb.AppendLine($"✅ Исходный многочлен: {PolyParser.Format(terms)}");
             sb.AppendLine();
 
-            bool hadLike = terms.GroupBy(t => t.Degree).Any(g => g.Count() > 1);
-            if (hadLike)
+            var reductionText = PolyParser.ShowReduction(terms);
+            if (reductionText != null)
             {
                 sb.AppendLine("Шаг 1. Приводим подобные члены:");
-                foreach (var g in terms.GroupBy(t => t.Degree)
-                                       .Where(g => g.Count() > 1)
-                                       .OrderByDescending(g => g.Key))
-                {
-                    string label = g.Key == 0 ? "свободные члены"
-                                 : g.Key == 1 ? "члены с x"
-                                 : $"члены с x{PolyTerm.Sup(g.Key)}";
-                    string chain = string.Join(" + ", g.Select(t => t.Coeff.ToString()))
-                                        .Replace("+ -", "− ");
-                    sb.AppendLine($"  {label}: {chain} = {g.Sum(t => t.Coeff)}");
-                }
+                sb.AppendLine(reductionText);
                 sb.AppendLine();
                 sb.AppendLine("Шаг 2. Расставляем по убыванию степеней:");
             }
@@ -1679,21 +1684,11 @@ namespace MathPocket
             sb.AppendLine($"✅ Выражение: {PolyParser.Format(raw)}");
             sb.AppendLine();
 
-            bool hadLike = raw.GroupBy(t => t.Degree).Any(g => g.Count() > 1);
-            if (hadLike)
+            var reductionText = PolyParser.ShowReduction(raw);
+            if (reductionText != null)
             {
                 sb.AppendLine("Шаг 1. Приводим подобные члены:");
-                foreach (var g in raw.GroupBy(t => t.Degree)
-                                     .Where(g => g.Count() > 1)
-                                     .OrderByDescending(g => g.Key))
-                {
-                    string label = g.Key == 0 ? "свободные члены"
-                                 : g.Key == 1 ? "члены с x"
-                                 : $"члены с x{PolyTerm.Sup(g.Key)}";
-                    string chain = string.Join(" + ", g.Select(t => t.Coeff.ToString()))
-                                        .Replace("+ -", "− ");
-                    sb.AppendLine($"  {label}: {chain} = {g.Sum(t => t.Coeff)}");
-                }
+                sb.AppendLine(reductionText);
                 sb.AppendLine($"  Упрощённый вид: {PolyParser.Format(reduced)}");
                 sb.AppendLine();
             }
