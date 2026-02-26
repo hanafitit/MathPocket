@@ -184,50 +184,6 @@ namespace MathPocket
             var nz = terms.Where(t => t.Coeff != 0).ToList();
             return nz.Any() ? nz.Max(t => t.Degree) : 0;
         }
-
-        /// <summary>
-        /// Проверяет, есть ли подобные члены.
-        /// </summary>
-        public static bool HasLikeTerms(List<PolyTerm> terms) =>
-            terms.GroupBy(t => t.Degree).Any(g => g.Count() > 1);
-
-        /// <summary>
-        /// Генерирует пошаговый текст приведения подобных членов.
-        /// Возвращает null если подобных нет.
-        /// </summary>
-        public static string? ShowReduction(List<PolyTerm> terms)
-        {
-            var groups = terms.GroupBy(t => t.Degree)
-                              .Where(g => g.Count() > 1)
-                              .OrderByDescending(g => g.Key)
-                              .ToList();
-            if (!groups.Any()) return null;
-
-            var sb = new System.Text.StringBuilder();
-            foreach (var g in groups)
-            {
-                string label = g.Key == 0 ? "свободные члены"
-                             : g.Key == 1 ? "члены с x"
-                             : $"члены с x{PolyTerm.Sup(g.Key)}";
-                string chain = string.Join(" + ", g.Select(t => t.Coeff.ToString()))
-                                     .Replace("+ -", "− ");
-                sb.AppendLine($"  {label}: {chain} = {g.Sum(t => t.Coeff)}");
-            }
-            return sb.ToString().TrimEnd();
-        }
-
-        /// <summary>
-        /// Форматирует список слагаемых без сортировки (для вывода "как ввёл").
-        /// </summary>
-        public static string FormatRaw(IEnumerable<PolyTerm> terms)
-        {
-            var list = terms.Where(t => t.Coeff != 0).ToList();
-            if (!list.Any()) return "0";
-            var sb = new System.Text.StringBuilder(list[0].ToStringFirst());
-            foreach (var t in list.Skip(1))
-                sb.Append(t.ToStringNext());
-            return sb.ToString();
-        }
     }
 
     // ═══════════════════════════════════════════════════════════════
@@ -305,16 +261,6 @@ namespace MathPocket
             }
         };
 
-
-        public override string? GetPreview(List<string> answers)
-        {
-            if (answers.Count == 0) return null;
-            try {
-                var t = PolyParser.Parse(answers[0]);
-                return $"\U0001f50d Многочлен: {PolyParser.Format(t)}";
-            } catch { return null; }
-        }
-
         public override string CalculateFromAnswers(List<string> answers)
         {
             var terms   = PolyParser.Parse(answers[0]);
@@ -325,11 +271,24 @@ namespace MathPocket
             sb.AppendLine($"✅ Многочлен: {PolyParser.Format(terms)}");
             sb.AppendLine();
 
-            var reductionText = PolyParser.ShowReduction(terms);
-            if (reductionText != null)
+            // Проверяем, были ли подобные
+            bool hadLike = terms.GroupBy(t => t.Degree).Any(g => g.Count() > 1);
+
+            if (hadLike)
             {
                 sb.AppendLine("Шаг 1. Приводим подобные слагаемые:");
-                sb.AppendLine(reductionText);
+                foreach (var g in terms.GroupBy(t => t.Degree).OrderByDescending(g => g.Key))
+                {
+                    if (g.Count() <= 1) continue;
+                    long sum     = g.Sum(t => t.Coeff);
+                    string xLbl  = g.Key == 0 ? "свободные члены"
+                                 : g.Key == 1 ? "слагаемые с x"
+                                 : $"слагаемые с x{PolyTerm.Sup(g.Key)}";
+                    string parts = string.Join(" + ",
+                        g.Select(t => t.Coeff.ToString()))
+                        .Replace("+ -", "− ");
+                    sb.AppendLine($"  {xLbl}: {parts} = {sum}");
+                }
                 sb.AppendLine($"  После приведения: {PolyParser.Format(reduced)}");
                 sb.AppendLine();
                 sb.AppendLine("Шаг 2. Смотрим на показатели степени x:");
@@ -398,16 +357,6 @@ namespace MathPocket
                 Validate = PolyValidate.CheckPoly
             }
         };
-
-
-        public override string? GetPreview(List<string> answers)
-        {
-            if (answers.Count == 0) return null;
-            try {
-                var t = PolyParser.Parse(answers[0]);
-                return $"\U0001f50d Многочлен: {PolyParser.Format(t)}";
-            } catch { return null; }
-        }
 
         public override string CalculateFromAnswers(List<string> answers)
         {
@@ -524,18 +473,6 @@ namespace MathPocket
                 Validate = PolyValidate.CheckNumber
             }
         };
-
-
-        public override string? GetPreview(List<string> answers)
-        {
-            if (answers.Count == 0) return null;
-            try {
-                var t = PolyParser.Reduce(PolyParser.Parse(answers[0]));
-                if (answers.Count == 1)
-                    return $"\U0001f50d P(x) = {PolyParser.Format(t)}";
-                return $"\U0001f50d P(x) = {PolyParser.Format(t)}, x = {answers[1]}";
-            } catch { return null; }
-        }
 
         public override string CalculateFromAnswers(List<string> answers)
         {
@@ -665,18 +602,6 @@ namespace MathPocket
             }
         };
 
-
-        public override string? GetPreview(List<string> answers)
-        {
-            if (answers.Count == 0) return null;
-            try {
-                var parts = answers[0].Split(',');
-                var sb = new System.Text.StringBuilder("\U0001f50d Члены: ");
-                sb.Append(string.Join(", ", parts.Select(p => p.Trim())));
-                return sb.ToString();
-            } catch { return null; }
-        }
-
         public override string CalculateFromAnswers(List<string> answers)
         {
             var parts   = answers[0].Split(',');
@@ -762,16 +687,6 @@ namespace MathPocket
             }
         };
 
-
-        public override string? GetPreview(List<string> answers)
-        {
-            if (answers.Count == 0) return null;
-            try {
-                var t = PolyParser.Parse(answers[0]);
-                return $"\U0001f50d Многочлен: {PolyParser.Format(t)}";
-            } catch { return null; }
-        }
-
         public override string CalculateFromAnswers(List<string> answers)
         {
             var terms   = PolyParser.Parse(answers[0]);
@@ -838,16 +753,6 @@ namespace MathPocket
                 Validate = PolyValidate.CheckPoly
             }
         };
-
-
-        public override string? GetPreview(List<string> answers)
-        {
-            if (answers.Count == 0) return null;
-            try {
-                var t = PolyParser.Parse(answers[0]);
-                return $"\U0001f50d Многочлен: {PolyParser.Format(t)}";
-            } catch { return null; }
-        }
 
         public override string CalculateFromAnswers(List<string> answers)
         {
@@ -931,20 +836,6 @@ namespace MathPocket
             }
         };
 
-
-        public override string? GetPreview(List<string> answers)
-        {
-            if (answers.Count == 0) return null;
-            try {
-                var t1 = PolyParser.Parse(answers[0]);
-                if (answers.Count == 1)
-                    return $"\U0001f50d Первый: {PolyParser.Format(t1)}";
-                var t2 = PolyParser.Parse(answers[1]);
-                var res = PolyParser.Reduce(t1.Concat(t2).ToList());
-                return $"\U0001f50d ({PolyParser.Format(t1)}) + ({PolyParser.Format(t2)}) = {PolyParser.Format(res)}";
-            } catch { return null; }
-        }
-
         public override string CalculateFromAnswers(List<string> answers)
         {
             var t1 = PolyParser.Parse(answers[0]);
@@ -960,11 +851,19 @@ namespace MathPocket
             sb.AppendLine($"  {PolyParser.Format(all)}");
             sb.AppendLine();
 
-            var reductionText2 = PolyParser.ShowReduction(all);
-            if (reductionText2 != null)
+            var groups = all.GroupBy(t => t.Degree).Where(g => g.Count() > 1).ToList();
+            if (groups.Any())
             {
                 sb.AppendLine("Шаг 2. Приводим подобные:");
-                sb.AppendLine(reductionText2);
+                foreach (var g in groups.OrderByDescending(g => g.Key))
+                {
+                    string label = g.Key == 0 ? "свободные члены"
+                                 : g.Key == 1 ? "члены с x"
+                                 : $"члены с x{PolyTerm.Sup(g.Key)}";
+                    string chain = string.Join(" + ", g.Select(t => t.Coeff.ToString()))
+                                        .Replace("+ -", "− ");
+                    sb.AppendLine($"  {label}: {chain} = {g.Sum(t => t.Coeff)}");
+                }
                 sb.AppendLine();
             }
 
@@ -1008,21 +907,6 @@ namespace MathPocket
             }
         };
 
-
-        public override string? GetPreview(List<string> answers)
-        {
-            if (answers.Count == 0) return null;
-            try {
-                var t1 = PolyParser.Parse(answers[0]);
-                if (answers.Count == 1)
-                    return $"\U0001f50d Первый: {PolyParser.Format(t1)}";
-                var t2 = PolyParser.Parse(answers[1]);
-                var t2neg = t2.Select(t => new PolyTerm(-t.Coeff, t.Degree)).ToList();
-                var res = PolyParser.Reduce(t1.Concat(t2neg).ToList());
-                return $"\U0001f50d ({PolyParser.Format(t1)}) − ({PolyParser.Format(t2)}) = {PolyParser.Format(res)}";
-            } catch { return null; }
-        }
-
         public override string CalculateFromAnswers(List<string> answers)
         {
             var t1 = PolyParser.Parse(answers[0]);
@@ -1040,11 +924,19 @@ namespace MathPocket
             sb.AppendLine($"  {PolyParser.Format(all)}");
             sb.AppendLine();
 
-            var reductionText2 = PolyParser.ShowReduction(all);
-            if (reductionText2 != null)
+            var groups = all.GroupBy(t => t.Degree).Where(g => g.Count() > 1).ToList();
+            if (groups.Any())
             {
                 sb.AppendLine("Шаг 2. Приводим подобные:");
-                sb.AppendLine(reductionText2);
+                foreach (var g in groups.OrderByDescending(g => g.Key))
+                {
+                    string label = g.Key == 0 ? "свободные члены"
+                                 : g.Key == 1 ? "члены с x"
+                                 : $"члены с x{PolyTerm.Sup(g.Key)}";
+                    string chain = string.Join(" + ", g.Select(t => t.Coeff.ToString()))
+                                        .Replace("+ -", "− ");
+                    sb.AppendLine($"  {label}: {chain} = {g.Sum(t => t.Coeff)}");
+                }
                 sb.AppendLine();
             }
 
@@ -1086,17 +978,6 @@ namespace MathPocket
             }
         };
 
-
-        public override string? GetPreview(List<string> answers)
-        {
-            if (answers.Count == 0) return null;
-            try {
-                var t = PolyParser.Parse(answers[0]);
-                var r = PolyParser.Reduce(t);
-                return $"\U0001f50d Многочлен: {PolyParser.Format(t)}\n    Стандартный вид: {PolyParser.Format(r)}";
-            } catch { return null; }
-        }
-
         public override string CalculateFromAnswers(List<string> answers)
         {
             var terms   = PolyParser.Parse(answers[0]);
@@ -1107,11 +988,21 @@ namespace MathPocket
             sb.AppendLine($"✅ Исходный многочлен: {PolyParser.Format(terms)}");
             sb.AppendLine();
 
-            var reductionText = PolyParser.ShowReduction(terms);
-            if (reductionText != null)
+            bool hadLike = terms.GroupBy(t => t.Degree).Any(g => g.Count() > 1);
+            if (hadLike)
             {
                 sb.AppendLine("Шаг 1. Приводим подобные члены:");
-                sb.AppendLine(reductionText);
+                foreach (var g in terms.GroupBy(t => t.Degree)
+                                       .Where(g => g.Count() > 1)
+                                       .OrderByDescending(g => g.Key))
+                {
+                    string label = g.Key == 0 ? "свободные члены"
+                                 : g.Key == 1 ? "члены с x"
+                                 : $"члены с x{PolyTerm.Sup(g.Key)}";
+                    string chain = string.Join(" + ", g.Select(t => t.Coeff.ToString()))
+                                        .Replace("+ -", "− ");
+                    sb.AppendLine($"  {label}: {chain} = {g.Sum(t => t.Coeff)}");
+                }
                 sb.AppendLine();
                 sb.AppendLine("Шаг 2. Расставляем по убыванию степеней:");
             }
@@ -1185,20 +1076,6 @@ namespace MathPocket
             }
         };
 
-
-        public override string? GetPreview(List<string> answers)
-        {
-            if (answers.Count == 0) return null;
-            try {
-                var t = PolyParser.Reduce(PolyParser.Parse(answers[0]));
-                if (answers.Count == 1)
-                    return $"\U0001f50d P(x) = {PolyParser.Format(t)}";
-                if (answers.Count == 2)
-                    return $"\U0001f50d P(x) = {PolyParser.Format(t)}, первое x = {answers[1]}";
-                return $"\U0001f50d P(x) = {PolyParser.Format(t)}, x₁ = {answers[1]}, x₂ = {answers[2]}";
-            } catch { return null; }
-        }
-
         public override string CalculateFromAnswers(List<string> answers)
         {
             var terms   = PolyParser.Parse(answers[0]);
@@ -1253,478 +1130,6 @@ namespace MathPocket
             return v.ToString("G10",
                 System.Globalization.CultureInfo.InvariantCulture)
                 .TrimEnd('0').TrimEnd('.');
-        }
-    }
-
-    // ═══════════════════════════════════════════════════════════════
-    //  §12.1–12.4: Сумма нескольких многочленов (3+)
-    // ═══════════════════════════════════════════════════════════════
-    public class PolynomialSumManyFunction : FunctionBase
-    {
-        public override string   Name       => "Сумма нескольких многочленов";
-        public override string   Formula    => "A + B + C + ...";
-        public override string[] Keywords   => new[] { "сумма", "несколько", "многочлен" };
-        public override string[] Parameters => Array.Empty<string>();
-        public override double   Calculate(double[] inputs) => throw new NotSupportedException();
-
-        // Динамические шаги: сначала спросим сколько многочленов, потом каждый
-        public override InputStep[] Steps => _steps;
-
-        private static readonly InputStep[] _steps = new InputStep[]
-        {
-            new InputStep
-            {
-                Question =
-                    "📘 Сумма нескольких многочленов\n\n" +
-                    "Чтобы сложить несколько многочленов:\n" +
-                    "  1. Раскрываем все скобки (знаки не меняются)\n" +
-                    "  2. Приводим подобные члены\n\n" +
-                    "Пример: (x² + 5) и (x² − 4) и (2x + 3)\n" +
-                    "  = x² + 5 + x² − 4 + 2x + 3\n" +
-                    "  = 2x² + 2x + 4\n\n" +
-                    "Сколько многочленов хочешь сложить?\n" +
-                    "Напиши число от 2 до 5.",
-                Validate = s =>
-                {
-                    if (int.TryParse(s, out int n) && n >= 2 && n <= 5) return null;
-                    return "Напиши число от 2 до 5.";
-                }
-            },
-            new InputStep { Question = "✏️ Введи многочлен №1:", Validate = PolyValidate.CheckPoly },
-            new InputStep { Question = "✏️ Введи многочлен №2:", Validate = PolyValidate.CheckPoly },
-            new InputStep { Question = "✏️ Введи многочлен №3:", Validate = PolyValidate.CheckPoly },
-            new InputStep { Question = "✏️ Введи многочлен №4:", Validate = PolyValidate.CheckPoly },
-            new InputStep { Question = "✏️ Введи многочлен №5:", Validate = PolyValidate.CheckPoly },
-        };
-
-        // Количество активных шагов: 1 (вопрос о кол-ве) + N многочленов
-        public int ActiveStepCount(List<string> answers)
-        {
-            if (answers.Count == 0) return 6;
-            if (int.TryParse(answers[0], out int n)) return 1 + n;
-            return 6;
-        }
-
-        public override string? GetPreview(List<string> answers)
-        {
-            if (answers.Count == 0) return null;
-            if (answers.Count == 1)
-            {
-                int.TryParse(answers[0], out int n);
-                return $"\U0001f50d Складываем {n} многочлена(ов)";
-            }
-            try
-            {
-                int.TryParse(answers[0], out int total);
-                var entered = answers.Skip(1).ToList();
-                var allTerms = new List<PolyTerm>();
-                var parts = new List<string>();
-                foreach (var a in entered)
-                {
-                    var t = PolyParser.Parse(a);
-                    allTerms.AddRange(t);
-                    parts.Add(PolyParser.Format(t));
-                }
-                var reduced = PolyParser.Reduce(allTerms);
-                string joined = string.Join(" + ", parts.Select(p => $"({p})"));
-                if (entered.Count < total)
-                    return $"\U0001f50d Пока: {joined}\n    = {PolyParser.Format(reduced)}";
-                return $"\U0001f50d ({string.Join(") + (", parts)})\n    = {PolyParser.Format(reduced)}";
-            }
-            catch { return null; }
-        }
-
-        public override string CalculateFromAnswers(List<string> answers)
-        {
-            int.TryParse(answers[0], out int count);
-            var polys = answers.Skip(1).Take(count).ToList();
-
-            var allTerms = new List<PolyTerm>();
-            var parsed   = new List<List<PolyTerm>>();
-            foreach (var p in polys)
-            {
-                var t = PolyParser.Parse(p);
-                parsed.Add(t);
-                allTerms.AddRange(t);
-            }
-            var reduced = PolyParser.Reduce(allTerms);
-
-            var sb = new StringBuilder();
-            string expr = string.Join(" + ", parsed.Select(t => $"({PolyParser.Format(t)})"));
-            sb.AppendLine($"✅ {expr}");
-            sb.AppendLine();
-            sb.AppendLine("Шаг 1. Раскрываем все скобки:");
-            sb.AppendLine($"  {PolyParser.Format(allTerms)}");
-            sb.AppendLine();
-
-            var groups = allTerms.GroupBy(t => t.Degree).Where(g => g.Count() > 1).ToList();
-            if (groups.Any())
-            {
-                sb.AppendLine("Шаг 2. Приводим подобные:");
-                foreach (var g in groups.OrderByDescending(g => g.Key))
-                {
-                    string label = g.Key == 0 ? "свободные члены"
-                                 : g.Key == 1 ? "члены с x"
-                                 : $"члены с x{PolyTerm.Sup(g.Key)}";
-                    string chain = string.Join(" + ", g.Select(t => t.Coeff.ToString()))
-                                        .Replace("+ -", "− ");
-                    sb.AppendLine($"  {label}: {chain} = {g.Sum(t => t.Coeff)}");
-                }
-                sb.AppendLine();
-            }
-
-            sb.AppendLine($"📌 Результат: {PolyParser.Format(reduced)}");
-            return sb.ToString().TrimEnd();
-        }
-    }
-
-    // ═══════════════════════════════════════════════════════════════
-    //  §12.2–12.4: Разность нескольких многочленов (3+)
-    // ═══════════════════════════════════════════════════════════════
-    public class PolynomialDiffManyFunction : FunctionBase
-    {
-        public override string   Name       => "Разность нескольких многочленов";
-        public override string   Formula    => "A − B − C − ...";
-        public override string[] Keywords   => new[] { "разность", "несколько", "многочлен" };
-        public override string[] Parameters => Array.Empty<string>();
-        public override double   Calculate(double[] inputs) => throw new NotSupportedException();
-
-        public override InputStep[] Steps => _steps;
-
-        private static readonly InputStep[] _steps = new InputStep[]
-        {
-            new InputStep
-            {
-                Question =
-                    "📘 Разность нескольких многочленов\n\n" +
-                    "При вычитании меняем знаки всех членов вычитаемого.\n\n" +
-                    "Пример: (5x² + 3x) − (2x² − x + 1) − (x² + 2)\n" +
-                    "  = 5x² + 3x − 2x² + x − 1 − x² − 2\n" +
-                    "  = 2x² + 4x − 3\n\n" +
-                    "Сколько многочленов? (от 2 до 5)\n" +
-                    "Первый — уменьшаемое, остальные вычитаются.",
-                Validate = s =>
-                {
-                    if (int.TryParse(s, out int n) && n >= 2 && n <= 5) return null;
-                    return "Напиши число от 2 до 5.";
-                }
-            },
-            new InputStep { Question = "✏️ Введи многочлен №1 (уменьшаемое):", Validate = PolyValidate.CheckPoly },
-            new InputStep { Question = "✏️ Введи многочлен №2 (вычитаемый):", Validate = PolyValidate.CheckPoly },
-            new InputStep { Question = "✏️ Введи многочлен №3 (вычитаемый):", Validate = PolyValidate.CheckPoly },
-            new InputStep { Question = "✏️ Введи многочлен №4 (вычитаемый):", Validate = PolyValidate.CheckPoly },
-            new InputStep { Question = "✏️ Введи многочлен №5 (вычитаемый):", Validate = PolyValidate.CheckPoly },
-        };
-
-        public int ActiveStepCount(List<string> answers)
-        {
-            if (answers.Count == 0) return 6;
-            if (int.TryParse(answers[0], out int n)) return 1 + n;
-            return 6;
-        }
-
-        public override string? GetPreview(List<string> answers)
-        {
-            if (answers.Count == 0) return null;
-            if (answers.Count == 1) {
-                int.TryParse(answers[0], out int n);
-                return $"\U0001f50d Вычитаем {n-1} из первого";
-            }
-            try
-            {
-                int.TryParse(answers[0], out int total);
-                var entered = answers.Skip(1).ToList();
-                var allTerms = new List<PolyTerm>();
-                for (int i = 0; i < entered.Count; i++)
-                {
-                    var t = PolyParser.Parse(entered[i]);
-                    if (i == 0) allTerms.AddRange(t);
-                    else allTerms.AddRange(t.Select(tt => new PolyTerm(-tt.Coeff, tt.Degree)));
-                }
-                var reduced = PolyParser.Reduce(allTerms);
-                return $"\U0001f50d Пока: {PolyParser.Format(reduced)}";
-            }
-            catch { return null; }
-        }
-
-        public override string CalculateFromAnswers(List<string> answers)
-        {
-            int.TryParse(answers[0], out int count);
-            var polys = answers.Skip(1).Take(count).ToList();
-
-            var parsed = new List<List<PolyTerm>>();
-            foreach (var p in polys)
-                parsed.Add(PolyParser.Parse(p));
-
-            // Собираем с учётом знаков
-            var allTerms = new List<PolyTerm>();
-            for (int i = 0; i < parsed.Count; i++)
-            {
-                if (i == 0) allTerms.AddRange(parsed[i]);
-                else allTerms.AddRange(parsed[i].Select(t => new PolyTerm(-t.Coeff, t.Degree)));
-            }
-            var reduced = PolyParser.Reduce(allTerms);
-
-            var sb = new StringBuilder();
-            string expr = PolyParser.Format(parsed[0]) + " − " +
-                          string.Join(" − ", parsed.Skip(1).Select(t => $"({PolyParser.Format(t)})"));
-            sb.AppendLine($"✅ ({expr})");
-            sb.AppendLine();
-            sb.AppendLine("Шаг 1. Раскрываем скобки (меняем знаки вычитаемых):");
-            sb.AppendLine($"  {PolyParser.Format(allTerms)}");
-            sb.AppendLine();
-
-            var groups = allTerms.GroupBy(t => t.Degree).Where(g => g.Count() > 1).ToList();
-            if (groups.Any())
-            {
-                sb.AppendLine("Шаг 2. Приводим подобные:");
-                foreach (var g in groups.OrderByDescending(g => g.Key))
-                {
-                    string label = g.Key == 0 ? "свободные члены"
-                                 : g.Key == 1 ? "члены с x"
-                                 : $"члены с x{PolyTerm.Sup(g.Key)}";
-                    string chain = string.Join(" + ", g.Select(t => t.Coeff.ToString()))
-                                        .Replace("+ -", "− ");
-                    sb.AppendLine($"  {label}: {chain} = {g.Sum(t => t.Coeff)}");
-                }
-                sb.AppendLine();
-            }
-
-            sb.AppendLine($"📌 Результат: {PolyParser.Format(reduced)}");
-            return sb.ToString().TrimEnd();
-        }
-    }
-
-    // ═══════════════════════════════════════════════════════════════
-    //  §12.7: Проверить тождество многочленов
-    //  Пользователь вводит левую и правую части, бот проверяет
-    //  равенство подстановкой нескольких значений x
-    // ═══════════════════════════════════════════════════════════════
-    public class PolynomialIdentityCheckFunction : FunctionBase
-    {
-        public override string   Name       => "Проверить тождество";
-        public override string   Formula    => "Верно ли A = B?";
-        public override string[] Keywords   => new[] { "тождество", "проверить", "верно", "равенство" };
-        public override string[] Parameters => Array.Empty<string>();
-        public override double   Calculate(double[] inputs) => throw new NotSupportedException();
-
-        public override InputStep[] Steps => new[]
-        {
-            new InputStep
-            {
-                Question =
-                    "📘 Как проверить тождество?\n\n" +
-                    "Тождество — это равенство, верное при любых значениях переменных.\n\n" +
-                    "Способ проверки:\n" +
-                    "  1. Упростим левую и правую части (приведём подобные)\n" +
-                    "  2. Если стандартные виды совпадают — тождество верно\n\n" +
-                    "Пример: (18,9 − x²) − (5x² − 21) + (7x³ − 39,9) = x²?\n" +
-                    "  Левая часть: 18,9 − x² − 5x² + 21 + 7x³ − 39,9\n" +
-                    "             = 7x³ − 6x² + 0 = 7x³ − 6x²\n" +
-                    "  Правая: x²\n" +
-                    "  Не совпадают → тождество неверно\n\n" +
-                    "✏️ Введи левую часть равенства:",
-                Validate = PolyValidate.CheckPoly
-            },
-            new InputStep
-            {
-                Question = "✏️ Введи правую часть равенства:",
-                Validate = PolyValidate.CheckPoly
-            }
-        };
-
-        public override string? GetPreview(List<string> answers)
-        {
-            if (answers.Count == 0) return null;
-            try
-            {
-                var left = PolyParser.Reduce(PolyParser.Parse(answers[0]));
-                if (answers.Count == 1)
-                    return $"\U0001f50d Левая часть: {PolyParser.Format(left)}";
-                var right = PolyParser.Reduce(PolyParser.Parse(answers[1]));
-                return $"\U0001f50d {PolyParser.Format(left)} = {PolyParser.Format(right)}?";
-            }
-            catch { return null; }
-        }
-
-        public override string CalculateFromAnswers(List<string> answers)
-        {
-            var leftRaw  = PolyParser.Parse(answers[0]);
-            var rightRaw = PolyParser.Parse(answers[1]);
-            var left     = PolyParser.Reduce(leftRaw);
-            var right    = PolyParser.Reduce(rightRaw);
-
-            string leftStr  = PolyParser.Format(left);
-            string rightStr = PolyParser.Format(right);
-
-            var sb = new StringBuilder();
-            sb.AppendLine($"✅ Проверяем: {PolyParser.Format(leftRaw)} = {PolyParser.Format(rightRaw)}");
-            sb.AppendLine();
-
-            // Проверяем приведение левой
-            bool leftHadLike = leftRaw.GroupBy(t => t.Degree).Any(g => g.Count() > 1);
-            if (leftHadLike)
-            {
-                sb.AppendLine("Шаг 1. Упрощаем левую часть:");
-                sb.AppendLine($"  {leftStr}");
-            }
-            else sb.AppendLine($"Левая часть: {leftStr}");
-
-            bool rightHadLike = rightRaw.GroupBy(t => t.Degree).Any(g => g.Count() > 1);
-            if (rightHadLike)
-            {
-                sb.AppendLine("Шаг 2. Упрощаем правую часть:");
-                sb.AppendLine($"  {rightStr}");
-            }
-            else sb.AppendLine($"Правая часть: {rightStr}");
-
-            sb.AppendLine();
-
-            // Сравниваем по коэффициентам
-            bool equal = AreEqual(left, right);
-            if (equal)
-            {
-                sb.AppendLine($"Левая = {leftStr}");
-                sb.AppendLine($"Правая = {rightStr}");
-                sb.AppendLine();
-                sb.AppendLine("✅ Стандартные виды совпадают.");
-                sb.AppendLine("📌 Тождество ВЕРНО ✓");
-            }
-            else
-            {
-                sb.AppendLine($"Левая  = {leftStr}");
-                sb.AppendLine($"Правая = {rightStr}");
-                sb.AppendLine();
-                sb.AppendLine("❌ Стандартные виды не совпадают.");
-                sb.AppendLine("📌 Тождество НЕВЕРНО ✗");
-            }
-
-            return sb.ToString().TrimEnd();
-        }
-
-        private static bool AreEqual(List<PolyTerm> a, List<PolyTerm> b)
-        {
-            var da = a.Where(t => t.Coeff != 0).ToDictionary(t => t.Degree, t => t.Coeff);
-            var db = b.Where(t => t.Coeff != 0).ToDictionary(t => t.Degree, t => t.Coeff);
-            if (da.Count != db.Count) return false;
-            foreach (var kv in da)
-                if (!db.TryGetValue(kv.Key, out long v) || v != kv.Value) return false;
-            return true;
-        }
-    }
-
-    // ═══════════════════════════════════════════════════════════════
-    //  §12.8: Упростить выражение и найти его значение
-    // ═══════════════════════════════════════════════════════════════
-    public class PolynomialSimplifyAndEvalFunction : FunctionBase
-    {
-        public override string   Name       => "Упростить и найти значение";
-        public override string   Formula    => "Упростить → подставить x";
-        public override string[] Keywords   => new[] { "упростить", "значение", "выражение" };
-        public override string[] Parameters => Array.Empty<string>();
-        public override double   Calculate(double[] inputs) => throw new NotSupportedException();
-
-        public override InputStep[] Steps => new[]
-        {
-            new InputStep
-            {
-                Question =
-                    "📘 Упростить выражение и найти значение\n\n" +
-                    "Порядок действий:\n" +
-                    "  1. Раскрыть скобки\n" +
-                    "  2. Привести подобные\n" +
-                    "  3. Подставить заданное значение x\n\n" +
-                    "Пример: (20a² + 7a²) − (57 − 20a²) при a = 2\n" +
-                    "  = 20a² + 7a² − 57 + 20a²\n" +
-                    "  = 47a² − 57\n" +
-                    "  При a=2: 47·4 − 57 = 188 − 57 = 131\n\n" +
-                    "Как записывать выражение:\n" +
-                    "  · Введи уже раскрытое выражение одной строкой\n" +
-                    "  · x² → x^2,  члены через + или −\n\n" +
-                    "✏️ Введи выражение (многочлен):",
-                Validate = PolyValidate.CheckPoly
-            },
-            new InputStep
-            {
-                Question =
-                    "✏️ При каком значении x найти значение?\n\n" +
-                    "Введи одно число, например: 2 или -5 или 0.5",
-                Validate = PolyValidate.CheckNumber
-            }
-        };
-
-        public override string? GetPreview(List<string> answers)
-        {
-            if (answers.Count == 0) return null;
-            try
-            {
-                var t = PolyParser.Reduce(PolyParser.Parse(answers[0]));
-                if (answers.Count == 1)
-                    return $"\U0001f50d Упрощено: {PolyParser.Format(t)}";
-                double x = double.Parse(answers[1].Replace(',', '.'),
-                    System.Globalization.NumberStyles.Any,
-                    System.Globalization.CultureInfo.InvariantCulture);
-                double val = t.Sum(tt => tt.Coeff * Math.Pow(x, tt.Degree));
-                return $"\U0001f50d {PolyParser.Format(t)} при x={answers[1]} = {FmtNum(val)}";
-            }
-            catch { return null; }
-        }
-
-        public override string CalculateFromAnswers(List<string> answers)
-        {
-            var raw     = PolyParser.Parse(answers[0]);
-            var reduced = PolyParser.Reduce(raw);
-
-            double x = double.Parse(answers[1].Replace(',', '.'),
-                System.Globalization.NumberStyles.Any,
-                System.Globalization.CultureInfo.InvariantCulture);
-            string xStr = FmtNum(x);
-
-            var sb = new StringBuilder();
-            sb.AppendLine($"✅ Выражение: {PolyParser.Format(raw)}");
-            sb.AppendLine();
-
-            var reductionText = PolyParser.ShowReduction(raw);
-            if (reductionText != null)
-            {
-                sb.AppendLine("Шаг 1. Приводим подобные члены:");
-                sb.AppendLine(reductionText);
-                sb.AppendLine($"  Упрощённый вид: {PolyParser.Format(reduced)}");
-                sb.AppendLine();
-            }
-
-            sb.AppendLine($"Шаг 2. Подставляем x = {xStr}:");
-            double total = 0;
-            var parts = new List<string>();
-            foreach (var t in reduced.OrderByDescending(t => t.Degree))
-            {
-                if (t.Coeff == 0) continue;
-                double tVal = t.Coeff * Math.Pow(x, t.Degree);
-                string detail = t.Degree == 0 ? $"{t.Coeff}"
-                              : t.Degree == 1 ? $"{t.Coeff}·{xStr} = {FmtNum(tVal)}"
-                              : $"{t.Coeff}·{xStr}{PolyTerm.Sup(t.Degree)} = {FmtNum(tVal)}";
-                sb.AppendLine($"  {t.ToStringFirst()}: {detail}");
-                total += tVal;
-                parts.Add(FmtNum(tVal));
-            }
-
-            if (parts.Count > 1)
-            {
-                string sumLine = string.Join(" + ", parts).Replace("+ -", "− ");
-                sb.AppendLine();
-                sb.AppendLine($"  Складываем: {sumLine} = {FmtNum(total)}");
-            }
-
-            sb.AppendLine();
-            sb.AppendLine($"📌 Значение при x = {xStr}: {FmtNum(total)}");
-            return sb.ToString().TrimEnd();
-        }
-
-        private static string FmtNum(double v)
-        {
-            if (v == Math.Floor(v) && Math.Abs(v) < 1e15) return ((long)v).ToString();
-            return v.ToString("G10", System.Globalization.CultureInfo.InvariantCulture)
-                    .TrimEnd('0').TrimEnd('.');
         }
     }
 }

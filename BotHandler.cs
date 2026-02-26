@@ -106,13 +106,6 @@ namespace MathPocket
         // §11.10–11.12
         new PolynomialValueFunction(),
         new PolynomialValueTwoVarsFunction(),
-        // §12.1–12.4
-        new PolynomialSumManyFunction(),
-        new PolynomialDiffManyFunction(),
-        // §12.7
-        new PolynomialIdentityCheckFunction(),
-        // §12.8
-        new PolynomialSimplifyAndEvalFunction(),
     }
 },
 
@@ -177,7 +170,8 @@ namespace MathPocket
                     Name = "🎲 Комбинаторика",
                     Functions = new FunctionBase[]
                     {
-                        // TODO: добавьте функции для комбинаторики
+                        new Nod(),
+                        new Nok(),
                     }
                 },
 
@@ -204,7 +198,7 @@ namespace MathPocket
                     Name = "🎯 Теория вероятностей",
                     Functions = new FunctionBase[]
                     {
-                        // TODO: добавьте функции для теории вероятностей
+                        new PercentOfNumberFunction(),
                     }
                 },
 
@@ -470,36 +464,33 @@ namespace MathPocket
 
         private async Task HandleChooseSection(Message msg)
         {
-            var chatId  = msg.Chat.Id;
             var section = Sections.FirstOrDefault(s =>
                 s.Name.Equals(msg.Text, StringComparison.OrdinalIgnoreCase));
 
             if (section is null)
             {
-                await _bot.SendMessage(chatId, "Выберите раздел из предложенных кнопок.");
+                await _bot.SendMessage(msg.Chat.Id, "Выберите раздел из предложенных кнопок.");
                 return;
             }
 
-            if (!section.Functions.Any())
+            if (section.Functions.Length == 0)
             {
-                await _bot.SendMessage(chatId,
+                await _bot.SendMessage(msg.Chat.Id,
                     $"📭 Раздел «{section.Name}» пока не содержит функций.\n" +
                     "Выберите другой раздел или нажмите «◀️ Назад».");
                 return;
             }
 
-            SelectedSection[chatId] = section;
-            UserState[chatId]       = "choose_function";
-            await SendFunctionMenu(chatId, section);
+            SelectedSection[msg.Chat.Id] = section;
+            UserState[msg.Chat.Id]       = "choose_function";
+            await SendFunctionMenu(msg.Chat.Id, section);
         }
 
         private async Task HandleChooseFunction(Message msg)
         {
-            var chatId = msg.Chat.Id;
-
-            if (!SelectedSection.TryGetValue(chatId, out var section))
+            if (!SelectedSection.TryGetValue(msg.Chat.Id, out var section))
             {
-                await _bot.SendMessage(chatId, "Произошла ошибка. Попробуйте /start");
+                await _bot.SendMessage(msg.Chat.Id, "Произошла ошибка. Попробуйте /start");
                 return;
             }
 
@@ -508,26 +499,27 @@ namespace MathPocket
 
             if (func is null)
             {
-                await _bot.SendMessage(chatId, "Выберите функцию из предложенных кнопок.");
+                await _bot.SendMessage(msg.Chat.Id, "Выберите функцию из предложенных кнопок.");
                 return;
             }
 
-            SelectedFunction[chatId] = func;
-            UserState[chatId]        = "input_data";
+            SelectedFunction[msg.Chat.Id] = func;
+            UserState[msg.Chat.Id]        = "input_data";
 
             // ── Пошаговый ввод ────────────────────────────────────
             if (func.Steps != null)
             {
                 var session = new StepInputSession();
-                InputSession[chatId] = session;
+                InputSession[msg.Chat.Id] = session;
 
-                WriteLog($"[{DateTime.Now:HH:mm:ss}] [СТАРТ] user={chatId} | func=\"{func.Name}\" | шагов={func.Steps.Length}");
+                WriteLog($"[{DateTime.Now:HH:mm:ss}] [СТАРТ] user={msg.Chat.Id} | func=\"{func.Name}\" | шагов={func.Steps.Length}");
 
-                await _bot.SendMessage(chatId,
+                // Показываем формулу и сразу задаём первый вопрос
+                await _bot.SendMessage(msg.Chat.Id,
                     $"✅ {func.Name}\nФормула: {func.Formula}",
                     replyMarkup: BackKeyboard());
 
-                await AskCurrentStep(chatId, func, session);
+                await AskCurrentStep(msg.Chat.Id, func, session);
                 return;
             }
 
@@ -537,7 +529,7 @@ namespace MathPocket
                 $"Формула: {func.Formula}\n\n" +
                 $"Введите через пробел: {string.Join(", ", func.Parameters)}";
 
-            await _bot.SendMessage(chatId, prompt, replyMarkup: BackKeyboard());
+            await _bot.SendMessage(msg.Chat.Id, prompt, replyMarkup: BackKeyboard());
         }
 
         // ─────────────────────────────────────────────────────────
@@ -553,13 +545,9 @@ namespace MathPocket
             int total   = GetTotalSteps(func, session);
             int current = session.CurrentStep + 1;
 
-            // Показываем превью текущего состояния (если есть)
-            var preview = func.GetPreview(session.Answers);
-            var text    = preview != null
-                ? $"{preview}\n\n─────────────────\nШаг {current} из {total}\n\n{step.Question}"
-                : $"Шаг {current} из {total}\n\n{step.Question}";
-
-            await _bot.SendMessage(chatId, text, replyMarkup: BackKeyboard());
+            await _bot.SendMessage(chatId,
+                $"Шаг {current} из {total}\n\n{step.Question}",
+                replyMarkup: BackKeyboard());
         }
 
         // ─────────────────────────────────────────────────────────
@@ -590,11 +578,9 @@ namespace MathPocket
 
         private static int GetTotalSteps(FunctionBase func, StepInputSession session)
         {
-            if (func is MonomialStandardFormFunction sf)  return sf.ActiveStepCount(session.Answers);
-            if (func is MonomialPowerFunction pf)         return pf.ActiveStepCount(session.Answers);
-            if (func is MonomialMultiplyFunction mf)      return mf.ActiveStepCount(session.Answers);
-            if (func is PolynomialSumManyFunction smf)    return smf.ActiveStepCount(session.Answers);
-            if (func is PolynomialDiffManyFunction dmf)   return dmf.ActiveStepCount(session.Answers);
+            if (func is MonomialStandardFormFunction sf) return sf.ActiveStepCount(session.Answers);
+            if (func is MonomialPowerFunction pf)       return pf.ActiveStepCount(session.Answers);
+            if (func is MonomialMultiplyFunction mf)    return mf.ActiveStepCount(session.Answers);
             return func.Steps?.Length ?? 0;
         }
 
@@ -737,7 +723,7 @@ namespace MathPocket
         {
             var rows = Sections
                 .Select(s => new KeyboardButton[] { s.Name })
-                .Append(new KeyboardButton[] { "◀️ Назад" })
+                .Concat(new[] { new KeyboardButton[] { "◀️ Назад" } })
                 .ToArray();
 
             await _bot.SendMessage(chatId, "📂 Выберите раздел:",
@@ -748,7 +734,7 @@ namespace MathPocket
         {
             var rows = section.Functions
                 .Select(f => new KeyboardButton[] { f.Name })
-                .Append(new KeyboardButton[] { "◀️ Назад" })
+                .Concat(new[] { new KeyboardButton[] { "◀️ Назад" } })
                 .ToArray();
 
             await _bot.SendMessage(chatId, $"📂 {section.Name} — выберите функцию:",
