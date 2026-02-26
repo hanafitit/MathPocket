@@ -291,6 +291,27 @@ namespace MathPocket
         public int ActiveStepCount(List<string> answers) =>
             answers.Count > 0 && answers[0] == "2" ? 5 : 4;
 
+        public override string? GetPreview(List<string> answers)
+        {
+            if (answers.Count == 0) return null;
+            bool two = answers[0] == "2";
+            if (answers.Count == 1)
+                return $"\U0001f50d Переменных: {(two ? "a и b" : "только a")}";
+            double.TryParse(answers.Count > 1 ? answers[1].Replace(',', '.') : "0",
+                System.Globalization.NumberStyles.Any,
+                System.Globalization.CultureInfo.InvariantCulture, out double k);
+            int pa = answers.Count > 2 && int.TryParse(answers[2], out int pa2) ? pa2 : 0;
+            int pb = answers.Count > 3 && two && int.TryParse(answers[3], out int pb2) ? pb2 : 0;
+            // nIdx: если two — n на позиции 4, иначе на 3
+            int nIdx = two ? 4 : 3;
+            int n  = answers.Count > nIdx && int.TryParse(answers[nIdx], out int n2) ? n2 : 0;
+            var m  = new Monomial(k, pa, pb);
+            if (answers.Count == 2) return $"\U0001f50d Одночлен: {Monomial.Fmt(k)}";
+            if (answers.Count >= 3 && n == 0) return $"\U0001f50d Одночлен: {m}";
+            if (n > 0) return $"\U0001f50d Возводим: ({m}){Monomial.Sup(n)}";
+            return $"\U0001f50d Одночлен: {m}";
+        }
+
         public override string CalculateFromAnswers(List<string> answers)
         {
             bool twoVars = answers[0] == "2";
@@ -438,6 +459,43 @@ namespace MathPocket
             if (!two)
                 return logicalStep < 3 ? logicalStep : logicalStep + 1;
             return logicalStep;
+        }
+
+        public override string? GetPreview(List<string> answers)
+        {
+            if (answers.Count == 0) return null;
+            bool two = answers[0] == "2";
+            if (answers.Count == 1)
+                return $"\U0001f50d Переменных: {(two ? "a и b" : "только a")}";
+
+            // Парсим первый одночлен (позиции 1,2,[3])
+            double.TryParse(answers.Count > 1 ? answers[1].Replace(',', '.') : "0",
+                System.Globalization.NumberStyles.Any,
+                System.Globalization.CultureInfo.InvariantCulture, out double k1);
+            int pa1 = answers.Count > 2 && int.TryParse(answers[2], out int pa1v) ? pa1v : 0;
+            int pb1 = answers.Count > 3 && two && int.TryParse(answers[3], out int pb1v) ? pb1v : 0;
+            var m1 = new Monomial(k1, pa1, pb1);
+
+            // Позиция начала второго одночлена
+            int s2 = two ? 4 : 3;
+
+            // Парсим второй одночлен если уже начали вводить
+            double.TryParse(answers.Count > s2 ? answers[s2].Replace(',', '.') : "",
+                System.Globalization.NumberStyles.Any,
+                System.Globalization.CultureInfo.InvariantCulture, out double k2);
+            int pa2 = answers.Count > s2+1 && int.TryParse(answers[s2+1], out int pa2v) ? pa2v : 0;
+            int pb2 = answers.Count > s2+2 && two && int.TryParse(answers[s2+2], out int pb2v) ? pb2v : 0;
+            var m2 = new Monomial(k2, pa2, pb2);
+
+            bool hasSecond = answers.Count > s2;
+
+            if (!hasSecond)
+                return $"\U0001f50d Первый одночлен: {m1}";
+            else
+            {
+                var result = m1 * m2;
+                return $"\U0001f50d ({m1}) · ({m2})\n    = {result}";
+            }
         }
 
         public override string CalculateFromAnswers(List<string> answers)

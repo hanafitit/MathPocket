@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -22,10 +22,12 @@ namespace MathPocket
             var numbers = parts.Select(p => double.Parse(p.Replace(',', '.'))).ToArray();
             return Calculate(numbers).ToString();
         }
+
+        /// <summary>
+        /// Превью текущего состояния после очередного ответа пользователя.
+        /// Показывается перед следующим вопросом — чтобы пользователь видел что уже ввёл.
+        /// Вернуть null если превью не нужно на данном шаге.
+        /// </summary>
+        public virtual string? GetPreview(List<string> answers) => null;
     }
-
-
-
-
 }
-
