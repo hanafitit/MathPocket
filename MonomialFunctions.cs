@@ -60,6 +60,14 @@ namespace MathPocket
                    $"0 означает что переменной {varName} нет, 1 — просто {varName}, 2 — {varName}², и так далее.";
         }
 
+        // ── Быстрый парсинг ──────────────────────────────────────
+        public static double ParseDouble(string s) =>
+            double.Parse(s.Replace(',', '.'),
+                System.Globalization.NumberStyles.Any,
+                System.Globalization.CultureInfo.InvariantCulture);
+
+        public static int ParseInt(string s) => int.Parse(s);
+
         // ── Вспомогательные ──────────────────────────────────────
         public static string Fmt(double v) =>
             (v == Math.Floor(v) && !double.IsInfinity(v))
