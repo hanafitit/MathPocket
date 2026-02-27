@@ -27,9 +27,8 @@ namespace MathPocket
 
             try
             {
-                var token = Environment.GetEnvironmentVariable("8023118563:AAFfqJ4IE4CxEiSovDmsUJheBHBxD6S7RGw")
-                            ?? throw new InvalidOperationException(
-                                "BOT_TOKEN");
+                var token = Environment.GetEnvironmentVariable("BOT_TOKEN")
+            ?? throw new InvalidOperationException("BOT_TOKEN not set");
 
                 var bot     = new TelegramBotClient(token);
                 var handler = new BotHandler(bot);
