@@ -1,15 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
 namespace MathPocket
 {
-    public class Material
+    /// <summary>Теоретический материал (справка), доступный пользователю.</summary>
+    public sealed class Material
     {
-        public string Name { get; set; } = string.Empty;
-        public string[] Keywords { get; set; } = Array.Empty<string>();
-        public string Content { get; set; } = string.Empty;
+        public string   Name     { get; init; } = string.Empty;
+        public string[] Keywords { get; init; } = [];
+        public string   Content  { get; init; } = string.Empty;
     }
 }

@@ -3,59 +3,34 @@ using System.Collections.Generic;
 
 namespace MathPocket
 {
-    // ═══════════════════════════════════════════════════════════════
-    //  Пошаговый ввод данных
-    //
-    //  Как работает:
-    //    1. Функция объявляет список шагов (Steps) вместо Parameters.
-    //    2. BotHandler задаёт вопрос из текущего шага.
-    //    3. Ответ пользователя валидируется и сохраняется в Answers.
-    //    4. Когда все шаги пройдены — вызывается CalculateFromAnswers.
-    //
-    //  Для обычных функций (без пошагового ввода) Steps = null,
-    //  бот ведёт себя по-старому.
-    // ═══════════════════════════════════════════════════════════════
+    // ─── Один шаг диалога ─────────────────────────────────────────
 
-    /// <summary>Один шаг диалога ввода.</summary>
-    public class InputStep
+    /// <summary>Один вопрос пошагового ввода.</summary>
+    public sealed record InputStep
     {
-        /// <summary>Вопрос, который бот задаёт пользователю.</summary>
-        public string Question { get; init; } = string.Empty;
+        /// <summary>Текст вопроса, который бот отправляет пользователю.</summary>
+        public required string Question { get; init; }
 
         /// <summary>
-        /// Валидация ответа. Возвращает null если ок,
-        /// или строку с объяснением ошибки если нет.
+        /// Валидация ответа.
+        /// Возвращает <c>null</c>, если ответ корректен,
+        /// или строку с объяснением ошибки — иначе.
         /// </summary>
         public Func<string, string?> Validate { get; init; } = _ => null;
     }
 
+    // ─── Сессия пошагового ввода ──────────────────────────────────
+
     /// <summary>
-    /// Хранит текущий прогресс пошагового ввода одного пользователя.
+    /// Хранит прогресс пошагового ввода одного пользователя:
+    /// текущий логический шаг и накопленные ответы.
     /// </summary>
-    public class StepInputSession
+    public sealed class StepInputSession
     {
-        public int            CurrentStep { get; set; } = 0;
-        public List<string>   Answers     { get; }      = new();
-    }
+        /// <summary>Индекс текущего логического шага (0-based).</summary>
+        public int CurrentStep { get; set; } = 0;
 
-    // ─────────────────────────────────────────────────────────────
-    //  Расширение FunctionBase — добавляем пошаговый ввод
-    // ─────────────────────────────────────────────────────────────
-
-    public abstract partial class FunctionBase
-    {
-        /// <summary>
-        /// Шаги пошагового ввода. Если null — используется старый
-        /// однострочный режим (CalculateFromText).
-        /// </summary>
-        public virtual InputStep[]? Steps => null;
-
-        /// <summary>
-        /// Вычислить результат по накопленным ответам пошагового ввода.
-        /// Переопределяйте вместе со Steps.
-        /// </summary>
-        public virtual string CalculateFromAnswers(List<string> answers) =>
-            throw new NotImplementedException(
-                $"{GetType().Name} не реализует CalculateFromAnswers.");
+        /// <summary>Ответы пользователя, собранные на каждом пройденном шаге.</summary>
+        public List<string> Answers { get; } = [];
     }
 }

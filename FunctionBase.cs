@@ -1,32 +1,77 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
-using System;
 namespace MathPocket
 {
+    /// <summary>
+    /// Базовый класс для всех математических функций бота.
+    /// Поддерживает два режима ввода:
+    ///   • Пошаговый — если <see cref="Steps"/> не null.
+    ///   • Однострочный — иначе (через <see cref="CalculateFromText"/>).
+    /// </summary>
     public abstract partial class FunctionBase
     {
-        public virtual string Name { get; }
-        public virtual string Formula => "";
-        public virtual string[] Parameters { get; }
+        /// <summary>Отображаемое название функции.</summary>
+        public virtual string Name { get; } = string.Empty;
+
+        /// <summary>Формула функции (для показа пользователю).</summary>
+        public virtual string Formula => string.Empty;
+
+        /// <summary>Параметры для однострочного режима.</summary>
+        public virtual string[] Parameters => Array.Empty<string>();
+
+        /// <summary>Ключевые слова для поиска.</summary>
         public virtual string[] Keywords => Array.Empty<string>();
+
+        /// <summary>
+        /// Вычислить результат по массиву чисел (однострочный режим).
+        /// </summary>
         public abstract double Calculate(double[] inputs);
+
+        /// <summary>
+        /// Разобрать строку пользователя, вычислить и вернуть ответ (однострочный режим).
+        /// </summary>
         public virtual string CalculateFromText(string input)
         {
             var parts = input.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+
             if (parts.Length != Parameters.Length)
-                return $"Ожидалось {Parameters.Length} данных";
-            var numbers = parts.Select(p => double.Parse(p.Replace(',', '.'))).ToArray();
+                return $"Ожидалось {Parameters.Length} данных, получено {parts.Length}.";
+
+            var numbers = parts
+                .Select(p => double.Parse(p.Replace(',', '.'),
+                    System.Globalization.CultureInfo.InvariantCulture))
+                .ToArray();
+
             return Calculate(numbers).ToString();
         }
 
+        // ─── Пошаговый ввод (опциональный) ───────────────────────
+
         /// <summary>
-        /// Превью текущего состояния после очередного ответа пользователя.
-        /// Показывается перед следующим вопросом — чтобы пользователь видел что уже ввёл.
-        /// Вернуть null если превью не нужно на данном шаге.
+        /// Шаги пошагового ввода. Если <c>null</c> — используется <see cref="CalculateFromText"/>.
+        /// </summary>
+        public virtual InputStep[]? Steps => null;
+
+        /// <summary>
+        /// Вычислить результат по накопленным ответам пошагового ввода.
+        /// Переопределяйте совместно со <see cref="Steps"/>.
+        /// </summary>
+        public virtual string CalculateFromAnswers(List<string> answers) =>
+            throw new NotImplementedException(
+                $"{GetType().Name} не реализует CalculateFromAnswers.");
+
+        /// <summary>
+        /// Реальное количество активных шагов (может зависеть от предыдущих ответов).
+        /// По умолчанию — <c>Steps.Length</c>.
+        /// </summary>
+        public virtual int ActiveStepCount(List<string> answers) =>
+            Steps?.Length ?? 0;
+
+        /// <summary>
+        /// Превью текущего состояния — показывается перед следующим вопросом.
+        /// Возвращайте <c>null</c>, если превью не нужно.
         /// </summary>
         public virtual string? GetPreview(List<string> answers) => null;
     }

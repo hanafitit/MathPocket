@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Telegram.Bot;
@@ -11,26 +13,29 @@ using Telegram.Bot.Types.ReplyMarkups;
 namespace MathPocket
 {
     // ═══════════════════════════════════════════════════════════════
-    //  Структура каталога: Раздел → Функции
+    //  Модели каталога
     // ═══════════════════════════════════════════════════════════════
 
-    public class MathSection
+    /// <summary>
+    /// Группа функций (используется как прямой список или как подраздел категории).
+    /// </summary>
+    public sealed class MathSection
     {
-        public string Name { get; init; } = string.Empty;
-        public FunctionBase[] Functions { get; init; } = Array.Empty<FunctionBase>();
+        public string         Name      { get; init; } = string.Empty;
+        public FunctionBase[] Functions { get; init; } = [];
     }
 
     /// <summary>
-    /// Категория верхнего уровня. Может содержать подразделы (SubSections)
-    /// или напрямую функции (Functions) — но не то и другое одновременно.
+    /// Категория верхнего уровня.
+    /// Содержит либо <see cref="SubSections"/> (вложенное меню),
+    /// либо <see cref="Functions"/> напрямую — но не оба сразу.
     /// </summary>
-    public class MathCategory
+    public sealed class MathCategory
     {
-        public string Name { get; init; } = string.Empty;
-        /// <summary>Подразделы (вложенное меню). Если не пусто — Functions игнорируются.</summary>
-        public MathSection[] SubSections { get; init; } = Array.Empty<MathSection>();
-        /// <summary>Функции напрямую (без подразделов).</summary>
-        public FunctionBase[] Functions { get; init; } = Array.Empty<FunctionBase>();
+        public string       Name        { get; init; } = string.Empty;
+        public MathSection[] SubSections { get; init; } = [];
+        public FunctionBase[] Functions  { get; init; } = [];
+
         public bool HasSubSections => SubSections.Length > 0;
     }
 
@@ -38,152 +43,42 @@ namespace MathPocket
     //  BotHandler
     // ═══════════════════════════════════════════════════════════════
 
-    class BotHandler
+    internal sealed class BotHandler
     {
         private readonly ITelegramBotClient _bot;
+        private readonly MathCategory[]     _categories;
+        private readonly Material[]         _materials;
 
-        // ── Каталог категорий ─────────────────────────────────────
-        private readonly MathCategory[] Categories;
+        // ── Состояние пользователей (per-chat) ────────────────────
+        private readonly ConcurrentDictionary<long, string>           _userState       = new();
+        private readonly ConcurrentDictionary<long, MathCategory>     _selectedCategory = new();
+        private readonly ConcurrentDictionary<long, MathSection>      _selectedSection  = new();
+        private readonly ConcurrentDictionary<long, FunctionBase>     _selectedFunction = new();
+        private readonly ConcurrentDictionary<long, StepInputSession> _inputSession     = new();
 
-        // ── Материалы ─────────────────────────────────────────────
-        private readonly Material[] Materials;
+        // ── Диспетчер состояний ───────────────────────────────────
+        private readonly Dictionary<string, Func<Message, Task>> _stateHandlers;
 
-        // ── Состояние пользователей ───────────────────────────────
-        private readonly ConcurrentDictionary<long, string>            UserState        = new();
-        private readonly ConcurrentDictionary<long, MathCategory>     SelectedCategory   = new();
-        private readonly ConcurrentDictionary<long, MathSection>       SelectedSection    = new();
-        private readonly ConcurrentDictionary<long, FunctionBase>      SelectedFunction = new();
-
-        // Пошаговый ввод: сессия хранит текущий шаг и накопленные ответы
-        private readonly ConcurrentDictionary<long, StepInputSession>  InputSession     = new();
-
-        private readonly Dictionary<string, Func<Message, Task>> StateHandlers;
+        // ── Команды верхнего уровня ───────────────────────────────
+        private const string BtnSections   = "📂 Разделы";
+        private const string BtnCalculator = "🧮 Калькулятор";
+        private const string BtnBack       = "◀️ Назад";
 
         public BotHandler(ITelegramBotClient bot)
         {
-            _bot = bot;
-
-            // ══════════════════════════════════════════════════════
-            //  КАТАЛОГ ФУНКЦИЙ
-            //  Структура: MathSection → FunctionBase[]
-            //
-            //  Чтобы добавить функцию:
-            //    1. Создайте класс, унаследованный от FunctionBase
-            //    2. Вставьте new МойКласс() в нужный MathSection
-            //
-            //  Разделы с пустым Functions[] показывают «пока пуст».
-            // ══════════════════════════════════════════════════════
-            Categories = new MathCategory[]
-            {
-                // ── ⚡ Степень ────────────────────────────────────
-                new MathCategory
-                {
-                    Name = "⚡ Степень",
-                    Functions = new FunctionBase[]
-                    {
-                        new PowerFunction(),
-                        new EvaluateAtValueFunction(),
-                        new PowerProductFunction(),
-                        new PowerQuotientFunction(),
-                        new PowerOfPowerFunction(),
-                        new PowerOfProductFunction(),
-                        new PowerOfFractionFunction(),
-                        new ComparePowersFunction(),
-                        new FindBaseOrExponentFunction(),
-                    }
-                },
-
-                // ── 🔢 Одночлены (без подразделов) ───────────────
-                new MathCategory
-                {
-                    Name = "🔢 Одночлены",
-                    Functions = new FunctionBase[]
-                    {
-                        new MonomialStandardFormFunction(),
-                        new MonomialPowerFunction(),
-                        new MonomialMultiplyFunction(),
-                        new MonomialDivideFunction(),
-                        new MonomialDivideEvalFunction(),
-                    }
-                },
-
-                // ── 🔣 Многочлены (с подразделами) ───────────────
-                new MathCategory
-                {
-                    Name = "🔣 Многочлены",
-                    SubSections = new MathSection[]
-                    {
-                        new MathSection
-                        {
-                            Name = "🔣 Основы многочленов",
-                            Functions = new FunctionBase[]
-                            {
-                                new PolynomialFromMonomialsFunction(),
-                                new PolynomialStandardMembersFunction(),
-                                new PolynomialNameMembersFunction(),
-                                new PolynomialDegreeFunction(),
-                                new PolynomialStandardFormFunction(),
-                                new PolynomialValueFunction(),
-                                new PolynomialValueTwoVarsFunction(),
-                            }
-                        },
-                        new MathSection
-                        {
-                            Name = "➕ Сложение и вычитание",
-                            Functions = new FunctionBase[]
-                            {
-                                new PolynomialLikeTermsFunction(),
-                                new PolynomialAddFunction(),
-                                new PolynomialSubtractFunction(),
-                            }
-                        },
-                        new MathSection
-                        {
-                            Name = "✖️ Умножение многочленов",
-                            Functions = new FunctionBase[]
-                            {
-                                new PolyTimesMonomial(),
-                                new PolyTimesPolyFunction(),
-                                new PolySimplifyExpression(),
-                                new PolyEvalProduct(),
-                                new PolyEquation(),
-                                new PolyProveIdentity(),
-                            }
-                        },
-                    }
-                },
-
-                
-
-                new MathCategory { Name = "✂️ Формулы сокращённого умножения" },
-                new MathCategory { Name = "➗ Алгебраические дроби" },
-                new MathCategory { Name = "√ Квадратные корни" },
-                new MathCategory { Name = "🔲 Квадратные уравнения" },
-                new MathCategory { Name = "⚖️ Неравенства" },
-                new MathCategory { Name = "🔀 Системы уравнений и неравенств" },
-                new MathCategory { Name = "🎲 Комбинаторика" },
-                new MathCategory { Name = "🔢 Последовательности" },
-                new MathCategory { Name = "📐 Тригонометрия" },
-                new MathCategory
-                {
-                    Name = "🎯 Теория вероятностей",
-                    Functions = new FunctionBase[] { new PercentOfNumberFunction() }
-                },
-                new MathCategory { Name = "📊 Элементы статистики" },
-            };
-            // ══════════════════════════════════════════════════════
-
-            Materials = new Material[]
-            {
+            _bot        = bot;
+            _categories = FunctionCatalog.All;
+            _materials  =
+            [
                 new Material
                 {
                     Name     = "Пример",
-                    Keywords = new[] { "пример" },
+                    Keywords = ["пример"],
                     Content  = "Это пример материала."
                 }
-            };
+            ];
 
-            StateHandlers = new Dictionary<string, Func<Message, Task>>
+            _stateHandlers = new Dictionary<string, Func<Message, Task>>
             {
                 ["choose_category"]   = HandleChooseCategory,
                 ["choose_subsection"] = HandleChooseSubSection,
@@ -194,35 +89,31 @@ namespace MathPocket
         }
 
         // ═══════════════════════════════════════════════════════════
-        //  Входная точка обновлений
+        //  Входная точка
         // ═══════════════════════════════════════════════════════════
 
         public async Task HandleUpdateAsync(
-            ITelegramBotClient botClient,
+            ITelegramBotClient _,
             Update update,
             CancellationToken ct)
         {
-            if (update.Message is not { } msg) return;
-            await OnMessage(msg);
+            if (update.Message is { } msg)
+                await OnMessage(msg);
         }
 
         public Task HandleErrorAsync(
-            ITelegramBotClient botClient,
+            ITelegramBotClient _,
             Exception exception,
             Telegram.Bot.Polling.HandleErrorSource source,
             CancellationToken ct)
         {
-            Console.WriteLine($"Ошибка: {exception.Message} (Источник: {source})");
+            Console.WriteLine($"[ОШИБКА] {exception.Message} (источник: {source})");
             return Task.CompletedTask;
         }
 
-        // ─────────────────────────────────────────────────────────
-        //  Логирование пошагового ввода → файл
-        //
-        //  Файл: logs/steps_YYYY-MM-DD.log  (рядом с exe)
-        //  Каждый день создаётся новый файл автоматически.
-        //  Запись thread-safe через lock.
-        // ─────────────────────────────────────────────────────────
+        // ═══════════════════════════════════════════════════════════
+        //  Логирование
+        // ═══════════════════════════════════════════════════════════
 
         private static readonly object _logLock = new();
 
@@ -230,8 +121,7 @@ namespace MathPocket
         {
             var dir = Path.Combine(AppContext.BaseDirectory, "logs");
             Directory.CreateDirectory(dir);
-            var date = DateTime.Now.ToString("yyyy-MM-dd");
-            return Path.Combine(dir, $"steps_{date}.log");
+            return Path.Combine(dir, $"steps_{DateTime.Now:yyyy-MM-dd}.log");
         }
 
         private static void WriteLog(string line)
@@ -239,61 +129,50 @@ namespace MathPocket
             Console.WriteLine(line);
             lock (_logLock)
             {
-                try
-                {
-                    File.AppendAllText(LogFilePath(), line + Environment.NewLine,
-                        System.Text.Encoding.UTF8);
-                }
-                catch
-                {
-                    // игнорируем ошибки записи в файл
-                }
+                try { File.AppendAllText(LogFilePath(), line + Environment.NewLine, Encoding.UTF8); }
+                catch { /* игнорируем ошибки файловой системы */ }
             }
         }
 
-        private static void LogStep(string tag, long chatId, FunctionBase func,
-            StepInputSession session, string? userAnswer = null, string? extra = null)
+        private static void LogStep(
+            string tag, long chatId, FunctionBase func, StepInputSession session,
+            string? userAnswer = null, string? extra = null)
         {
-            var timestamp = DateTime.Now.ToString("HH:mm:ss");
-            var stepNum   = session.CurrentStep + 1;
-            var total     = func.Steps?.Length ?? 0;
+            var sb = new StringBuilder();
+            sb.Append($"[{DateTime.Now:HH:mm:ss}] [{tag}] user={chatId} | func=\"{func.Name}\"");
 
-            var sb = new System.Text.StringBuilder();
-            sb.Append($"[{timestamp}] [{tag}] user={chatId} | func=\"{func.Name}\"");
+            int stepNum = session.CurrentStep + 1;
+            int total   = func.Steps?.Length ?? 0;
 
-            if (userAnswer != null)
-                sb.Append($" | шаг {stepNum}/{total} | ответ=\"{userAnswer}\"");
-            else
-                sb.Append($" | шаг {stepNum}/{total}");
+            sb.Append(userAnswer is not null
+                ? $" | шаг {stepNum}/{total} | ответ=\"{userAnswer}\""
+                : $" | шаг {stepNum}/{total}");
 
             if (session.Answers.Count > 0)
             {
-                var answersFormatted = string.Join(", ",
+                var formatted = string.Join(", ",
                     session.Answers.Select((a, i) => $"[{i + 1}]=\"{a}\""));
-                sb.Append($" | накоплено: [{answersFormatted}]");
+                sb.Append($" | накоплено: [{formatted}]");
             }
 
-            if (extra != null)
+            if (extra is not null)
                 sb.Append($" | {extra}");
 
             WriteLog(sb.ToString());
         }
 
-        private static void LogSessionEnd(string tag, long chatId, FunctionBase func,
-            List<string> answers, string? result = null, string? error = null)
+        private static void LogSessionEnd(
+            string tag, long chatId, FunctionBase func, List<string> answers,
+            string? result = null, string? error = null)
         {
-            var timestamp = DateTime.Now.ToString("HH:mm:ss");
-            var answersFormatted = string.Join(", ",
-                answers.Select((a, i) => $"[{i + 1}]=\"{a}\""));
+            var sb = new StringBuilder();
+            sb.Append($"[{DateTime.Now:HH:mm:ss}] [{tag}] user={chatId} | func=\"{func.Name}\" | ЗАВЕРШЕНО");
 
-            var sb = new System.Text.StringBuilder();
-            sb.Append($"[{timestamp}] [{tag}] user={chatId} | func=\"{func.Name}\"");
-            sb.Append($" | ЗАВЕРШЕНО | ответы: [{answersFormatted}]");
+            var formatted = string.Join(", ", answers.Select((a, i) => $"[{i + 1}]=\"{a}\""));
+            sb.Append($" | ответы: [{formatted}]");
 
-            if (result != null)
-                sb.Append($" | результат=\"{result}\"");
-            if (error != null)
-                sb.Append($" | ОШИБКА: {error}");
+            if (result is not null) sb.Append($" | результат=\"{result}\"");
+            if (error  is not null) sb.Append($" | ОШИБКА: {error}");
 
             WriteLog(sb.ToString());
         }
@@ -313,9 +192,9 @@ namespace MathPocket
             var text   = msg.Text.Trim();
             var chatId = msg.Chat.Id;
 
-            // Логируем все входящие сообщения
-            Console.WriteLine($"[{DateTime.Now:HH:mm:ss}] [СООБЩЕНИЕ] user={chatId} (@{msg.Chat.Username ?? "no_username"}) | текст=\"{text}\"");
+            WriteLog($"[{DateTime.Now:HH:mm:ss}] [СООБЩЕНИЕ] user={chatId} (@{msg.Chat.Username ?? "no_username"}) | текст=\"{text}\"");
 
+            // ── Глобальные команды ────────────────────────────────
             if (text.StartsWith("/start"))
             {
                 ClearState(chatId);
@@ -323,111 +202,74 @@ namespace MathPocket
                 return;
             }
 
-            if (text == "◀️ Назад")
+            if (text == BtnBack)
             {
                 await HandleBack(chatId);
                 return;
             }
 
-            if (text == "📂 Разделы")
+            if (text == BtnSections)
             {
                 ClearState(chatId);
-                UserState[chatId] = "choose_category";
+                _userState[chatId] = "choose_category";
                 await SendCategoryMenu(chatId);
                 return;
             }
 
-            if (text == "🧮 Калькулятор")
+            if (text == BtnCalculator)
             {
                 ClearState(chatId);
-                UserState[chatId] = "universal_calc";
+                _userState[chatId] = "universal_calc";
                 await _bot.SendMessage(chatId,
                     "Введите выражение для вычисления:\n(например: 2 + 3 * (4 - 1))",
                     replyMarkup: BackKeyboard());
                 return;
             }
 
-            if (UserState.TryGetValue(chatId, out var state) &&
-                StateHandlers.TryGetValue(state, out var handler))
+            // ── Обработка по текущему состоянию ──────────────────
+            if (_userState.TryGetValue(chatId, out var state) &&
+                _stateHandlers.TryGetValue(state, out var handler))
             {
                 await handler(msg);
                 return;
             }
 
-            await _bot.SendMessage(chatId,
-                "Я вас не понял. Нажмите /start для перезапуска.");
+            await _bot.SendMessage(chatId, "Я вас не понял. Нажмите /start для перезапуска.");
         }
 
         // ═══════════════════════════════════════════════════════════
-        //  Логика кнопки «Назад»
+        //  Кнопка «Назад»
         //
-        //  Главное меню
-        //    └─ choose_category
-        //         └─ choose_subsection (только если есть подразделы)
-        //              └─ choose_function
-        //                   └─ input_data  (пошаговый или однострочный)
+        //  Дерево навигации:
+        //    Главное меню
+        //      └─ choose_category
+        //           └─ choose_subsection (если есть подразделы)
+        //                └─ choose_function
+        //                     └─ input_data
         // ═══════════════════════════════════════════════════════════
 
         private async Task HandleBack(long chatId)
         {
-            UserState.TryGetValue(chatId, out var state);
+            _userState.TryGetValue(chatId, out var state);
 
             switch (state)
             {
                 case "input_data":
-                    // Если идёт пошаговый ввод и мы не на первом шаге —
-                    // откатываем один шаг назад внутри диалога
-                    if (InputSession.TryGetValue(chatId, out var session) &&
-                        session.CurrentStep > 0 &&
-                        SelectedFunction.TryGetValue(chatId, out var funcForBack) &&
-                        funcForBack.Steps != null)
-                    {
-                        session.CurrentStep--;
-                        if (session.Answers.Count > 0)
-                            session.Answers.RemoveAt(session.Answers.Count - 1);
-
-                        WriteLog($"[{DateTime.Now:HH:mm:ss}] [ОТКАТ] user={chatId} | func=\"{funcForBack.Name}\" | возврат к шагу {session.CurrentStep + 1} | накоплено ответов={session.Answers.Count}");
-
-                        await AskCurrentStep(chatId, funcForBack, session);
-                        return;
-                    }
-
-                    // Иначе — выходим к списку функций
-                    if (InputSession.TryGetValue(chatId, out var abortedSession) &&
-                        SelectedFunction.TryGetValue(chatId, out var abortedFunc))
-                    {
-                        WriteLog($"[{DateTime.Now:HH:mm:ss}] [ОТМЕНА] user={chatId} | func=\"{abortedFunc.Name}\" | прервано на шаге {abortedSession.CurrentStep + 1} | накоплено ответов={abortedSession.Answers.Count}");
-                    }
-                    InputSession.TryRemove(chatId, out _);
-                    SelectedFunction.TryRemove(chatId, out _);
-                    UserState[chatId] = "choose_function";
-                    if (SelectedSection.TryGetValue(chatId, out var sec))
-                        await SendFunctionMenu(chatId, sec);
-                    else
-                        goto default;
+                    await HandleBackFromInput(chatId);
                     break;
 
                 case "choose_function":
-                    SelectedFunction.TryRemove(chatId, out _);
-                    // Если у категории есть подразделы — назад к подразделам
-                    if (SelectedCategory.TryGetValue(chatId, out var catForFunc) && catForFunc.HasSubSections)
-                    {
-                        SelectedSection.TryRemove(chatId, out _);
-                        UserState[chatId] = "choose_subsection";
-                        await SendSubSectionMenu(chatId, catForFunc);
-                    }
+                    HandleBackFromFunction(chatId);
+                    if (_selectedCategory.TryGetValue(chatId, out var cat) && cat.HasSubSections)
+                        await SendSubSectionMenu(chatId, cat);
                     else
-                    {
-                        SelectedSection.TryRemove(chatId, out _);
-                        UserState[chatId] = "choose_category";
                         await SendCategoryMenu(chatId);
-                    }
                     break;
 
                 case "choose_subsection":
-                    SelectedSection.TryRemove(chatId, out _);
-                    SelectedCategory.TryRemove(chatId, out _);
-                    UserState[chatId] = "choose_category";
+                    _selectedSection.TryRemove(chatId, out _);
+                    _selectedCategory.TryRemove(chatId, out _);
+                    _userState[chatId] = "choose_category";
                     await SendCategoryMenu(chatId);
                     break;
 
@@ -438,13 +280,64 @@ namespace MathPocket
             }
         }
 
+        private async Task HandleBackFromInput(long chatId)
+        {
+            // Шаг назад внутри пошагового диалога
+            if (_inputSession.TryGetValue(chatId, out var session) &&
+                session.CurrentStep > 0 &&
+                _selectedFunction.TryGetValue(chatId, out var func) &&
+                func.Steps is not null)
+            {
+                session.CurrentStep--;
+                if (session.Answers.Count > 0)
+                    session.Answers.RemoveAt(session.Answers.Count - 1);
+
+                WriteLog($"[{DateTime.Now:HH:mm:ss}] [ОТКАТ] user={chatId} | func=\"{func.Name}\" | возврат к шагу {session.CurrentStep + 1} | накоплено={session.Answers.Count}");
+                await AskCurrentStep(chatId, func, session);
+                return;
+            }
+
+            // Выход к списку функций
+            if (_inputSession.TryGetValue(chatId, out var aborted) &&
+                _selectedFunction.TryGetValue(chatId, out var abortedFunc))
+            {
+                WriteLog($"[{DateTime.Now:HH:mm:ss}] [ОТМЕНА] user={chatId} | func=\"{abortedFunc.Name}\" | прервано на шаге {aborted.CurrentStep + 1}");
+            }
+
+            _inputSession.TryRemove(chatId, out _);
+            _selectedFunction.TryRemove(chatId, out _);
+            _userState[chatId] = "choose_function";
+
+            if (_selectedSection.TryGetValue(chatId, out var sec))
+                await SendFunctionMenu(chatId, sec);
+            else
+            {
+                ClearState(chatId);
+                await SendStartMessage(chatId);
+            }
+        }
+
+        private void HandleBackFromFunction(long chatId)
+        {
+            _selectedFunction.TryRemove(chatId, out _);
+            _selectedSection.TryRemove(chatId, out _);
+
+            if (_selectedCategory.TryGetValue(chatId, out var cat) && cat.HasSubSections)
+                _userState[chatId] = "choose_subsection";
+            else
+            {
+                _selectedCategory.TryRemove(chatId, out _);
+                _userState[chatId] = "choose_category";
+            }
+        }
+
         // ═══════════════════════════════════════════════════════════
         //  Обработчики состояний
         // ═══════════════════════════════════════════════════════════
 
         private async Task HandleChooseCategory(Message msg)
         {
-            var category = Categories.FirstOrDefault(c =>
+            var category = _categories.FirstOrDefault(c =>
                 c.Name.Equals(msg.Text, StringComparison.OrdinalIgnoreCase));
 
             if (category is null)
@@ -453,18 +346,16 @@ namespace MathPocket
                 return;
             }
 
-            SelectedCategory[msg.Chat.Id] = category;
+            _selectedCategory[msg.Chat.Id] = category;
 
-            // Если есть подразделы — показываем подменю
             if (category.HasSubSections)
             {
-                UserState[msg.Chat.Id] = "choose_subsection";
+                _userState[msg.Chat.Id] = "choose_subsection";
                 await SendSubSectionMenu(msg.Chat.Id, category);
                 return;
             }
 
-            // Иначе — напрямую к функциям
-            if (!category.Functions.Any())
+            if (category.Functions.Length == 0)
             {
                 await _bot.SendMessage(msg.Chat.Id,
                     $"📭 Раздел «{category.Name}» пока не содержит функций.\n" +
@@ -472,16 +363,16 @@ namespace MathPocket
                 return;
             }
 
-            // Создаём временный MathSection из функций категории
+            // Напрямую к функциям — оборачиваем в временный MathSection
             var section = new MathSection { Name = category.Name, Functions = category.Functions };
-            SelectedSection[msg.Chat.Id] = section;
-            UserState[msg.Chat.Id]       = "choose_function";
+            _selectedSection[msg.Chat.Id] = section;
+            _userState[msg.Chat.Id]       = "choose_function";
             await SendFunctionMenu(msg.Chat.Id, section);
         }
 
         private async Task HandleChooseSubSection(Message msg)
         {
-            if (!SelectedCategory.TryGetValue(msg.Chat.Id, out var category))
+            if (!_selectedCategory.TryGetValue(msg.Chat.Id, out var category))
             {
                 await _bot.SendMessage(msg.Chat.Id, "Произошла ошибка. Попробуйте /start");
                 return;
@@ -496,7 +387,7 @@ namespace MathPocket
                 return;
             }
 
-            if (!section.Functions.Any())
+            if (section.Functions.Length == 0)
             {
                 await _bot.SendMessage(msg.Chat.Id,
                     $"📭 Подраздел «{section.Name}» пока не содержит функций.\n" +
@@ -504,14 +395,14 @@ namespace MathPocket
                 return;
             }
 
-            SelectedSection[msg.Chat.Id] = section;
-            UserState[msg.Chat.Id]       = "choose_function";
+            _selectedSection[msg.Chat.Id] = section;
+            _userState[msg.Chat.Id]       = "choose_function";
             await SendFunctionMenu(msg.Chat.Id, section);
         }
 
         private async Task HandleChooseFunction(Message msg)
         {
-            if (!SelectedSection.TryGetValue(msg.Chat.Id, out var section))
+            if (!_selectedSection.TryGetValue(msg.Chat.Id, out var section))
             {
                 await _bot.SendMessage(msg.Chat.Id, "Произошла ошибка. Попробуйте /start");
                 return;
@@ -526,163 +417,117 @@ namespace MathPocket
                 return;
             }
 
-            SelectedFunction[msg.Chat.Id] = func;
-            UserState[msg.Chat.Id]        = "input_data";
+            _selectedFunction[msg.Chat.Id] = func;
+            _userState[msg.Chat.Id]        = "input_data";
 
-            // ── Пошаговый ввод ────────────────────────────────────
-            if (func.Steps != null)
+            if (func.Steps is not null)
             {
+                // ── Пошаговый ввод ────────────────────────────────
                 var session = new StepInputSession();
-                InputSession[msg.Chat.Id] = session;
+                _inputSession[msg.Chat.Id] = session;
 
                 WriteLog($"[{DateTime.Now:HH:mm:ss}] [СТАРТ] user={msg.Chat.Id} | func=\"{func.Name}\" | шагов={func.Steps.Length}");
 
-                // Показываем формулу и сразу задаём первый вопрос
                 await _bot.SendMessage(msg.Chat.Id,
                     $"✅ {func.Name}\nФормула: {func.Formula}",
                     replyMarkup: BackKeyboard());
 
                 await AskCurrentStep(msg.Chat.Id, func, session);
-                return;
             }
-
-            // ── Старый однострочный режим ─────────────────────────
-            var prompt =
-                $"✅ {func.Name}\n" +
-                $"Формула: {func.Formula}\n\n" +
-                $"Введите через пробел: {string.Join(", ", func.Parameters)}";
-
-            await _bot.SendMessage(msg.Chat.Id, prompt, replyMarkup: BackKeyboard());
-        }
-
-        // ─────────────────────────────────────────────────────────
-        //  Пошаговый ввод: задать текущий вопрос
-        // ─────────────────────────────────────────────────────────
-
-        private async Task AskCurrentStep(long chatId, FunctionBase func, StepInputSession session)
-        {
-            // Определяем реальный индекс шага в Steps[]
-            int stepIndex = GetStepIndex(func, session);
-            var step      = func.Steps![stepIndex];
-
-            int total   = GetTotalSteps(func, session);
-            int current = session.CurrentStep + 1;
-
-            await _bot.SendMessage(chatId,
-                $"Шаг {current} из {total}\n\n{step.Question}",
-                replyMarkup: BackKeyboard());
-        }
-
-        // ─────────────────────────────────────────────────────────
-        //  Определить индекс шага в Steps[] с учётом динамики
-        // ─────────────────────────────────────────────────────────
-
-        private static int GetStepIndex(FunctionBase func, StepInputSession session)
-        {
-            // Функции с динамическим количеством шагов переопределяют StepIndex
-            if (func is MonomialMultiplyFunction mf)
-                return mf.StepIndex(session.Answers, session.CurrentStep);
-
-            // Для стандартной формы и степени: если одна переменная,
-            // пропускаем шаг про b (индекс 3) когда логический шаг == 3
-            // (т.е. шаг 3 = "в какую степень" для MonomialPowerFunction)
-            if (func is MonomialStandardFormFunction || func is MonomialPowerFunction)
+            else
             {
-                bool two = session.Answers.Count > 0 && session.Answers[0] == "2";
-                // Steps[] layout: [0=varCount, 1=k, 2=pa, 3=pb, 4=n]
-                // 1 var: logical steps 0,1,2 -> Steps[0,1,2]; step 3 (Power: n) -> Steps[4]
-                // 2 var: logical steps 0,1,2,3 -> Steps[0,1,2,3]; step 4 (Power: n) -> Steps[4]
-                if (!two && session.CurrentStep >= 3)
-                    return session.CurrentStep + 1; // skip Steps[3] (b-step)
+                // ── Однострочный режим ────────────────────────────
+                await _bot.SendMessage(msg.Chat.Id,
+                    $"✅ {func.Name}\n" +
+                    $"Формула: {func.Formula}\n\n" +
+                    $"Введите через пробел: {string.Join(", ", func.Parameters)}",
+                    replyMarkup: BackKeyboard());
             }
-
-            return session.CurrentStep;
         }
 
-        private static int GetTotalSteps(FunctionBase func, StepInputSession session)
-        {
-            if (func is MonomialStandardFormFunction sf) return sf.ActiveStepCount(session.Answers);
-            if (func is MonomialPowerFunction pf)       return pf.ActiveStepCount(session.Answers);
-            if (func is MonomialMultiplyFunction mf)    return mf.ActiveStepCount(session.Answers);
-            return func.Steps?.Length ?? 0;
-        }
-
-        // ─────────────────────────────────────────────────────────
-        //  Обработчик ввода данных (пошаговый + однострочный)
-        // ─────────────────────────────────────────────────────────
+        // ═══════════════════════════════════════════════════════════
+        //  Обработчик ввода данных
+        // ═══════════════════════════════════════════════════════════
 
         private async Task HandleInputData(Message msg)
         {
-            if (!SelectedFunction.TryGetValue(msg.Chat.Id, out var func))
+            if (!_selectedFunction.TryGetValue(msg.Chat.Id, out var func))
             {
                 await _bot.SendMessage(msg.Chat.Id, "Произошла ошибка. Попробуйте /start");
                 return;
             }
 
-            // ── Пошаговый режим ───────────────────────────────────
-            if (func.Steps != null &&
-                InputSession.TryGetValue(msg.Chat.Id, out var session))
+            if (func.Steps is not null &&
+                _inputSession.TryGetValue(msg.Chat.Id, out var session))
             {
-                int stepIndex = GetStepIndex(func, session);
-                var step      = func.Steps[stepIndex];
-
-                // Валидация текущего ответа
-                var error = step.Validate(msg.Text.Trim());
-                if (error != null)
-                {
-                    LogStep("ОШИБКА_ВАЛИДАЦИИ", msg.Chat.Id, func, session,
-                        userAnswer: msg.Text.Trim(), extra: $"причина=\"{error}\"");
-                    await _bot.SendMessage(msg.Chat.Id,
-                        $"⚠️ {error}\n\nПопробуй ещё раз:",
-                        replyMarkup: BackKeyboard());
-                    return;
-                }
-
-                // Сохраняем ответ и переходим к следующему шагу
-                LogStep("ОТВЕТ", msg.Chat.Id, func, session, userAnswer: msg.Text.Trim());
-                session.Answers.Add(msg.Text.Trim());
-                session.CurrentStep++;
-
-                int total = GetTotalSteps(func, session);
-
-                // Все шаги пройдены — считаем результат
-                if (session.CurrentStep >= total)
-                {
-                    string result;
-                    try
-                    {
-                        result = func.CalculateFromAnswers(session.Answers);
-                        LogSessionEnd("ИТОГ", msg.Chat.Id, func, session.Answers, result: result);
-                    }
-                    catch (Exception ex)
-                    {
-                        LogSessionEnd("ИТОГ", msg.Chat.Id, func, session.Answers, error: ex.Message);
-                        await _bot.SendMessage(msg.Chat.Id,
-                            $"⚠️ Что-то пошло не так: {ex.Message}",
-                            replyMarkup: BackKeyboard());
-                        return;
-                    }
-
-                    await _bot.SendMessage(msg.Chat.Id, result, replyMarkup: BackKeyboard());
-                    await _bot.SendMessage(msg.Chat.Id,
-                        "Хочешь посчитать ещё раз? Нажми «◀️ Назад» и выбери функцию снова.");
-
-                    // Сбрасываем сессию, но остаёмся в input_data
-                    InputSession.TryRemove(msg.Chat.Id, out _);
-                    return;
-                }
-
-                // Задаём следующий вопрос
-                LogStep("СЛЕДУЮЩИЙ_ШАГ", msg.Chat.Id, func, session);
-                await AskCurrentStep(msg.Chat.Id, func, session);
+                await HandleStepInput(msg, func, session);
                 return;
             }
 
-            // ── Однострочный режим (старые функции) ───────────────
+            await HandleSingleLineInput(msg, func);
+        }
+
+        private async Task HandleStepInput(Message msg, FunctionBase func, StepInputSession session)
+        {
+            int stepIndex = GetStepIndex(func, session);
+            var step      = func.Steps![stepIndex];
+            var answer    = msg.Text!.Trim();
+
+            var error = step.Validate(answer);
+            if (error is not null)
+            {
+                LogStep("ОШИБКА_ВАЛИДАЦИИ", msg.Chat.Id, func, session,
+                    userAnswer: answer, extra: $"причина=\"{error}\"");
+                await _bot.SendMessage(msg.Chat.Id,
+                    $"⚠️ {error}\n\nПопробуй ещё раз:",
+                    replyMarkup: BackKeyboard());
+                return;
+            }
+
+            LogStep("ОТВЕТ", msg.Chat.Id, func, session, userAnswer: answer);
+            session.Answers.Add(answer);
+            session.CurrentStep++;
+
+            int total = GetTotalSteps(func, session);
+
+            if (session.CurrentStep >= total)
+            {
+                await FinishStepSession(msg.Chat.Id, func, session);
+                return;
+            }
+
+            LogStep("СЛЕДУЮЩИЙ_ШАГ", msg.Chat.Id, func, session);
+            await AskCurrentStep(msg.Chat.Id, func, session);
+        }
+
+        private async Task FinishStepSession(long chatId, FunctionBase func, StepInputSession session)
+        {
+            string result;
+            try
+            {
+                result = func.CalculateFromAnswers(session.Answers);
+                LogSessionEnd("ИТОГ", chatId, func, session.Answers, result: result);
+            }
+            catch (Exception ex)
+            {
+                LogSessionEnd("ИТОГ", chatId, func, session.Answers, error: ex.Message);
+                await _bot.SendMessage(chatId,
+                    $"⚠️ Что-то пошло не так: {ex.Message}",
+                    replyMarkup: BackKeyboard());
+                return;
+            }
+
+            await _bot.SendMessage(chatId, result, replyMarkup: BackKeyboard());
+            await _bot.SendMessage(chatId, "Хочешь посчитать ещё раз? Нажми «◀️ Назад» и выбери функцию снова.");
+            _inputSession.TryRemove(chatId, out _);
+        }
+
+        private async Task HandleSingleLineInput(Message msg, FunctionBase func)
+        {
             string resultText;
             try
             {
-                resultText = func.CalculateFromText(msg.Text);
+                resultText = func.CalculateFromText(msg.Text!);
             }
             catch (Exception ex)
             {
@@ -713,10 +558,10 @@ namespace MathPocket
             try
             {
                 var (steps, result) = UnivCalc.Calculate(input);
-                var reply = "📋 Пошаговое решение:\n";
-                foreach (var step in steps) reply += step + "\n";
-                reply += $"\nИтог: {result}";
-                await _bot.SendMessage(msg.Chat.Id, reply, replyMarkup: BackKeyboard());
+                var sb = new StringBuilder("📋 Пошаговое решение:\n");
+                foreach (var step in steps) sb.AppendLine(step);
+                sb.Append($"\nИтог: {result}");
+                await _bot.SendMessage(msg.Chat.Id, sb.ToString(), replyMarkup: BackKeyboard());
             }
             catch (Exception ex)
             {
@@ -726,15 +571,56 @@ namespace MathPocket
         }
 
         // ═══════════════════════════════════════════════════════════
-        //  Отправка меню
+        //  Пошаговый ввод: задать вопрос текущего шага
+        // ═══════════════════════════════════════════════════════════
+
+        private async Task AskCurrentStep(long chatId, FunctionBase func, StepInputSession session)
+        {
+            int stepIndex = GetStepIndex(func, session);
+            var step      = func.Steps![stepIndex];
+            int total     = GetTotalSteps(func, session);
+
+            await _bot.SendMessage(chatId,
+                $"Шаг {session.CurrentStep + 1} из {total}\n\n{step.Question}",
+                replyMarkup: BackKeyboard());
+        }
+
+        // ─── Динамические шаги: сопоставление логического шага с индексом в Steps[] ──
+
+        private static int GetStepIndex(FunctionBase func, StepInputSession session)
+        {
+            if (func is MonomialMultiplyFunction mf)
+                return MonomialMultiplyFunction.StepIndex(session.Answers, session.CurrentStep);
+
+            // MonomialStandardFormFunction и MonomialPowerFunction пропускают Steps[3] (степень b)
+            // когда переменная одна: логические шаги 0,1,2 → Steps[0,1,2]; шаг 3 → Steps[4]
+            if (func is MonomialStandardFormFunction or MonomialPowerFunction)
+            {
+                bool twoVars = session.Answers.Count > 0 && session.Answers[0] == "2";
+                if (!twoVars && session.CurrentStep >= 3)
+                    return session.CurrentStep + 1;
+            }
+
+            return session.CurrentStep;
+        }
+
+        private static int GetTotalSteps(FunctionBase func, StepInputSession session) =>
+            func switch
+            {
+                MonomialStandardFormFunction sf => sf.ActiveStepCount(session.Answers),
+                MonomialPowerFunction        pf => pf.ActiveStepCount(session.Answers),
+                MonomialMultiplyFunction     mf => mf.ActiveStepCount(session.Answers),
+                _                               => func.Steps?.Length ?? 0,
+            };
+
+        // ═══════════════════════════════════════════════════════════
+        //  Меню
         // ═══════════════════════════════════════════════════════════
 
         public async Task SendStartMessage(long chatId)
         {
-            var keyboard = new ReplyKeyboardMarkup(new[]
-            {
-                new KeyboardButton[] { "📂 Разделы", "🧮 Калькулятор" },
-            })
+            var keyboard = new ReplyKeyboardMarkup(
+                new[] { new KeyboardButton[] { BtnSections, BtnCalculator } })
             { ResizeKeyboard = true };
 
             await _bot.SendMessage(chatId,
@@ -744,9 +630,9 @@ namespace MathPocket
 
         private async Task SendCategoryMenu(long chatId)
         {
-            var rows = Categories
+            var rows = _categories
                 .Select(c => new KeyboardButton[] { c.Name })
-                .Append(new KeyboardButton[] { "◀️ Назад" })
+                .Append([BtnBack])
                 .ToArray();
 
             await _bot.SendMessage(chatId, "📂 Выберите раздел:",
@@ -757,7 +643,7 @@ namespace MathPocket
         {
             var rows = category.SubSections
                 .Select(s => new KeyboardButton[] { s.Name })
-                .Append(new KeyboardButton[] { "◀️ Назад" })
+                .Append([BtnBack])
                 .ToArray();
 
             await _bot.SendMessage(chatId, $"📂 {category.Name} — выберите подраздел:",
@@ -768,7 +654,7 @@ namespace MathPocket
         {
             var rows = section.Functions
                 .Select(f => new KeyboardButton[] { f.Name })
-                .Concat(new[] { new KeyboardButton[] { "◀️ Назад" } })
+                .Append([BtnBack])
                 .ToArray();
 
             await _bot.SendMessage(chatId, $"📂 {section.Name} — выберите функцию:",
@@ -776,11 +662,7 @@ namespace MathPocket
         }
 
         private static ReplyKeyboardMarkup BackKeyboard() =>
-            new ReplyKeyboardMarkup(new[]
-            {
-                new KeyboardButton[] { "◀️ Назад" }
-            })
-            { ResizeKeyboard = true };
+            new(new[] { new KeyboardButton[] { BtnBack } }) { ResizeKeyboard = true };
 
         // ═══════════════════════════════════════════════════════════
         //  Вспомогательное
@@ -788,11 +670,11 @@ namespace MathPocket
 
         private void ClearState(long chatId)
         {
-            UserState.TryRemove(chatId, out _);
-            SelectedCategory.TryRemove(chatId, out _);
-            SelectedSection.TryRemove(chatId, out _);
-            SelectedFunction.TryRemove(chatId, out _);
-            InputSession.TryRemove(chatId, out _);
+            _userState.TryRemove(chatId, out _);
+            _selectedCategory.TryRemove(chatId, out _);
+            _selectedSection.TryRemove(chatId, out _);
+            _selectedFunction.TryRemove(chatId, out _);
+            _inputSession.TryRemove(chatId, out _);
         }
     }
 }
