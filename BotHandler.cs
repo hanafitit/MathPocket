@@ -102,6 +102,8 @@ namespace MathPocket
                         new MonomialStandardFormFunction(),
                         new MonomialPowerFunction(),
                         new MonomialMultiplyFunction(),
+                        new MonomialDivideFunction(),
+                        new MonomialDivideEvalFunction(),
                     }
                 },
 

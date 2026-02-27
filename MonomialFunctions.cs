@@ -60,14 +60,6 @@ namespace MathPocket
                    $"0 означает что переменной {varName} нет, 1 — просто {varName}, 2 — {varName}², и так далее.";
         }
 
-        // ── Быстрый парсинг ──────────────────────────────────────
-        public static double ParseDouble(string s) =>
-            double.Parse(s.Replace(',', '.'),
-                System.Globalization.NumberStyles.Any,
-                System.Globalization.CultureInfo.InvariantCulture);
-
-        public static int ParseInt(string s) => int.Parse(s);
-
         // ── Вспомогательные ──────────────────────────────────────
         public static string Fmt(double v) =>
             (v == Math.Floor(v) && !double.IsInfinity(v))
@@ -541,6 +533,214 @@ namespace MathPocket
                 sb.AppendLine("Один коэффициент отрицательный → результат отрицательный.");
 
             return sb.ToString().TrimEnd();
+        }
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    //  §14.1–14.2  Деление одночлена на одночлен
+    // ═══════════════════════════════════════════════════════════════
+    public class MonomialDivideFunction : FunctionBase
+    {
+        public override string   Name       => "Деление одночленов";
+        public override string   Formula    => "k₁aᵖbq ÷ k₂aʳbˢ";
+        public override string[] Parameters => Array.Empty<string>();
+        public override string[] Keywords   => new[] { "делить", "деление одночлен", "частное" };
+        public override double   Calculate(double[] _) => throw new NotSupportedException();
+
+        public override InputStep[] Steps => new[]
+        {
+            new InputStep
+            {
+                Question =
+                    "📘 Деление одночленов\n\n" +
+                    "Правило: делим коэффициенты, из показателей степени делимого\n" +
+                    "вычитаем показатели степени делителя.\n\n" +
+                    "Пример: 46a²b ÷ (2a)\n" +
+                    "  · Коэффициенты: 46 ÷ 2 = 23\n" +
+                    "  · Степень a: a² ÷ a¹ = a²⁻¹ = a¹\n" +
+                    "  · b: b¹ ÷ b⁰ = b¹\n" +
+                    "  · Ответ: 23ab\n\n" +
+                    "Используешь одну переменную (a) или две (a и b)?\n" +
+                    "✏️ Введи 1 или 2:",
+                Validate = s => s == "1" || s == "2" ? null : "Введи 1 или 2"
+            },
+            new InputStep { Question = "✏️ Коэффициент делимого k₁:", Validate = ValidateCoeff },
+            new InputStep { Question = "✏️ Степень a в делимом:", Validate = ValidateDeg },
+            new InputStep { Question = "✏️ Степень b в делимом (или 0):", Validate = ValidateDeg },
+            new InputStep { Question = "✏️ Коэффициент делителя k₂:", Validate = ValidateCoeff },
+            new InputStep { Question = "✏️ Степень a в делителе:", Validate = ValidateDeg },
+            new InputStep { Question = "✏️ Степень b в делителе (или 0):", Validate = ValidateDeg },
+        };
+
+        public override int ActiveStepCount(List<string> answers)
+        {
+            if (answers.Count == 0) return 7;
+            bool two = answers[0] == "2";
+            return two ? 7 : 6; // без степени b если одна переменная
+        }
+
+        public override string? GetPreview(List<string> answers)
+        {
+            if (answers.Count >= 3)
+            {
+                string k1 = answers[1], pa1 = answers[2];
+                string pb1 = answers.Count > 3 ? answers[3] : "0";
+                var m = FormatMono(k1, pa1, pb1, answers[0] == "2");
+                return $"🔍 Делимое: {m}";
+            }
+            if (answers.Count >= 6)
+            {
+                string k2 = answers[4], pa2 = answers[5];
+                string pb2 = answers.Count > 6 ? answers[6] : "0";
+                var d = FormatMono(k2, pa2, pb2, answers[0] == "2");
+                return $"🔍 Делитель: {d}";
+            }
+            return null;
+        }
+
+        public override string CalculateFromAnswers(List<string> answers)
+        {
+            bool two = answers[0] == "2";
+            int i = 1;
+            double k1 = Monomial.ParseDouble(answers[i++]);
+            int pa1   = Monomial.ParseInt(answers[i++]);
+            int pb1   = two ? Monomial.ParseInt(answers[i++]) : 0;
+            double k2 = Monomial.ParseDouble(answers[i++]);
+            int pa2   = Monomial.ParseInt(answers[i++]);
+            int pb2   = two ? Monomial.ParseInt(answers[i++]) : 0;
+
+            if (k2 == 0) return "⚠️ Делитель не может быть равен нулю.";
+
+            double kR = k1 / k2;
+            int paR = pa1 - pa2;
+            int pbR = pb1 - pb2;
+
+            var sb = new StringBuilder();
+            string m1 = FormatMono(k1.ToString(), pa1.ToString(), pb1.ToString(), two);
+            string m2 = FormatMono(k2.ToString(), pa2.ToString(), pb2.ToString(), two);
+            sb.AppendLine($"📌 ({m1}) ÷ ({m2})");
+            sb.AppendLine();
+            sb.AppendLine("Разбираем по шагам:");
+            sb.AppendLine($"  Шаг 1. Коэффициенты: {Monomial.Fmt(k1)} ÷ {Monomial.Fmt(k2)} = {Monomial.Fmt(kR)}");
+            if (pa1 != 0 || pa2 != 0)
+                sb.AppendLine($"  Шаг 2. Степень a: a{Monomial.Sup(pa1)} ÷ a{Monomial.Sup(pa2)} = a{Monomial.Sup(paR)}");
+            if (two && (pb1 != 0 || pb2 != 0))
+                sb.AppendLine($"  Шаг 3. Степень b: b{Monomial.Sup(pb1)} ÷ b{Monomial.Sup(pb2)} = b{Monomial.Sup(pbR)}");
+            sb.AppendLine();
+            sb.AppendLine($"✅ Ответ: {FormatMono(Monomial.Fmt(kR), paR.ToString(), pbR.ToString(), two)}");
+            return sb.ToString().TrimEnd();
+        }
+
+        private static string FormatMono(string k, string pa, string pb, bool two)
+        {
+            double kd = double.Parse(k.Replace(",","."), System.Globalization.CultureInfo.InvariantCulture);
+            int pai = int.Parse(pa), pbi = int.TryParse(pb, out int tmp) ? tmp : 0;
+            var m = new Monomial(kd, pai, two ? pbi : 0);
+            return m.ToString();
+        }
+
+        private static string? ValidateCoeff(string s)
+        {
+            if (double.TryParse(s.Replace(',','.'), System.Globalization.NumberStyles.Any,
+                System.Globalization.CultureInfo.InvariantCulture, out _)) return null;
+            return $"«{s}» — не число. Введи коэффициент, например: 46 или -7";
+        }
+        private static string? ValidateDeg(string s)
+        {
+            if (int.TryParse(s, out int r) && r >= 0) return null;
+            return $"«{s}» — введи целое число ≥ 0";
+        }
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    //  §14.5  Найти значение выражения вида (монном ÷ моном) при a,b
+    // ═══════════════════════════════════════════════════════════════
+    public class MonomialDivideEvalFunction : FunctionBase
+    {
+        public override string   Name       => "Значение частного при a, b";
+        public override string   Formula    => "k₁aᵐbⁿ ÷ k₂aᵖbq при a=…, b=…";
+        public override string[] Parameters => Array.Empty<string>();
+        public override string[] Keywords   => new[] { "значение деления", "подставить частное" };
+        public override double   Calculate(double[] _) => throw new NotSupportedException();
+
+        public override InputStep[] Steps => new[]
+        {
+            new InputStep
+            {
+                Question =
+                    "📘 Значение частного одночленов\n\n" +
+                    "Сначала делим одночлены (упрощаем), потом подставляем значения.\n\n" +
+                    "Пример: 100b⁴ : (4b² − 5b) при b = 0.2\n" +
+                    "  Шаг 1. 100b⁴ ÷ 4b² = 25b²\n" +
+                    "  Шаг 2. При b = 0.2: 25 · 0.04 = 1\n\n" +
+                    "✏️ Коэффициент делимого k₁:",
+                Validate = ValidateCoeff
+            },
+            new InputStep { Question = "✏️ Степень a в делимом (0 если нет):", Validate = ValidateDeg },
+            new InputStep { Question = "✏️ Степень b в делимом (0 если нет):", Validate = ValidateDeg },
+            new InputStep { Question = "✏️ Коэффициент делителя k₂:", Validate = ValidateCoeff },
+            new InputStep { Question = "✏️ Степень a в делителе (0 если нет):", Validate = ValidateDeg },
+            new InputStep { Question = "✏️ Степень b в делителе (0 если нет):", Validate = ValidateDeg },
+            new InputStep { Question = "✏️ Введи значение a:", Validate = ValidateCoeff },
+            new InputStep { Question = "✏️ Введи значение b:", Validate = ValidateCoeff },
+        };
+
+        public override string? GetPreview(List<string> answers)
+        {
+            if (answers.Count == 3)
+            {
+                string mono = FormatResult(Monomial.ParseDouble(answers[0]),
+                    Monomial.ParseInt(answers[1]), Monomial.ParseInt(answers[2]));
+                return $"🔍 Делимое: {mono}";
+            }
+            if (answers.Count == 6)
+            {
+                double kR = Monomial.ParseDouble(answers[0]) / Monomial.ParseDouble(answers[3]);
+                int paR = Monomial.ParseInt(answers[1]) - Monomial.ParseInt(answers[4]);
+                int pbR = Monomial.ParseInt(answers[2]) - Monomial.ParseInt(answers[5]);
+                return $"🔍 Упрощённое: {FormatResult(kR, paR, pbR)}";
+            }
+            return null;
+        }
+
+        public override string CalculateFromAnswers(List<string> answers)
+        {
+            double k1 = Monomial.ParseDouble(answers[0]);
+            int pa1 = Monomial.ParseInt(answers[1]), pb1 = Monomial.ParseInt(answers[2]);
+            double k2 = Monomial.ParseDouble(answers[3]);
+            int pa2 = Monomial.ParseInt(answers[4]), pb2 = Monomial.ParseInt(answers[5]);
+            double a = Monomial.ParseDouble(answers[6]);
+            double b = Monomial.ParseDouble(answers[7]);
+
+            if (k2 == 0) return "⚠️ Делитель не может быть равен нулю.";
+
+            double kR = k1 / k2;
+            int paR = pa1 - pa2, pbR = pb1 - pb2;
+            double result = kR * Math.Pow(a, paR) * Math.Pow(b, pbR);
+
+            var sb = new StringBuilder();
+            sb.AppendLine($"📌 {FormatResult(k1,pa1,pb1)} ÷ {FormatResult(k2,pa2,pb2)} при a={Monomial.Fmt(a)}, b={Monomial.Fmt(b)}");
+            sb.AppendLine();
+            sb.AppendLine($"Шаг 1. Делим: {FormatResult(kR, paR, pbR)}");
+            sb.AppendLine($"Шаг 2. Подставляем a={Monomial.Fmt(a)}, b={Monomial.Fmt(b)}:");
+            sb.AppendLine($"  = {Monomial.Fmt(kR)} · {Monomial.Fmt(a)}{Monomial.Sup(paR)} · {Monomial.Fmt(b)}{Monomial.Sup(pbR)}");
+            sb.AppendLine($"\n✅ Ответ: {Monomial.Fmt(result)}");
+            return sb.ToString().TrimEnd();
+        }
+
+        private static string FormatResult(double k, int pa, int pb)
+            => new Monomial(k, pa, pb).ToString();
+
+        private static string? ValidateCoeff(string s)
+        {
+            if (double.TryParse(s.Replace(',','.'), System.Globalization.NumberStyles.Any,
+                System.Globalization.CultureInfo.InvariantCulture, out _)) return null;
+            return $"«{s}» — не число";
+        }
+        private static string? ValidateDeg(string s)
+        {
+            if (int.TryParse(s, out int r) && r >= 0) return null;
+            return $"«{s}» — введи целое число ≥ 0";
         }
     }
 }
