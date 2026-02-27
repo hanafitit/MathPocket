@@ -15,6 +15,14 @@ namespace MathPocket
                 Numerator = int.Parse(parts[0]);
                 Denominator = int.Parse(parts[1]);
             }
+            else if (text.Contains("."))
+            {
+                // Десятичное число: 36.7 → 367/10
+                int dotPos = text.IndexOf('.');
+                int decimals = text.Length - dotPos - 1;
+                Denominator = (int)Math.Pow(10, decimals);
+                Numerator = int.Parse(text.Replace(".", ""));
+            }
             else
             {
                 Numerator = int.Parse(text);
@@ -472,14 +480,14 @@ namespace MathPocket
         public static List<Token> Tokenize(string input)
         {
             var raw = new List<Token>();
-            input = input.Replace(" ", "");
+            input = input.Replace(" ", "").Replace(",", ".");
             for (int i = 0; i < input.Length; i++)
             {
                 char c = input[i];
-                if (char.IsDigit(c))
+                if (char.IsDigit(c) || c == '.')
                 {
                     string number = c.ToString();
-                    while (i + 1 < input.Length && (char.IsDigit(input[i + 1]) || input[i + 1] == '/'))
+                    while (i + 1 < input.Length && (char.IsDigit(input[i + 1]) || input[i + 1] == '/' || input[i + 1] == '.'))
                     { i++; number += input[i]; }
                     raw.Add(new Token(TokenType.Fraction, number));
                 }
