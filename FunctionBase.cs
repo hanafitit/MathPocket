@@ -74,5 +74,11 @@ namespace MathPocket
         /// Возвращайте <c>null</c>, если превью не нужно.
         /// </summary>
         public virtual string? GetPreview(List<string> answers) => null;
+
+        /// <summary>
+        /// Если функция возвращает график — переопределите этот метод.
+        /// Возвращает байты PNG, или <c>null</c> если результат текстовый.
+        /// </summary>
+        public virtual byte[]? GetPlotBytes(List<string> answers) => null;
     }
 }

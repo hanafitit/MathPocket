@@ -502,6 +502,34 @@ namespace MathPocket
 
         private async Task FinishStepSession(long chatId, FunctionBase func, StepInputSession session)
         {
+            // ── Попытка получить график ───────────────────────────
+            byte[]? plotBytes = null;
+            try { plotBytes = func.GetPlotBytes(session.Answers); }
+            catch { /* если график не вышел — продолжаем без него */ }
+
+            if (plotBytes is not null)
+            {
+                try
+                {
+                    using var ms = new MemoryStream(plotBytes);
+                    await _bot.SendPhoto(chatId,
+                        new InputFileStream(ms, "plot.png"),
+                        replyMarkup: BackKeyboard());
+                    LogSessionEnd("ИТОГ_ГРАФИК", chatId, func, session.Answers);
+                }
+                catch (Exception ex)
+                {
+                    LogSessionEnd("ИТОГ_ГРАФИК", chatId, func, session.Answers, error: ex.Message);
+                    await _bot.SendMessage(chatId,
+                        $"⚠️ Не удалось отправить график: {ex.Message}",
+                        replyMarkup: BackKeyboard());
+                }
+                await _bot.SendMessage(chatId, "Хочешь построить ещё раз? Нажми «◀️ Назад» и выбери функцию снова.");
+                _inputSession.TryRemove(chatId, out _);
+                return;
+            }
+
+            // ── Обычный текстовый результат ───────────────────────
             string result;
             try
             {
