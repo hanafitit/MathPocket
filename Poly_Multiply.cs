@@ -12,6 +12,8 @@ namespace MathPocket
     internal static class PolyMultiplyHelper
     {
         /// <summary>Перемножить два списка слагаемых (раскрыть скобки).</summary>
+        public static List<PolyTerm> MultiplyPolys(List<PolyTerm> a, List<PolyTerm> b) => Multiply(a, b);
+
         public static List<PolyTerm> Multiply(List<PolyTerm> a, List<PolyTerm> b)
         {
             var result = new List<PolyTerm>();
