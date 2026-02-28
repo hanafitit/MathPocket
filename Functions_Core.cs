@@ -368,6 +368,48 @@ namespace MathPocket
                     if (inc.Any()) sb.AppendLine($"   Возрастает на: {string.Join(", ", inc)}");
                     if (dec.Any()) sb.AppendLine($"   Убывает на:    {string.Join(", ", dec)}");
                 }
+
+                sb.AppendLine();
+
+                // ── 4. Нули функции ───────────────────────────────
+                sb.AppendLine("4️⃣ Нули функции (y = 0):");
+                var zeros = new List<string>();
+                for (int i = 0; i < xd.Count; i++)
+                    if (Math.Abs(yd[i]) < 1e-9) zeros.Add(xs[i]);
+
+                // Линейная интерполяция: нуль между соседними точками
+                for (int i = 0; i < xd.Count - 1; i++)
+                {
+                    if (yd[i] * yd[i + 1] < 0)
+                    {
+                        double zeroX = xd[i] - yd[i] * (xd[i + 1] - xd[i]) / (yd[i + 1] - yd[i]);
+                        zeros.Add($"≈{zeroX:G6} (между {xs[i]} и {xs[i+1]})");
+                    }
+                }
+
+                if (zeros.Count == 0)
+                    sb.AppendLine("   Нулей нет (y не обращается в 0 ни в одной точке таблицы).");
+                else
+                    foreach (var z in zeros)
+                        sb.AppendLine($"   x = {z}");
+
+                sb.AppendLine();
+
+                // ── 5. Знак функции ───────────────────────────────
+                sb.AppendLine("5️⃣ Знак функции:");
+                var pos = new List<string>();
+                var neg = new List<string>();
+                for (int i = 0; i < xd.Count; i++)
+                {
+                    if (yd[i] > 1e-9)  pos.Add(xs[i]);
+                    if (yd[i] < -1e-9) neg.Add(xs[i]);
+                }
+                sb.AppendLine(pos.Count > 0
+                    ? $"   y > 0 при x = {string.Join(", ", pos)}"
+                    : "   y > 0: нет таких точек в таблице");
+                sb.AppendLine(neg.Count > 0
+                    ? $"   y < 0 при x = {string.Join(", ", neg)}"
+                    : "   y < 0: нет таких точек в таблице");
             }
 
             return sb.ToString().TrimEnd();
@@ -1241,6 +1283,141 @@ namespace MathPocket
             }
             try   { PolyParser.Parse(denomPart); return null; }
             catch (FormatException ex) { return $"Не могу разобрать знаменатель: {ex.Message}"; }
+        }
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    //  Записать область определения по концам отрезка/луча/прямой
+    //  Пользователь снимает границы с графика и вводит числами.
+    // ═══════════════════════════════════════════════════════════════
+
+    public class GraphDomainFunction : FunctionBase
+    {
+        public override string   Name       => "Записать область определения по графику";
+        public override string   Formula    => "D(f) = [a; b] / (a; b) / [a; +∞) / ...";
+        public override string[] Keywords   => new[] { "область определения", "график", "отрезок", "луч" };
+        public override string[] Parameters => Array.Empty<string>();
+        public override double   Calculate(double[] _) => throw new NotSupportedException();
+
+        public override InputStep[] Steps => new[]
+        {
+            new InputStep
+            {
+                Question =
+                    "📘 Область определения по графику\n\n" +
+                    "Смотри на график и найди:\n" +
+                    "  · самую левую точку (или −∞ если линия уходит влево)\n" +
+                    "  · самую правую точку (или +∞ если линия уходит вправо)\n\n" +
+                    "Примеры:\n" +
+                    "  Отрезок от −2 до 5     → D(f) = [−2; 5]\n" +
+                    "  Луч вправо от 0        → D(f) = [0; +∞)\n" +
+                    "  Вся числовая прямая    → D(f) = (−∞; +∞)\n\n" +
+                    "✏️ Введи левую границу:\n" +
+                    "  Число (например: -2) или слово: бесконечность",
+                Validate = ValidateBound
+            },
+            new InputStep
+            {
+                Question =
+                    "✏️ Левая граница включена в область?\n" +
+                    "  Введи: да  или  нет\n\n" +
+                    "  Закрашенная точка на графике → да (включена, скобка [)\n" +
+                    "  Пустая точка                → нет (исключена, скобка ()\n" +
+                    "  Если ввёл бесконечность      → всегда нет",
+                Validate = ValidateYesNo
+            },
+            new InputStep
+            {
+                Question =
+                    "✏️ Введи правую границу:\n" +
+                    "  Число (например: 5) или слово: бесконечность",
+                Validate = ValidateBound
+            },
+            new InputStep
+            {
+                Question =
+                    "✏️ Правая граница включена в область?\n" +
+                    "  Введи: да  или  нет",
+                Validate = ValidateYesNo
+            },
+        };
+
+        public override string CalculateFromAnswers(List<string> answers)
+        {
+            string leftRaw  = answers[0].Trim().ToLower();
+            bool   leftIn   = answers[1].Trim().ToLower() == "да";
+            string rightRaw = answers[2].Trim().ToLower();
+            bool   rightIn  = answers[3].Trim().ToLower() == "да";
+
+            bool leftInf  = IsInfinity(leftRaw);
+            bool rightInf = IsInfinity(rightRaw);
+
+            // Бесконечности всегда со скобками (
+            if (leftInf)  leftIn  = false;
+            if (rightInf) rightIn = false;
+
+            string leftStr  = leftInf  ? "−∞" : FormatBound(leftRaw);
+            string rightStr = rightInf ? "+∞" : FormatBound(rightRaw);
+
+            string leftBracket  = leftIn  ? "[" : "(";
+            string rightBracket = rightIn ? "]" : ")";
+
+            string domain = $"{leftBracket}{leftStr}; {rightStr}{rightBracket}";
+
+            var sb = new StringBuilder();
+            sb.AppendLine("Читаем границы:");
+            sb.AppendLine($"  Левая:  {leftStr}  {(leftIn ? "(включена →  [)" : "(исключена → ()")}");
+            sb.AppendLine($"  Правая: {rightStr}  {(rightIn ? "(включена →  ])" : "(исключена → )")}");
+            sb.AppendLine();
+
+            sb.AppendLine("Пояснение:");
+            if (leftInf && rightInf)
+                sb.AppendLine("  Функция определена при любом x.");
+            else if (leftInf)
+                sb.AppendLine($"  Функция определена при x {(rightIn ? "≤" : "<")} {rightStr}.");
+            else if (rightInf)
+                sb.AppendLine($"  Функция определена при x {(leftIn ? "≥" : ">")} {leftStr}.");
+            else
+                sb.AppendLine($"  Функция определена при {leftStr} {(leftIn ? "≤" : "<")} x {(rightIn ? "≤" : "<")} {rightStr}.");
+
+            sb.AppendLine();
+            sb.AppendLine($"📌 D(f) = {domain}");
+
+            return sb.ToString().TrimEnd();
+        }
+
+        private static bool IsInfinity(string s) =>
+            s == "бесконечность" || s == "inf" || s == "∞" || s == "-∞" || s == "+∞";
+
+        private static string FormatBound(string s)
+        {
+            s = s.Replace(',', '.');
+            if (double.TryParse(s, System.Globalization.NumberStyles.Any,
+                    System.Globalization.CultureInfo.InvariantCulture, out double v))
+            {
+                return v == Math.Floor(v) && Math.Abs(v) < 1e12
+                    ? ((long)v).ToString()
+                    : v.ToString("G6", System.Globalization.CultureInfo.InvariantCulture);
+            }
+            return s;
+        }
+
+        private static string? ValidateBound(string s)
+        {
+            if (string.IsNullOrWhiteSpace(s))
+                return "Ты ничего не ввёл. Введи число или слово: бесконечность";
+            string t = s.Trim().ToLower().Replace(',', '.');
+            if (IsInfinity(t)) return null;
+            if (double.TryParse(t, System.Globalization.NumberStyles.Any,
+                    System.Globalization.CultureInfo.InvariantCulture, out _)) return null;
+            return $"Не понимаю «{s}». Введи число (например: -3) или слово: бесконечность";
+        }
+
+        private static string? ValidateYesNo(string s)
+        {
+            string t = s.Trim().ToLower();
+            if (t == "да" || t == "нет") return null;
+            return "Введи: да  или  нет";
         }
     }
 

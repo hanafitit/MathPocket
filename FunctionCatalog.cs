@@ -141,9 +141,13 @@ namespace MathPocket
                         Name = "📌 Понятие функции",
                         Functions = new FunctionBase[]
                         {
-                            new IsFunctionFunction(),        // было определено, но не добавлено в каталог
+                            new IsFunctionFunction(),
                             new DomainFunction(),
+                            new DomainFromTableFunction(),
+                            new GraphDomainFunction(),
                             new IsIncreasingDecreasingFunction(),
+                            new FormulaFromTableFunction(),
+                            new TableFromFormulaFunction(),
                         }
                     },
                     new MathSection
@@ -153,10 +157,6 @@ namespace MathPocket
                         {
                             new TableAnalysisFunction(),
                             new DetectFormulaFunction(),
-                            new FormulaFromTableFunction(),
-                            new TableFromFormulaFunction(),
-                            new DomainFromTableFunction(),
-                            
                         }
                     },
                 }
