@@ -142,7 +142,6 @@ namespace MathPocket
                         Functions = new FunctionBase[]
                         {
                             new DomainFunction(),
-                            new DomainFromTableFunction(),
                             new IsIncreasingDecreasingFunction(),
                             new FormulaFromTableFunction(),
                             new TableFromFormulaFunction(),
