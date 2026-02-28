@@ -134,15 +134,36 @@ namespace MathPocket
             new MathCategory
             {
                 Name = "📏 Линейная функция",
-                Functions = new FunctionBase[]
+                SubSections = new MathSection[]
                 {
-                    new IsLinearFunction(),
-                    new LinearEvalFunction(),
-                    new LinearPlotFunction(),
-                    new LinearPointBelongsFunction(),
-                    new LinearFindBFunction(),
-                    new LinearFindKFunction(),
-                    new LinearSignFunction(),
+                    new MathSection
+                    {
+                        Name = "📘 Основы",
+                        Functions = new FunctionBase[]
+                        {
+                            new IsLinearFunction(),
+                            new LinearEvalFunction(),
+                        }
+                    },
+                    new MathSection
+                    {
+                        Name = "📈 График",
+                        Functions = new FunctionBase[]
+                        {
+                            new LinearPlotFunction(),
+                            new LinearSignFunction(),
+                        }
+                    },
+                    new MathSection
+                    {
+                        Name = "📍 Точки и коэффициенты",
+                        Functions = new FunctionBase[]
+                        {
+                            new LinearPointBelongsFunction(),
+                            new LinearFindBFunction(),
+                            new LinearFindKFunction(),
+                        }
+                    },
                 }
             },
 
