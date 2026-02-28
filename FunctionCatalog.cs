@@ -143,6 +143,7 @@ namespace MathPocket
                         {
                             new IsFunctionFunction(),        // было определено, но не добавлено в каталог
                             new DomainFunction(),
+                            new IsIncreasingDecreasingFunction(),
                         }
                     },
                     new MathSection
@@ -155,7 +156,7 @@ namespace MathPocket
                             new FormulaFromTableFunction(),
                             new TableFromFormulaFunction(),
                             new DomainFromTableFunction(),
-                            new IsIncreasingDecreasingFunction(),
+                            
                         }
                     },
                 }
