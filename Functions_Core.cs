@@ -674,6 +674,261 @@ namespace MathPocket
         }
     }
     // ═══════════════════════════════════════════════════════════════
+    //  Область определения и множество значений по таблице
+    // ═══════════════════════════════════════════════════════════════
+
+    public class DomainFromTableFunction : FunctionBase
+    {
+        public override string   Name       => "Область определения по таблице";
+        public override string   Formula    => "D(f) = {x₁; x₂; ...},  E(f) = {y₁; y₂; ...}";
+        public override string[] Keywords   => new[] { "область определения", "множество значений", "таблица" };
+        public override string[] Parameters => Array.Empty<string>();
+        public override double   Calculate(double[] _) => throw new NotSupportedException();
+
+        public override InputStep[] Steps => new[]
+        {
+            new InputStep
+            {
+                Question =
+                    "📘 Область определения и множество значений по таблице\n\n" +
+                    "Область определения D(f) — все значения x из таблицы.\n" +
+                    "Множество значений E(f)   — все значения y из таблицы.\n\n" +
+                    "Пример:\n" +
+                    "  x:  15  18  20  21  30  40\n" +
+                    "  y:  30  36  40  42  60  120\n" +
+                    "  D(f) = {15; 18; 20; 21; 30; 40}\n" +
+                    "  E(f) = {30; 36; 40; 42; 60; 120}\n\n" +
+                    "✏️ Введи строку x через запятую:",
+                Validate = TableSteps.ValidateRow
+            },
+            new InputStep
+            {
+                Question = "✏️ Введи строку y через запятую:",
+                Validate = TableSteps.ValidateRow
+            }
+        };
+
+        public override string CalculateFromAnswers(List<string> answers)
+        {
+            var xs = TableSteps.ParseRow(answers[0]);
+            var ys = TableSteps.ParseRow(answers[1]);
+
+            if (xs.Count != ys.Count)
+                return $"⚠️ Количество x ({xs.Count}) не совпадает с количеством y ({ys.Count}).";
+
+            var sb = new StringBuilder();
+            sb.AppendLine("Введённая таблица:");
+            sb.AppendLine($"  x: {string.Join("  ", xs)}");
+            sb.AppendLine($"  y: {string.Join("  ", ys)}");
+            sb.AppendLine();
+
+            var domain = xs.Distinct().ToList();
+            var range  = ys.Distinct().ToList();
+
+            sb.AppendLine($"📌 Область определения D(f) = {{{string.Join("; ", domain)}}}");
+            sb.AppendLine($"📌 Множество значений  E(f) = {{{string.Join("; ", range)}}}");
+
+            if (domain.Count < xs.Count)
+            {
+                sb.AppendLine();
+                sb.AppendLine("Заметка: некоторые x повторяются —");
+                sb.AppendLine("в D(f) каждое значение записывается один раз.");
+            }
+
+            return sb.ToString().TrimEnd();
+        }
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    //  Определить закономерность по таблице
+    //  Проверяет: y=kx+b, y=kx, y=kx², y=kx²+b, y=kx³, y=k/x, y=|x|
+    // ═══════════════════════════════════════════════════════════════
+
+    public class DetectFormulaFunction : FunctionBase
+    {
+        public override string   Name       => "Назвать функцию по таблице";
+        public override string   Formula    => "y = ? (бот находит сам)";
+        public override string[] Keywords   => new[] { "закономерность", "формула", "определить", "найти" };
+        public override string[] Parameters => Array.Empty<string>();
+        public override double   Calculate(double[] _) => throw new NotSupportedException();
+
+        public override InputStep[] Steps => new[]
+        {
+            new InputStep
+            {
+                Question =
+                    "📘 Определить закономерность по таблице\n\n" +
+                    "Бот проверит все известные виды зависимостей:\n" +
+                    "  y = kx + b   (линейная)\n" +
+                    "  y = kx²      (квадратичная)\n" +
+                    "  y = kx² + b  (квадратичная со сдвигом)\n" +
+                    "  y = kx³      (кубическая)\n" +
+                    "  y = k/x      (обратная пропорция)\n" +
+                    "  y = k·|x|    (модуль)\n\n" +
+                    "И выведет подходящую формулу.\n\n" +
+                    "✏️ Введи строку x через запятую:\n" +
+                    "  Пример: 1, 2, 3, 4, 5",
+                Validate = ValidateNumericRow
+            },
+            new InputStep
+            {
+                Question = "✏️ Введи строку y через запятую:",
+                Validate = ValidateNumericRow
+            }
+        };
+
+        public override string CalculateFromAnswers(List<string> answers)
+        {
+            var xs = TableSteps.ParseRow(answers[0]);
+            var ys = TableSteps.ParseRow(answers[1]);
+
+            if (xs.Count != ys.Count)
+                return $"⚠️ Количество x ({xs.Count}) не совпадает с количеством y ({ys.Count}).";
+
+            if (!TableSteps.TryParseDoubles(xs, out var xd) ||
+                !TableSteps.TryParseDoubles(ys, out var yd))
+                return "⚠️ Все значения должны быть числами.";
+
+            var sb = new StringBuilder();
+            sb.AppendLine("Введённая таблица:");
+            sb.AppendLine($"  x: {string.Join("  ", xs)}");
+            sb.AppendLine($"  y: {string.Join("  ", ys)}");
+            sb.AppendLine();
+
+            var matches = new List<string>();
+
+            // ── y = kx (прямая пропорция) ─────────────────────────
+            if (xd.All(x => Math.Abs(x) > 1e-9))
+            {
+                var ratios = xd.Select((x, i) => yd[i] / x).ToList();
+                if (ratios.All(r => Math.Abs(r - ratios[0]) < 1e-9))
+                    matches.Add($"y = {Fmt(ratios[0])}x");
+            }
+
+            // ── y = kx + b (линейная) ─────────────────────────────
+            {
+                var diffs = Enumerable.Range(0, yd.Count - 1).Select(i => yd[i+1] - yd[i]).ToList();
+                if (diffs.All(d => Math.Abs(d - diffs[0]) < 1e-9) && xd.Count >= 2)
+                {
+                    double k = (yd[1] - yd[0]) / (xd[1] - xd[0]);
+                    double b = yd[0] - k * xd[0];
+                    if (Fits(xd, yd, x => k * x + b))
+                    {
+                        string formula = b == 0 ? $"y = {Fmt(k)}x"
+                                       : b  > 0 ? $"y = {Fmt(k)}x + {Fmt(b)}"
+                                       :          $"y = {Fmt(k)}x − {Fmt(-b)}";
+                        if (!matches.Contains(formula)) matches.Add(formula);
+                    }
+                }
+            }
+
+            // ── y = kx² (квадратичная без сдвига) ─────────────────
+            if (xd.All(x => Math.Abs(x) > 1e-9))
+            {
+                var ratios = xd.Select((x, i) => yd[i] / (x * x)).ToList();
+                if (ratios.All(r => Math.Abs(r - ratios[0]) < 1e-9))
+                    matches.Add($"y = {Fmt(ratios[0])}x²");
+            }
+
+            // ── y = kx² + b ───────────────────────────────────────
+            if (xd.Count >= 3 && xd.All(x => Math.Abs(x) > 1e-9))
+            {
+                // Берём три точки и решаем систему
+                double x1 = xd[0], y1 = yd[0];
+                double x2 = xd[1], y2 = yd[1];
+                double denom = x1*x1 - x2*x2;
+                if (Math.Abs(denom) > 1e-9)
+                {
+                    double k = (y1 - y2) / denom;
+                    double b = y1 - k * x1 * x1;
+                    if (b != 0 && Fits(xd, yd, x => k * x * x + b))
+                    {
+                        string formula = b > 0
+                            ? $"y = {Fmt(k)}x² + {Fmt(b)}"
+                            : $"y = {Fmt(k)}x² − {Fmt(-b)}";
+                        matches.Add(formula);
+                    }
+                }
+            }
+
+            // ── y = kx³ (кубическая) ──────────────────────────────
+            if (xd.All(x => Math.Abs(x) > 1e-9))
+            {
+                var ratios = xd.Select((x, i) => yd[i] / (x * x * x)).ToList();
+                if (ratios.All(r => Math.Abs(r - ratios[0]) < 1e-9))
+                    matches.Add($"y = {Fmt(ratios[0])}x³");
+            }
+
+            // ── y = k/x (обратная пропорция) ──────────────────────
+            if (xd.All(x => Math.Abs(x) > 1e-9))
+            {
+                var products = xd.Select((x, i) => yd[i] * x).ToList();
+                if (products.All(p => Math.Abs(p - products[0]) < 1e-9))
+                    matches.Add($"y = {Fmt(products[0])}/x");
+            }
+
+            // ── y = k·|x| (модуль) ────────────────────────────────
+            if (xd.All(x => Math.Abs(x) > 1e-9))
+            {
+                var ratios = xd.Select((x, i) => yd[i] / Math.Abs(x)).ToList();
+                if (ratios.All(r => Math.Abs(r - ratios[0]) < 1e-9) && ratios[0] >= 0)
+                {
+                    string candidate = $"y = {Fmt(ratios[0])}·|x|";
+                    if (!matches.Any(m => m == $"y = {Fmt(ratios[0])}x"))
+                        matches.Add(candidate);
+                }
+            }
+
+            // ── Вывод ─────────────────────────────────────────────
+            if (matches.Count == 0)
+            {
+                sb.AppendLine("Ни одна из известных закономерностей не подошла.");
+                sb.AppendLine("Проверь правильность введённых данных");
+                sb.AppendLine("или добавь больше точек.");
+            }
+            else
+            {
+                sb.AppendLine($"Найдено подходящих формул: {matches.Count}");
+                sb.AppendLine();
+                foreach (var m in matches)
+                    sb.AppendLine($"  📌 {m}");
+
+                if (matches.Count > 1)
+                {
+                    sb.AppendLine();
+                    sb.AppendLine("Несколько формул подошли — добавь больше точек");
+                    sb.AppendLine("чтобы точнее определить зависимость.");
+                }
+            }
+
+            return sb.ToString().TrimEnd();
+        }
+
+        private static bool Fits(List<double> xs, List<double> ys, Func<double, double> f)
+        {
+            for (int i = 0; i < xs.Count; i++)
+                if (Math.Abs(f(xs[i]) - ys[i]) > 1e-6) return false;
+            return true;
+        }
+
+        private static string Fmt(double v) =>
+            v == Math.Floor(v) && Math.Abs(v) < 1e12
+                ? ((long)v).ToString()
+                : v.ToString("G6", System.Globalization.CultureInfo.InvariantCulture);
+
+        private static string? ValidateNumericRow(string s)
+        {
+            var err = TableSteps.ValidateRow(s);
+            if (err is not null) return err;
+            foreach (var p in TableSteps.ParseRow(s))
+                if (!double.TryParse(p.Replace(',', '.'),
+                        NumberStyles.Any, CultureInfo.InvariantCulture, out _))
+                    return $"«{p}» — не число.";
+            return null;
+        }
+    }
+
+    // ═══════════════════════════════════════════════════════════════
     //  Угадать формулу по таблице
     // ═══════════════════════════════════════════════════════════════
 
