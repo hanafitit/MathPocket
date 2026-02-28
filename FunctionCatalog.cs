@@ -138,7 +138,7 @@ namespace MathPocket
                 {
                     new IsLinearFunction(),
                     new LinearEvalFunction(),
-                    new LinearTableAndAxesFunction(),
+                    new LinearPlotFunction(),
                     new LinearPointBelongsFunction(),
                     new LinearFindBFunction(),
                     new LinearFindKFunction(),

@@ -42,6 +42,129 @@ namespace MathPocket
         }
 
         /// <summary>
+        /// График линейной функции y = kx + b.
+        /// Рисует прямую, оси, нуль функции и пересечение с Oy.
+        /// </summary>
+        public static byte[] LinearFunction(
+            double k, double b,
+            double xMin = -10, double xMax = 10)
+        {
+            var plt = new Plot();
+
+            // ── Прямая ────────────────────────────────────────────
+            double[] xs = Range(xMin, xMax);
+            double[] ys = xs.Select(x => k * x + b).ToArray();
+
+            var line = plt.Add.Scatter(xs, ys);
+            line.Color     = Colors.RoyalBlue;
+            line.LineWidth = 2;
+            line.MarkerSize = 0;
+
+            // ── Оси координат ─────────────────────────────────────
+            AddAxes(plt);
+
+            // ── Точка пересечения с осью Oy (x = 0) ──────────────
+            var oyPoint = plt.Add.Scatter(new[] { 0.0 }, new[] { b });
+            oyPoint.Color      = Colors.OrangeRed;
+            oyPoint.MarkerSize = 8;
+            oyPoint.LineWidth  = 0;
+            oyPoint.LegendText = $"Oy: (0; {FmtLabel(b)})";
+
+            // ── Точка пересечения с осью Ox (y = 0) ──────────────
+            if (Math.Abs(k) > 1e-12)
+            {
+                double x0 = -b / k;
+                if (x0 >= xMin && x0 <= xMax)
+                {
+                    var oxPoint = plt.Add.Scatter(new[] { x0 }, new[] { 0.0 });
+                    oxPoint.Color      = Colors.SeaGreen;
+                    oxPoint.MarkerSize = 8;
+                    oxPoint.LineWidth  = 0;
+                    oxPoint.LegendText = $"Ox: ({FmtLabel(x0)}; 0)";
+                }
+            }
+
+            // ── Подпись и легенда ─────────────────────────────────
+            string title = k == 0   ? $"y = {FmtLabel(b)}"
+                         : b == 0   ? $"y = {FmtLabel(k)}x"
+                         : b > 0    ? $"y = {FmtLabel(k)}x + {FmtLabel(b)}"
+                         :            $"y = {FmtLabel(k)}x − {FmtLabel(-b)}";
+
+            plt.Title(title);
+            plt.XLabel("x");
+            plt.YLabel("y");
+            plt.ShowLegend();
+
+            return plt.GetImageBytes(Width, Height, ImageFormat.Png);
+        }
+
+        /// <summary>
+        /// График знака линейной функции: прямая + закрашенные области y>0 (зелёная) и y<0 (красная).
+        /// </summary>
+        public static byte[] LinearSignPlot(double k, double b, double xMin = -10, double xMax = 10)
+        {
+            var plt = new Plot();
+
+            double[] xs = Range(xMin, xMax);
+            double[] ys = xs.Select(x => k * x + b).ToArray();
+
+            // ── Закрашенные области ───────────────────────────────
+            // Зелёная: y > 0 — между прямой и осью X сверху
+            double[] ysPos = ys.Select(y => Math.Max(y, 0)).ToArray();
+            double[] ysNeg = ys.Select(y => Math.Min(y, 0)).ToArray();
+            double[] zeros = xs.Select(_ => 0.0).ToArray();
+
+            var fillPos = plt.Add.FillY(xs, zeros, ysPos);
+            fillPos.FillColor = Colors.LightGreen.WithAlpha(0.4f);
+            fillPos.LineWidth = 0;
+
+            var fillNeg = plt.Add.FillY(xs, ysNeg, zeros);
+            fillNeg.FillColor = Colors.LightCoral.WithAlpha(0.4f);
+            fillNeg.LineWidth = 0;
+
+            // ── Прямая ────────────────────────────────────────────
+            var line = plt.Add.Scatter(xs, ys);
+            line.Color     = Colors.RoyalBlue;
+            line.LineWidth = 2;
+            line.MarkerSize = 0;
+
+            // ── Оси ───────────────────────────────────────────────
+            AddAxes(plt);
+
+            // ── Нуль функции ──────────────────────────────────────
+            if (Math.Abs(k) > 1e-12)
+            {
+                double x0 = -b / k;
+                if (x0 >= xMin && x0 <= xMax)
+                {
+                    var zeroMark = plt.Add.Scatter(new[] { x0 }, new[] { 0.0 });
+                    zeroMark.Color      = Colors.RoyalBlue;
+                    zeroMark.MarkerSize = 8;
+                    zeroMark.LineWidth  = 0;
+                    zeroMark.LegendText = $"x₀ = {FmtLabel(x0)}";
+                }
+            }
+
+            string title = k == 0   ? $"y = {FmtLabel(b)}"
+                         : b == 0   ? $"y = {FmtLabel(k)}x"
+                         : b > 0    ? $"y = {FmtLabel(k)}x + {FmtLabel(b)}"
+                         :            $"y = {FmtLabel(k)}x − {FmtLabel(-b)}";
+
+            plt.Title(title);
+            plt.XLabel("x");
+            plt.YLabel("y");
+            plt.ShowLegend();
+
+            return plt.GetImageBytes(Width, Height, ImageFormat.Png);
+        }
+
+        private static string FmtLabel(double v)
+        {
+            if (v == Math.Floor(v) && Math.Abs(v) < 1e12) return ((long)v).ToString();
+            return v.ToString("G4", System.Globalization.CultureInfo.InvariantCulture);
+        }
+
+        /// <summary>
         /// Столбчатая диаграмма.
         /// </summary>
         public static byte[] Bar(

@@ -287,14 +287,14 @@ namespace MathPocket
     }
 
     // ═══════════════════════════════════════════════════════════════
-    //  22.4/22.5 Построить таблицу и найти точки пересечения с осями
+    //  22.9 Построить график, вычислить точки пересечения с осями
     // ═══════════════════════════════════════════════════════════════
 
-    public class LinearTableAndAxesFunction : FunctionBase
+    public class LinearPlotFunction : FunctionBase
     {
-        public override string   Name       => "Таблица и пересечение с осями";
-        public override string   Formula    => "y = kx + b → таблица, ось Ox, ось Oy";
-        public override string[] Keywords   => new[] { "линейная", "таблица", "пересечение", "оси", "график" };
+        public override string   Name       => "Построить график функции";
+        public override string   Formula    => "y = kx + b → график + пересечения с осями";
+        public override string[] Keywords   => new[] { "линейная", "построить", "график", "пересечение", "оси" };
         public override string[] Parameters => Array.Empty<string>();
         public override double   Calculate(double[] _) => throw new NotSupportedException();
 
@@ -303,73 +303,51 @@ namespace MathPocket
             new InputStep
             {
                 Question =
-                    "📘 Таблица значений и пересечение с осями\n\n" +
-                    "Для построения графика y = kx + b:\n" +
-                    "  1. Составим таблицу из нескольких точек\n" +
-                    "  2. Найдём пересечение с осью Ox (y = 0)\n" +
-                    "  3. Найдём пересечение с осью Oy (x = 0)\n\n" +
-                    "✏️ Введи формулу (правую часть после y =):\n" +
-                    "  Пример: 3x-6  или  -2x+4",
+                    "📘 Построить график линейной функции\n\n" +
+                    "Бот построит прямую и найдёт:\n" +
+                    "  · точку пересечения с осью Oy (x = 0)\n" +
+                    "  · точку пересечения с осью Ox (y = 0)\n\n" +
+                    "Примеры: 5x-5  или  3.8-0.2x  или  -10+2.5x\n\n" +
+                    "✏️ Введи правую часть формулы (после y =):",
                 Validate = LinearHelper.ValidateLinear
-            },
-            new InputStep
-            {
-                Question =
-                    "✏️ Введи значения x для таблицы через запятую:\n" +
-                    "  Пример: -2, -1, 0, 1, 2",
-                Validate = s =>
-                {
-                    if (string.IsNullOrWhiteSpace(s)) return "Введи хотя бы одно значение.";
-                    foreach (var p in s.Split(','))
-                        if (LinearHelper.ValidateNumber(p) is not null)
-                            return $"«{p.Trim()}» — не число.";
-                    return null;
-                }
             }
         };
+
+        public override byte[]? GetPlotBytes(List<string> answers)
+        {
+            var (k, b) = LinearHelper.ParseLinear(answers[0])!.Value;
+            return PlotHelper.LinearFunction(k, b);
+        }
 
         public override string CalculateFromAnswers(List<string> answers)
         {
             var (k, b) = LinearHelper.ParseLinear(answers[0])!.Value;
-            var xs = answers[1].Split(',')
-                .Select(p => LinearHelper.ParseNumber(p))
-                .ToList();
             var sb = new StringBuilder();
 
             sb.AppendLine($"Функция: {LinearHelper.FormatLinear(k, b)}");
             sb.AppendLine();
 
-            // Таблица
-            sb.AppendLine("📋 Таблица значений:");
-            var xStrs = xs.Select(x => LinearHelper.Fmt(x)).ToList();
-            var yStrs = xs.Select(x => LinearHelper.Fmt(k * x + b)).ToList();
-            sb.AppendLine($"  x:  {string.Join("   ", xStrs)}");
-            sb.AppendLine($"  y:  {string.Join("   ", yStrs)}");
-            sb.AppendLine();
-
-            // Пересечение с Oy (x = 0)
+            // Пересечение с Oy
             sb.AppendLine("📍 Пересечение с осью Oy (x = 0):");
-            double yAxis = b;
-            sb.AppendLine($"  y = {LinearHelper.Fmt(k)}·0 + {LinearHelper.Fmt(b)} = {LinearHelper.Fmt(yAxis)}");
-            sb.AppendLine($"  Точка: A(0; {LinearHelper.Fmt(yAxis)})");
+            sb.AppendLine($"  y = {LinearHelper.Fmt(k)}·0 + {LinearHelper.Fmt(b)} = {LinearHelper.Fmt(b)}");
+            sb.AppendLine($"  Точка A(0; {LinearHelper.Fmt(b)})");
             sb.AppendLine();
 
-            // Пересечение с Ox (y = 0)
+            // Пересечение с Ox
             sb.AppendLine("📍 Пересечение с осью Ox (y = 0):");
             if (Math.Abs(k) < 1e-12)
             {
-                if (Math.Abs(b) < 1e-9)
-                    sb.AppendLine("  Функция y = 0 — совпадает с осью Ox целиком.");
-                else
-                    sb.AppendLine($"  k = 0, функция y = {LinearHelper.Fmt(b)} — не пересекает ось Ox.");
+                sb.AppendLine(Math.Abs(b) < 1e-9
+                    ? "  Функция y = 0 — совпадает с осью Ox целиком."
+                    : $"  k = 0, функция y = {LinearHelper.Fmt(b)} — не пересекает ось Ox.");
             }
             else
             {
-                double xAxis = -b / k;
+                double x0 = -b / k;
                 sb.AppendLine($"  {LinearHelper.Fmt(k)}x + {LinearHelper.Fmt(b)} = 0");
                 sb.AppendLine($"  {LinearHelper.Fmt(k)}x = {LinearHelper.Fmt(-b)}");
-                sb.AppendLine($"  x = {LinearHelper.Fmt(xAxis)}");
-                sb.AppendLine($"  Точка: B({LinearHelper.Fmt(xAxis)}; 0)");
+                sb.AppendLine($"  x = {LinearHelper.Fmt(x0)}");
+                sb.AppendLine($"  Точка B({LinearHelper.Fmt(x0)}; 0)");
             }
 
             return sb.ToString().TrimEnd();
@@ -611,6 +589,12 @@ namespace MathPocket
                 Validate = LinearHelper.ValidateLinear
             }
         };
+
+        public override byte[]? GetPlotBytes(List<string> answers)
+        {
+            var (k, b) = LinearHelper.ParseLinear(answers[0])!.Value;
+            return PlotHelper.LinearSignPlot(k, b);
+        }
 
         public override string CalculateFromAnswers(List<string> answers)
         {
