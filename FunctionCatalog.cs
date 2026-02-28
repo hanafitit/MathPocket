@@ -2,15 +2,6 @@ namespace MathPocket
 {
     // ═══════════════════════════════════════════════════════════════
     //  Каталог всех разделов и функций бота
-    //
-    //  Чтобы добавить функцию:
-    //    1. Создайте класс, унаследованный от FunctionBase
-    //    2. Добавьте new МойКласс() в нужный MathSection ниже
-    //
-    //  Чтобы добавить новый раздел:
-    //    Добавьте new MathCategory { ... } в массив All
-    //
-    //  Разделы с пустым Functions[] показывают «пока пуст».
     // ═══════════════════════════════════════════════════════════════
 
     internal static class FunctionCatalog
@@ -81,6 +72,30 @@ namespace MathPocket
                     },
                     new MathSection
                     {
+                        Name = "✖️ Умножение многочленов",
+                        Functions = new FunctionBase[]
+                        {
+                            new PolyTimesMonomial(),
+                            new PolyTimesPolyFunction(),
+                            new PolySimplifyExpression(),
+                            new PolyEvalProduct(),
+                            new PolyEquation(),
+                            new PolyProveIdentity(),
+                        }
+                    },
+                    new MathSection
+                    {
+                        Name = "➗ Деление на одночлен",
+                        Functions = new FunctionBase[]
+                        {
+                            new MonomialDividePolyFunction(),
+                            new PolynomialDivideByMonomialFunction(),
+                            new PolyDivideSimplifyFunction(),
+                            new PolyDivideEvalFunction(),
+                        }
+                    },
+                    new MathSection
+                    {
                         Name = "🔧 Разложение на множители",
                         Functions = new FunctionBase[]
                         {
@@ -94,10 +109,22 @@ namespace MathPocket
                     },
                     new MathSection
                     {
-                        Name = "✖️ Умножение многочленов",
+                        Name = "🔄 Тождественные преобразования",
                         Functions = new FunctionBase[]
                         {
-                            
+                            new IdentitySimplifyFunction(),
+                            new IdentitySumAsProductFunction(),
+                            new IdentityInequalityIntegerFunction(),
+                        }
+                    },
+                    new MathSection
+                    {
+                        Name = "✅ Проверь себя",
+                        Functions = new FunctionBase[]
+                        {
+                            new PolyDivideByMonomialFunction(),
+                            new PolyFindEqualXFunction(),
+                            new PolyFindGcmExpressionFunction(),
                         }
                     },
                 }
