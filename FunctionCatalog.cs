@@ -130,6 +130,22 @@ namespace MathPocket
                 }
             },
 
+            // ── 📏 Линейная функция ───────────────────────────────
+            new MathCategory
+            {
+                Name = "📏 Линейная функция",
+                Functions = new FunctionBase[]
+                {
+                    new IsLinearFunction(),
+                    new LinearEvalFunction(),
+                    new LinearTableAndAxesFunction(),
+                    new LinearPointBelongsFunction(),
+                    new LinearFindBFunction(),
+                    new LinearFindKFunction(),
+                    new LinearSignFunction(),
+                }
+            },
+
             // ── 📈 Графики ────────────────────────────────────────
             new MathCategory
             {
