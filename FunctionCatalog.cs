@@ -134,9 +134,28 @@ namespace MathPocket
             new MathCategory
             {
                 Name = "📈 Графики",
-                Functions = new FunctionBase[]
+                SubSections = new MathSection[]
                 {
-                    // Сюда будут добавляться функции с графиками
+                    new MathSection
+                    {
+                        Name = "📌 Понятие функции",
+                        Functions = new FunctionBase[]
+                        {
+                            new DomainFunction(),
+                            new DomainFromTableFunction(),
+                            new IsIncreasingDecreasingFunction(),
+                            new FormulaFromTableFunction(),
+                            new TableFromFormulaFunction(),
+                        }
+                    },
+                    new MathSection
+                    {
+                        Name = "📊 Анализ по таблице",
+                        Functions = new FunctionBase[]
+                        {
+                            new TableAnalysisFunction(),
+                        }
+                    },
                 }
             },
 
