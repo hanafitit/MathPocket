@@ -105,8 +105,14 @@ namespace MathPocket
             bool isFunc = true;
             foreach (var kv in dict)
             {
-                var distinct = kv.Value.Distinct().ToList();
-                bool bad     = distinct.Count > 1;
+                // Сравниваем числово если возможно, иначе строково
+                var distinct = kv.Value
+                    .Select(v => double.TryParse(v.Replace(',', '.'),
+                        System.Globalization.NumberStyles.Any,
+                        System.Globalization.CultureInfo.InvariantCulture, out double d) ? d.ToString("G15") : v)
+                    .Distinct()
+                    .ToList();
+                bool bad = distinct.Count > 1;
                 if (bad) isFunc = false;
                 sb.AppendLine(bad
                     ? $"  ❌ x = {kv.Key} → y = {string.Join(", ", distinct)}  (два значения!)"
@@ -531,9 +537,11 @@ namespace MathPocket
                         double x2d = (double)(-a1 + sq) / (2 * a2);
                         if (x1d > x2d) (x1d, x2d) = (x2d, x1d);
 
-                        string x1 = FmtFrac(-a1 - sq, 2 * a2);
-                        string x2 = FmtFrac(-a1 + sq, 2 * a2);
-                        if (x1d > x2d) (x1, x2) = (x2, x1);
+                        // Строки уже соответствуют отсортированным x1d/x2d:
+                        // x1d = (-a1 - sq) / 2a2 — меньший корень (если a2 > 0)
+                        // Убеждаемся через числовой порядок
+                        string x1 = x1d <= x2d ? FmtFrac(-a1 - sq, 2 * a2) : FmtFrac(-a1 + sq, 2 * a2);
+                        string x2 = x1d <= x2d ? FmtFrac(-a1 + sq, 2 * a2) : FmtFrac(-a1 - sq, 2 * a2);
 
                         sb.AppendLine($"  √D = {sq}");
                         sb.AppendLine($"  x₁ = ({-a1} − {sq}) / (2·{a2}) = {x1}");
@@ -668,6 +676,15 @@ namespace MathPocket
                     { return $"Не могу разобрать: {ex.Message}\nПример: 3x-5  или  1/(x^2-5x+6)"; }
             }
 
+            // Валидируем и числитель, и знаменатель
+            int slash = raw.IndexOf('/');
+            string numPart = slash >= 0 ? raw.Substring(0, slash) : string.Empty;
+            if (!string.IsNullOrEmpty(numPart))
+            {
+                try   { PolyParser.Parse(numPart); }
+                catch (FormatException ex)
+                    { return $"Не могу разобрать числитель: {ex.Message}"; }
+            }
             try   { PolyParser.Parse(denom); return null; }
             catch (FormatException ex)
                 { return $"Не могу разобрать знаменатель: {ex.Message}"; }
@@ -808,16 +825,22 @@ namespace MathPocket
             // ── y = kx + b (линейная) ─────────────────────────────
             {
                 var diffs = Enumerable.Range(0, yd.Count - 1).Select(i => yd[i+1] - yd[i]).ToList();
-                if (diffs.All(d => Math.Abs(d - diffs[0]) < 1e-9) && xd.Count >= 2)
+                double xStep = xd.Count >= 2 ? xd[1] - xd[0] : 0;
+                if (diffs.All(d => Math.Abs(d - diffs[0]) < 1e-9) && xd.Count >= 2
+                    && Math.Abs(xStep) > 1e-9)
                 {
-                    double k = (yd[1] - yd[0]) / (xd[1] - xd[0]);
+                    double k = (yd[1] - yd[0]) / xStep;
                     double b = yd[0] - k * xd[0];
                     if (Fits(xd, yd, x => k * x + b))
                     {
-                        string formula = b == 0 ? $"y = {Fmt(k)}x"
-                                       : b  > 0 ? $"y = {Fmt(k)}x + {Fmt(b)}"
-                                       :          $"y = {Fmt(k)}x − {Fmt(-b)}";
-                        if (!matches.Contains(formula)) matches.Add(formula);
+                        // b == 0 означает прямую пропорцию — уже обрабатывается веткой y=kx
+                        if (Math.Abs(b) > 1e-9)
+                        {
+                            string formula = b > 0
+                                ? $"y = {Fmt(k)}x + {Fmt(b)}"
+                                : $"y = {Fmt(k)}x − {Fmt(-b)}";
+                            if (!matches.Contains(formula)) matches.Add(formula);
+                        }
                     }
                 }
             }
@@ -1203,9 +1226,21 @@ namespace MathPocket
                 return "Ты ничего не ввёл.\nПример: 2x+1  или  x^2-3x";
             string raw = s.Trim().Replace(" ", "").Replace("−", "-");
             int slash  = raw.IndexOf('/');
-            string toCheck = slash < 0 ? raw : raw.Substring(slash + 1).Trim('(', ')');
-            try   { PolyParser.Parse(toCheck); return null; }
-            catch (FormatException ex) { return $"Не могу разобрать: {ex.Message}"; }
+            if (slash < 0)
+            {
+                try   { PolyParser.Parse(raw); return null; }
+                catch (FormatException ex) { return $"Не могу разобрать: {ex.Message}"; }
+            }
+            // Валидируем числитель и знаменатель раздельно
+            string numPart   = raw.Substring(0, slash);
+            string denomPart = raw.Substring(slash + 1).Trim('(', ')');
+            if (!string.IsNullOrEmpty(numPart))
+            {
+                try   { PolyParser.Parse(numPart); }
+                catch (FormatException ex) { return $"Не могу разобрать числитель: {ex.Message}"; }
+            }
+            try   { PolyParser.Parse(denomPart); return null; }
+            catch (FormatException ex) { return $"Не могу разобрать знаменатель: {ex.Message}"; }
         }
     }
 

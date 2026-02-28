@@ -141,6 +141,7 @@ namespace MathPocket
                         Name = "📌 Понятие функции",
                         Functions = new FunctionBase[]
                         {
+                            new IsFunctionFunction(),        // было определено, но не добавлено в каталог
                             new DomainFunction(),
                             new DomainFromTableFunction(),
                             new IsIncreasingDecreasingFunction(),
