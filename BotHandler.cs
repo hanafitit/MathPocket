@@ -142,7 +142,7 @@ namespace MathPocket
             sb.Append($"[{DateTime.Now:HH:mm:ss}] [{tag}] user={chatId} | func=\"{func.Name}\"");
 
             int stepNum = session.CurrentStep + 1;
-            int total   = func.Steps?.Length ?? 0;
+            int total   = GetTotalSteps(func, session);  // динамический подсчёт, а не func.Steps?.Length
 
             sb.Append(userAnswer is not null
                 ? $" | шаг {stepNum}/{total} | ответ=\"{userAnswer}\""
@@ -282,11 +282,12 @@ namespace MathPocket
 
         private async Task HandleBackFromInput(long chatId)
         {
+            // Получаем сессию и функцию один раз
+            _inputSession.TryGetValue(chatId, out var session);
+            _selectedFunction.TryGetValue(chatId, out var func);
+
             // Шаг назад внутри пошагового диалога
-            if (_inputSession.TryGetValue(chatId, out var session) &&
-                session.CurrentStep > 0 &&
-                _selectedFunction.TryGetValue(chatId, out var func) &&
-                func.Steps is not null)
+            if (session is not null && func?.Steps is not null && session.CurrentStep > 0)
             {
                 session.CurrentStep--;
                 if (session.Answers.Count > 0)
@@ -297,11 +298,10 @@ namespace MathPocket
                 return;
             }
 
-            // Выход к списку функций
-            if (_inputSession.TryGetValue(chatId, out var aborted) &&
-                _selectedFunction.TryGetValue(chatId, out var abortedFunc))
+            // Выход к списку функций — логируем отмену если есть что логировать
+            if (session is not null && func is not null)
             {
-                WriteLog($"[{DateTime.Now:HH:mm:ss}] [ОТМЕНА] user={chatId} | func=\"{abortedFunc.Name}\" | прервано на шаге {aborted.CurrentStep + 1}");
+                WriteLog($"[{DateTime.Now:HH:mm:ss}] [ОТМЕНА] user={chatId} | func=\"{func.Name}\" | прервано на шаге {session.CurrentStep + 1}");
             }
 
             _inputSession.TryRemove(chatId, out _);
@@ -539,6 +539,7 @@ namespace MathPocket
             catch (Exception ex)
             {
                 LogSessionEnd("ИТОГ", chatId, func, session.Answers, error: ex.Message);
+                _inputSession.TryRemove(chatId, out _);   // сессия завершена даже при ошибке
                 await _bot.SendMessage(chatId,
                     $"⚠️ Что-то пошло не так: {ex.Message}",
                     replyMarkup: BackKeyboard());

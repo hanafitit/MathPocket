@@ -142,6 +142,7 @@ namespace MathPocket
                         Functions = new FunctionBase[]
                         {
                             new DomainFunction(),
+                            new DomainFromTableFunction(),
                             new IsIncreasingDecreasingFunction(),
                             new FormulaFromTableFunction(),
                             new TableFromFormulaFunction(),
@@ -149,10 +150,11 @@ namespace MathPocket
                     },
                     new MathSection
                     {
-                        Name = "📊 Анализ по таблице",
+                        Name = "📊 Табличная функция",
                         Functions = new FunctionBase[]
                         {
                             new TableAnalysisFunction(),
+                            new DetectFormulaFunction(),
                         }
                     },
                 }

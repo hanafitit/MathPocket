@@ -39,10 +39,18 @@ namespace MathPocket
             if (parts.Length != Parameters.Length)
                 return $"Ожидалось {Parameters.Length} данных, получено {parts.Length}.";
 
-            var numbers = parts
-                .Select(p => double.Parse(p.Replace(',', '.'),
-                    System.Globalization.CultureInfo.InvariantCulture))
-                .ToArray();
+            double[] numbers;
+            try
+            {
+                numbers = parts
+                    .Select(p => double.Parse(p.Replace(',', '.'),
+                        System.Globalization.CultureInfo.InvariantCulture))
+                    .ToArray();
+            }
+            catch (FormatException)
+            {
+                return "Ошибка: введите числа через пробел (например: 3 4.5).";
+            }
 
             return Calculate(numbers).ToString();
         }

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using ScottPlot;
 
 namespace MathPocket
@@ -51,6 +52,15 @@ namespace MathPocket
             var plt = new Plot();
 
             var bar = plt.Add.Bars(values);
+
+            // Подписи по оси X
+            if (labels.Length == values.Length)
+            {
+                var positions = Enumerable.Range(0, labels.Length)
+                    .Select(i => (double)i)
+                    .ToArray();
+                plt.Axes.Bottom.SetTicks(positions, labels);
+            }
 
             plt.Title(title);
 
