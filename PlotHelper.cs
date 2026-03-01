@@ -45,30 +45,41 @@ namespace MathPocket
         /// График линейной функции y = kx + b.
         /// Рисует прямую, оси, нуль функции и пересечение с Oy.
         /// </summary>
+
         /// <summary>
         /// Вычисляет диапазон осей так, чтобы прямая выглядела наклонной,
         /// а обе ключевые точки (A и B) были хорошо видны.
+        /// Диапазон адаптируется под крутизну наклона прямой.
         /// </summary>
         private static (double xMin, double xMax, double yMin, double yMax) CalcLinearRange(double k, double b)
         {
-            // Центрируемся между двумя ключевыми точками: A(0;b) и B(-b/k; 0)
-            double xOy = 0;
-            double xOx = Math.Abs(k) > 1e-12 ? -b / k : 0;
-            double cx  = (xOy + xOx) / 2.0;
-            double cy  = (b + 0.0) / 2.0;
+            // Две ключевые точки: A(0; b) и B(-b/k; 0)
+            double xA = 0, yA = b;
+            double xB = Math.Abs(k) > 1e-12 ? -b / k : 0;
+            double yB = 0;
 
-            // Фиксированный диапазон X = 8 единиц — как стандартный вид Desmos
-            // Диапазон Y подбирается из соотношения сторон изображения (640x400 = 1.6)
-            // чтобы масштаб по обеим осям был одинаковым
-            double xRange = 8.0;
-            double yRange = xRange * Height / (double)Width; // = 5.0
+            // Центр между точками
+            double cx = (xA + xB) / 2.0;
+            double cy = (yA + yB) / 2.0;
 
-            double xMin = cx - xRange / 2.0;
-            double xMax = cx + xRange / 2.0;
-            double yMin = cy - yRange / 2.0;
-            double yMax = cy + yRange / 2.0;
+            // Расстояние между ключевыми точками с отступом × 2.5
+            double spanX = Math.Max(Math.Abs(xB - xA), 1.0) * 2.5;
+            double spanY = Math.Max(Math.Abs(yA - yB), 1.0) * 2.5;
 
-            return (xMin, xMax, yMin, yMax);
+            // Соблюдаем пропорцию экрана (640×400 = 1.6),
+            // увеличиваем меньший диапазон чтобы обе оси вмещали всё нужное
+            double aspect = (double)Width / Height; // 1.6
+            spanX = Math.Max(spanX, spanY * aspect);
+            spanY = spanX / aspect;
+
+            // Минимальный размер окна — не меньше 10 единиц по X
+            spanX = Math.Max(spanX, 10.0);
+            spanY = spanX / aspect;
+
+            return (
+                cx - spanX / 2.0, cx + spanX / 2.0,
+                cy - spanY / 2.0, cy + spanY / 2.0
+            );
         }
 
         public static byte[] LinearFunction(double k, double b)
@@ -229,7 +240,7 @@ namespace MathPocket
             return plt.GetImageBytes(Width, Height, ImageFormat.Png);
         }
 
-                private static string FmtLabel(double v)
+        private static string FmtLabel(double v)
         {
             if (v == Math.Floor(v) && Math.Abs(v) < 1e12) return ((long)v).ToString();
             return v.ToString("G4", System.Globalization.CultureInfo.InvariantCulture);
