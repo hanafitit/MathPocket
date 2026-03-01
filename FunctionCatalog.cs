@@ -204,6 +204,9 @@ namespace MathPocket
                             new SystemEvalExpressionFunction(),
                         }
                     },
+                }
+            },
+
             new MathCategory { Name = "✂️ Формулы сокращённого умножения" },
             new MathCategory { Name = "➗ Алгебраические дроби" },
             new MathCategory { Name = "√ Квадратные корни" },
