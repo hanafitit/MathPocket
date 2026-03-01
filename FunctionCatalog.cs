@@ -130,47 +130,10 @@ namespace MathPocket
                 }
             },
 
-            // ── 📏 Линейная функция ───────────────────────────────
+            // ── 📈 Функции и графики ─────────────────────────────
             new MathCategory
             {
-                Name = "📏 Линейная функция",
-                SubSections = new MathSection[]
-                {
-                    new MathSection
-                    {
-                        Name = "📘 Основы",
-                        Functions = new FunctionBase[]
-                        {
-                            new IsLinearFunction(),
-                            new LinearEvalFunction(),
-                        }
-                    },
-                    new MathSection
-                    {
-                        Name = "📈 График",
-                        Functions = new FunctionBase[]
-                        {
-                            new LinearPlotFunction(),
-                            new LinearSignFunction(),
-                        }
-                    },
-                    new MathSection
-                    {
-                        Name = "📍 Точки и коэффициенты",
-                        Functions = new FunctionBase[]
-                        {
-                            new LinearPointBelongsFunction(),
-                            new LinearFindBFunction(),
-                            new LinearFindKFunction(),
-                        }
-                    },
-                }
-            },
-
-            // ── 📈 Графики ────────────────────────────────────────
-            new MathCategory
-            {
-                Name = "📈 Графики",
+                Name = "📈 Функции и графики",
                 SubSections = new MathSection[]
                 {
                     new MathSection
@@ -194,6 +157,20 @@ namespace MathPocket
                         {
                             new TableAnalysisFunction(),
                             new DetectFormulaFunction(),
+                        }
+                    },
+                    new MathSection
+                    {
+                        Name = "📏 Линейная функция и её график",
+                        Functions = new FunctionBase[]
+                        {
+                            new IsLinearFunction(),
+                            new LinearEvalFunction(),
+                            new LinearPointBelongsFunction(),
+                            new LinearFindBFunction(),
+                            new LinearFindKFunction(),
+                            new LinearPlotFunction(),
+                            new LinearSignFunction(),
                         }
                     },
                 }
