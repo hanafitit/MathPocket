@@ -54,32 +54,47 @@ namespace MathPocket
         private static (double xMin, double xMax, double yMin, double yMax) CalcLinearRange(double k, double b)
         {
             // Две ключевые точки: A(0; b) и B(-b/k; 0)
-            double xA = 0, yA = b;
+            double xA = 0,  yA = b;
             double xB = Math.Abs(k) > 1e-12 ? -b / k : 0;
-            double yB = 0;
 
-            // Центр между точками
+            // Центр между ключевыми точками
             double cx = (xA + xB) / 2.0;
-            double cy = (yA + yB) / 2.0;
+            double cy = (yA + 0)  / 2.0;
 
-            // Расстояние между ключевыми точками с отступом × 2.5
-            double spanX = Math.Max(Math.Abs(xB - xA), 1.0) * 2.5;
-            double spanY = Math.Max(Math.Abs(yA - yB), 1.0) * 2.5;
+            // Хотим ~10 клеток по X и ~6 по Y (пропорция 640×400).
+            // Находим «красивый» шаг тика исходя из того, что расстояние
+            // между ключевыми точками должно занимать ~3 клетки.
+            double distX = Math.Max(Math.Abs(xB - xA), 1e-6);
+            double distY = Math.Max(Math.Abs(yA),       1e-6);
 
-            // Соблюдаем пропорцию экрана (640×400 = 1.6),
-            // увеличиваем меньший диапазон чтобы обе оси вмещали всё нужное
-            double aspect = (double)Width / Height; // 1.6
-            spanX = Math.Max(spanX, spanY * aspect);
-            spanY = spanX / aspect;
+            double rawStep = Math.Max(distX, distY) / 3.0;
+            double tickStep = NiceNumber(rawStep);
+            tickStep = Math.Max(tickStep, 1.0); // минимум шаг = 1
 
-            // Минимальный размер окна — не меньше 10 единиц по X
-            spanX = Math.Max(spanX, 10.0);
-            spanY = spanX / aspect;
+            // Диапазон: 10 тиков по X, 6 по Y (с запасом ×0.5 от центра)
+            double spanX = tickStep * 10.0;
+            double spanY = tickStep * 6.0;
+
+            // Округляем центр до шага тика — оси выровняются красиво
+            double cxSnap = Math.Round(cx / tickStep) * tickStep;
+            double cySnap = Math.Round(cy / tickStep) * tickStep;
 
             return (
-                cx - spanX / 2.0, cx + spanX / 2.0,
-                cy - spanY / 2.0, cy + spanY / 2.0
+                cxSnap - spanX / 2.0, cxSnap + spanX / 2.0,
+                cySnap - spanY / 2.0, cySnap + spanY / 2.0
             );
+        }
+
+        /// <summary>
+        /// Округляет число вверх до «красивого» значения (1, 2, 5, 10, 20, ...).
+        /// </summary>
+        private static double NiceNumber(double x)
+        {
+            if (x <= 0) return 1;
+            double mag  = Math.Pow(10, Math.Floor(Math.Log10(x)));
+            double norm = x / mag;
+            double nice = norm < 1.5 ? 1 : norm < 3.5 ? 2 : norm < 7.5 ? 5 : 10;
+            return nice * mag;
         }
 
         public static byte[] LinearFunction(double k, double b)
@@ -148,7 +163,6 @@ namespace MathPocket
             plt.ShowLegend(Alignment.LowerRight);
 
             plt.Axes.SetLimits(xMin, xMax, yMin, yMax);
-            plt.Axes.SquareUnits();
             ApplyAxisTicks(plt, xMin, xMax, yMin, yMax);
 
             return plt.GetImageBytes(Width, Height, ImageFormat.Png);
@@ -236,7 +250,6 @@ namespace MathPocket
             plt.ShowLegend(Alignment.LowerRight);
 
             plt.Axes.SetLimits(xMin, xMax, yMin, yMax);
-            plt.Axes.SquareUnits();
             ApplyAxisTicks(plt, xMin, xMax, yMin, yMax);
 
             return plt.GetImageBytes(Width, Height, ImageFormat.Png);
@@ -281,41 +294,33 @@ namespace MathPocket
         /// </summary>
         private static void ApplyAxisTicks(Plot plt, double xMin, double xMax, double yMin, double yMax)
         {
-            // Подбираем шаг тика в зависимости от диапазона
-            static double NiceStep(double range)
-            {
-                double raw = range / 8.0; // ~8 делений
-                double mag = Math.Pow(10, Math.Floor(Math.Log10(raw)));
-                double norm = raw / mag;
-                double step = norm < 1.5 ? 1 : norm < 3.5 ? 2 : norm < 7.5 ? 5 : 10;
-                return step * mag;
-            }
+            // Шаг тика — «красивое» число, ~10 делений по X
+            double stepX = NiceNumber((xMax - xMin) / 10.0);
+            double stepY = NiceNumber((yMax - yMin) / 6.0);
+            // Используем одинаковый шаг по обеим осям для квадратной сетки
+            double step  = Math.Min(stepX, stepY);
+            step = Math.Max(step, 1.0);
 
-            double stepX = NiceStep(xMax - xMin);
-            double stepY = NiceStep(yMax - yMin);
-
-            // Генерируем позиции тиков
             static (double[] pos, string[] lbl) MakeTicks(double min, double max, double step)
             {
-                var positions = new System.Collections.Generic.List<double>();
-                double start = Math.Ceiling(min / step) * step;
+                var positions = new List<double>();
+                double start  = Math.Ceiling(min / step) * step;
                 for (double v = start; v <= max + 1e-9; v += step)
-                    positions.Add(Math.Round(v, 10));
+                    positions.Add(Math.Round(v / step) * step); // убираем float-мусор
                 var labels = positions.Select(v =>
                 {
                     long iv = (long)Math.Round(v);
-                    return Math.Abs(v - iv) < 1e-9 ? iv.ToString() : v.ToString("G4");
+                    return Math.Abs(v - iv) < step * 1e-6 ? iv.ToString() : v.ToString("G4");
                 }).ToArray();
                 return (positions.ToArray(), labels);
             }
 
-            var (xPos, xLbl) = MakeTicks(xMin, xMax, stepX);
-            var (yPos, yLbl) = MakeTicks(yMin, yMax, stepY);
+            var (xPos, xLbl) = MakeTicks(xMin, xMax, step);
+            var (yPos, yLbl) = MakeTicks(yMin, yMax, step);
 
             plt.Axes.Bottom.SetTicks(xPos, xLbl);
             plt.Axes.Left.SetTicks(yPos, yLbl);
 
-            // Настраиваем стиль подписей тиков
             plt.Axes.Bottom.TickLabelStyle.FontSize = 11;
             plt.Axes.Left.TickLabelStyle.FontSize   = 11;
         }
