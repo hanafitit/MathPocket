@@ -173,10 +173,37 @@ namespace MathPocket
                             new LinearSignFunction(),
                         }
                     },
-                }
-            },
-
-            // ── В разработке ──────────────────────────────────────
+                    new MathSection
+                    {
+                        Name = "🔀 Взаимное расположение функций",
+                        Functions = new FunctionBase[]
+                        {
+                            new LinearRelationFunction(),
+                            new LinearIntersectionPointFunction(),
+                            new LinearProveIntersectFunction(),
+                            new LinearWriteRelatedFunction(),
+                            new LinearParallelExamplesFunction(),
+                            new LinearTwoGraphsFunction(),
+                            new LinearQuadrantsFunction(),
+                            new LinearFindBFromIntersectionFunction(),
+                            new LinearFindByPointOnOyFunction(),
+                            new LinearParallelThroughPointFunction(),
+                            new LinearFindFormulaByPointAndOyFunction(),
+                        }
+                    },
+                    new MathSection
+                    {
+                        Name = "📐 Системы уравнений (графический способ)",
+                        Functions = new FunctionBase[]
+                        {
+                            new SystemGraphOxFunction(),
+                            new SystemGraphOyFunction(),
+                            new SystemGraphPlotFunction(),
+                            new SystemSolveGraphicallyFunction(),
+                            new SystemCountSolutionsFunction(),
+                            new SystemEvalExpressionFunction(),
+                        }
+                    },
             new MathCategory { Name = "✂️ Формулы сокращённого умножения" },
             new MathCategory { Name = "➗ Алгебраические дроби" },
             new MathCategory { Name = "√ Квадратные корни" },

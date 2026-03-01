@@ -48,26 +48,39 @@ namespace MathPocket
             CalcLinearRange(double k, double b)
         {
             // Ключевые точки: A(0; b) и B(-b/k; 0)
+            double xA = 0, yA = b;
             double xB = Math.Abs(k) > 1e-12 ? -b / k : 0;
 
-            // Базовое окно 10×10, всегда центрировано вокруг (0, 0), шаг = 1
-            double step = 1.0;
-            double xMin = -10.0;
-            double xMax =  10.0;
-            double yMin = -10.0;
-            double yMax =  10.0;
+            double cx = (xA + xB) / 2.0;
+            double cy = (yA + 0)  / 2.0;
 
-            // Если ключевые точки не влезают — расширяем окно и увеличиваем шаг
-            double maxCoord = Math.Max(Math.Abs(b), Math.Abs(xB));
-            if (maxCoord > 8.0)
-            {
-                step = NiceNumber(maxCoord / 7.0);
-                step = Math.Max(step, 1.0);
-                xMin = -10.0 * step;
-                xMax =  10.0 * step;
-                yMin = -10.0 * step;
-                yMax =  10.0 * step;
-            }
+            // Шаг всегда = 1: одна клетка = одна единица
+            double step = 1.0;
+
+            // Привязка центра к сетке
+            double cxSnap = Math.Round(cx / step) * step;
+            double cySnap = Math.Round(cy / step) * step;
+
+            // Базовое окно 10×8 клеток
+            double xMin = cxSnap - 5.0;
+            double xMax = cxSnap + 5.0;
+            double yMin = cySnap - 4.0;
+            double yMax = cySnap + 4.0;
+
+            // Гарантируем что обе ключевые точки видны с отступом 1.5 клетки
+            double pad = 1.5;
+            if (xA - pad < xMin) { double shift = xMin - (xA - pad); xMin -= shift; xMax -= shift; }
+            if (xA + pad > xMax) { double shift = (xA + pad) - xMax; xMin += shift; xMax += shift; }
+            if (xB - pad < xMin) { double shift = xMin - (xB - pad); xMin -= shift; xMax -= shift; }
+            if (xB + pad > xMax) { double shift = (xB + pad) - xMax; xMin += shift; xMax += shift; }
+            if (yA - pad < yMin) { double shift = yMin - (yA - pad); yMin -= shift; yMax -= shift; }
+            if (yA + pad > yMax) { double shift = (yA + pad) - yMax; yMin += shift; yMax += shift; }
+
+            // Гарантируем что начало координат видно с отступом 1 клетка
+            if (0 - pad < xMin) { double shift = xMin - (0 - pad); xMin -= shift; xMax -= shift; }
+            if (0 + pad > xMax) { double shift = (0 + pad) - xMax; xMin += shift; xMax += shift; }
+            if (0 - pad < yMin) { double shift = yMin - (0 - pad); yMin -= shift; yMax -= shift; }
+            if (0 + pad > yMax) { double shift = (0 + pad) - yMax; yMin += shift; yMax += shift; }
 
             return (xMin, xMax, yMin, yMax, step);
         }
@@ -274,7 +287,81 @@ namespace MathPocket
             return plt.GetImageBytes(Width, Height, ImageFormat.Png);
         }
 
-        // ─── Вспомогательное ─────────────────────────────────────
+        // ─── Two Linear Functions ─────────────────────────────────
+
+        public static byte[] TwoLinearFunctions(double k1, double b1, double k2, double b2)
+        {
+            // Диапазон: стандартный 10×10
+            double xMin = -10.0, xMax = 10.0, yMin = -10.0, yMax = 10.0, step = 1.0;
+
+            // Расширяем если точки не влезают
+            double maxCoord = Math.Max(
+                Math.Max(Math.Abs(b1), Math.Abs(b2)),
+                Math.Max(
+                    Math.Abs(k1) > 1e-12 ? Math.Abs(b1 / k1) : 0,
+                    Math.Abs(k2) > 1e-12 ? Math.Abs(b2 / k2) : 0));
+
+            if (maxCoord > 8.0)
+            {
+                step = NiceNumber(maxCoord / 7.0);
+                step = Math.Max(step, 1.0);
+                xMin = -10.0 * step; xMax = 10.0 * step;
+                yMin = -10.0 * step; yMax = 10.0 * step;
+            }
+
+            var plt = new Plot();
+
+            // Прямая 1
+            double[] xs1 = Range(xMin, xMax);
+            double[] ys1 = xs1.Select(x => k1 * x + b1).ToArray();
+            var line1 = plt.Add.ScatterLine(xs1, ys1);
+            line1.Color       = Colors.RoyalBlue;
+            line1.LineWidth   = 2.5f;
+            line1.LegendText  = FormatFunc(k1, b1);
+
+            // Прямая 2
+            double[] xs2 = Range(xMin, xMax);
+            double[] ys2 = xs2.Select(x => k2 * x + b2).ToArray();
+            var line2 = plt.Add.ScatterLine(xs2, ys2);
+            line2.Color       = Colors.OrangeRed;
+            line2.LineWidth   = 2.5f;
+            line2.LegendText  = FormatFunc(k2, b2);
+
+            // Оси
+            var hLine = plt.Add.HorizontalLine(0);
+            hLine.Color = Colors.Black; hLine.LineWidth = 1.5f;
+            var vLine = plt.Add.VerticalLine(0);
+            vLine.Color = Colors.Black; vLine.LineWidth = 1.5f;
+
+            // Точка пересечения
+            if (Math.Abs(k1 - k2) > 1e-9)
+            {
+                double xi = (b2 - b1) / (k1 - k2);
+                double yi = k1 * xi + b1;
+                if (xi >= xMin && xi <= xMax && yi >= yMin && yi <= yMax)
+                {
+                    var dot = plt.Add.Marker(xi, yi);
+                    dot.Color = Colors.SeaGreen;
+                    dot.Size  = 12;
+                    dot.LegendText = $"({FmtLabel(xi)}; {FmtLabel(yi)})";
+                }
+            }
+
+            plt.ShowLegend(Alignment.LowerRight);
+            ApplyTicks(plt, xMin, xMax, yMin, yMax, step);
+            plt.Axes.SetLimits(xMin, xMax, yMin, yMax);
+
+            return plt.GetImageBytes(Width, Height, ImageFormat.Png);
+        }
+
+        private static string FormatFunc(double k, double b)
+        {
+            string kStr = k == 1 ? "" : k == -1 ? "-" : FmtLabel(k);
+            if (k == 0) return $"y = {FmtLabel(b)}";
+            if (b == 0) return $"y = {kStr}x";
+            if (b > 0)  return $"y = {kStr}x + {FmtLabel(b)}";
+            return             $"y = {kStr}x − {FmtLabel(-b)}";
+        }
 
         private static string FmtLabel(double v)
         {
