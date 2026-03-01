@@ -149,6 +149,7 @@ namespace MathPocket
 
             plt.Axes.SetLimits(xMin, xMax, yMin, yMax);
             plt.Axes.SquareUnits();
+            ApplyAxisTicks(plt, xMin, xMax, yMin, yMax);
 
             return plt.GetImageBytes(Width, Height, ImageFormat.Png);
         }
@@ -236,6 +237,7 @@ namespace MathPocket
 
             plt.Axes.SetLimits(xMin, xMax, yMin, yMax);
             plt.Axes.SquareUnits();
+            ApplyAxisTicks(plt, xMin, xMax, yMin, yMax);
 
             return plt.GetImageBytes(Width, Height, ImageFormat.Png);
         }
@@ -273,6 +275,50 @@ namespace MathPocket
         }
 
         // ─── Вспомогательное ─────────────────────────────────────
+
+        /// <summary>
+        /// Настраивает тики на осях: целые числа с шагом, подобранным под диапазон.
+        /// </summary>
+        private static void ApplyAxisTicks(Plot plt, double xMin, double xMax, double yMin, double yMax)
+        {
+            // Подбираем шаг тика в зависимости от диапазона
+            static double NiceStep(double range)
+            {
+                double raw = range / 8.0; // ~8 делений
+                double mag = Math.Pow(10, Math.Floor(Math.Log10(raw)));
+                double norm = raw / mag;
+                double step = norm < 1.5 ? 1 : norm < 3.5 ? 2 : norm < 7.5 ? 5 : 10;
+                return step * mag;
+            }
+
+            double stepX = NiceStep(xMax - xMin);
+            double stepY = NiceStep(yMax - yMin);
+
+            // Генерируем позиции тиков
+            static (double[] pos, string[] lbl) MakeTicks(double min, double max, double step)
+            {
+                var positions = new System.Collections.Generic.List<double>();
+                double start = Math.Ceiling(min / step) * step;
+                for (double v = start; v <= max + 1e-9; v += step)
+                    positions.Add(Math.Round(v, 10));
+                var labels = positions.Select(v =>
+                {
+                    long iv = (long)Math.Round(v);
+                    return Math.Abs(v - iv) < 1e-9 ? iv.ToString() : v.ToString("G4");
+                }).ToArray();
+                return (positions.ToArray(), labels);
+            }
+
+            var (xPos, xLbl) = MakeTicks(xMin, xMax, stepX);
+            var (yPos, yLbl) = MakeTicks(yMin, yMax, stepY);
+
+            plt.Axes.Bottom.SetTicks(xPos, xLbl);
+            plt.Axes.Left.SetTicks(yPos, yLbl);
+
+            // Настраиваем стиль подписей тиков
+            plt.Axes.Bottom.TickLabelStyle.FontSize = 11;
+            plt.Axes.Left.TickLabelStyle.FontSize   = 11;
+        }
 
         private static void AddAxes(Plot plt)
         {
