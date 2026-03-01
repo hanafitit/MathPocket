@@ -51,70 +51,71 @@ namespace MathPocket
         {
             var plt = new Plot();
 
-            // ── Прямая ────────────────────────────────────────────
+            // ── Прямая (линия без маркеров) ───────────────────────
             double[] xs = Range(xMin, xMax);
             double[] ys = xs.Select(x => k * x + b).ToArray();
-
-            var line = plt.Add.Scatter(xs, ys);
-            line.Color      = Colors.RoyalBlue;
-            line.LineWidth  = 2.5f;
-            line.MarkerSize = 0;
+            var line = plt.Add.ScatterLine(xs, ys);
+            line.Color     = Colors.RoyalBlue;
+            line.LineWidth = 2.5f;
 
             // ── Жирные оси координат ──────────────────────────────
             var hLine = plt.Add.HorizontalLine(0);
             hLine.Color     = Colors.Black;
             hLine.LineWidth = 1.5f;
-
             var vLine = plt.Add.VerticalLine(0);
             vLine.Color     = Colors.Black;
             vLine.LineWidth = 1.5f;
 
-            // ── Точка пересечения с осью Oy (x = 0) ──────────────
-            var oyPoint = plt.Add.Scatter(new[] { 0.0 }, new[] { b });
-            oyPoint.Color      = Colors.OrangeRed;
-            oyPoint.MarkerSize = 12;
-            oyPoint.LineWidth  = 0;
-            oyPoint.LegendText = $"A(0; {FmtLabel(b)})  — ось Oy";
+            // ── Точка A: пересечение с осью Oy (x = 0) ───────────
+            var oyMarker = plt.Add.Marker(0, b);
+            oyMarker.Color      = Colors.OrangeRed;
+            oyMarker.Size       = 12;
+            oyMarker.LegendText = $"A(0; {FmtLabel(b)})";
 
-            // ── Подпись точки Oy ──────────────────────────────────
-            var oyLabel = plt.Add.Text($"A(0; {FmtLabel(b)})", 0, b);
-            oyLabel.LabelFontSize = 13;
-            oyLabel.LabelFontColor = Colors.OrangeRed;
-            oyLabel.LabelAlignment = ScottPlot.Alignment.LowerLeft;
-            oyLabel.LabelBorderWidth = 0;
-            oyLabel.LabelBackgroundColor = Colors.Transparent;
+            var oyText = plt.Add.Text($"A(0; {FmtLabel(b)})", 0, b);
+            oyText.LabelFontSize        = 13;
+            oyText.LabelFontColor       = Colors.OrangeRed;
+            oyText.LabelBold            = true;
+            oyText.LabelAlignment       = Alignment.LowerLeft;
+            oyText.LabelBorderWidth     = 0;
+            oyText.LabelBackgroundColor = Colors.Transparent;
 
-            // ── Точка пересечения с осью Ox (y = 0) ──────────────
+            // ── Точка B: пересечение с осью Ox (y = 0) ───────────
             if (Math.Abs(k) > 1e-12)
             {
                 double x0 = -b / k;
                 if (x0 >= xMin && x0 <= xMax)
                 {
-                    var oxPoint = plt.Add.Scatter(new[] { x0 }, new[] { 0.0 });
-                    oxPoint.Color      = Colors.SeaGreen;
-                    oxPoint.MarkerSize = 12;
-                    oxPoint.LineWidth  = 0;
-                    oxPoint.LegendText = $"B({FmtLabel(x0)}; 0)  — ось Ox";
+                    var oxMarker = plt.Add.Marker(x0, 0);
+                    oxMarker.Color      = Colors.SeaGreen;
+                    oxMarker.Size       = 12;
+                    oxMarker.LegendText = $"B({FmtLabel(x0)}; 0)";
 
-                    var oxLabel = plt.Add.Text($"B({FmtLabel(x0)}; 0)", x0, 0);
-                    oxLabel.LabelFontSize = 13;
-                    oxLabel.LabelFontColor = Colors.SeaGreen;
-                    oxLabel.LabelAlignment = ScottPlot.Alignment.UpperLeft;
-                    oxLabel.LabelBorderWidth = 0;
-                    oxLabel.LabelBackgroundColor = Colors.Transparent;
+                    var oxText = plt.Add.Text($"B({FmtLabel(x0)}; 0)", x0, 0);
+                    oxText.LabelFontSize        = 13;
+                    oxText.LabelFontColor       = Colors.SeaGreen;
+                    oxText.LabelBold            = true;
+                    oxText.LabelAlignment       = Alignment.UpperRight;
+                    oxText.LabelBorderWidth     = 0;
+                    oxText.LabelBackgroundColor = Colors.Transparent;
                 }
             }
 
-            // ── Заголовок и подписи осей ──────────────────────────
+            // ── Заголовок ─────────────────────────────────────────
             string title = k == 0  ? $"y = {FmtLabel(b)}"
                          : b == 0  ? $"y = {FmtLabel(k)}x"
                          : b > 0   ? $"y = {FmtLabel(k)}x + {FmtLabel(b)}"
                          :           $"y = {FmtLabel(k)}x − {FmtLabel(-b)}";
-
             plt.Title(title, size: 16);
             plt.XLabel("x");
             plt.YLabel("y");
-            plt.ShowLegend(ScottPlot.Alignment.LowerRight);
+            plt.ShowLegend(Alignment.LowerRight);
+
+            // Убедимся что обе точки и нули попадают в область видимости
+            double yMin = Math.Min(k * xMin + b, k * xMax + b);
+            double yMax = Math.Max(k * xMin + b, k * xMax + b);
+            double pad  = Math.Max((yMax - yMin) * 0.15, 1);
+            plt.Axes.SetLimits(xMin, xMax, yMin - pad, yMax + pad);
 
             return plt.GetImageBytes(Width, Height, ImageFormat.Png);
         }
@@ -142,16 +143,14 @@ namespace MathPocket
             fillNeg.LineWidth = 0;
 
             // ── Прямая ────────────────────────────────────────────
-            var line = plt.Add.Scatter(xs, ys);
-            line.Color      = Colors.RoyalBlue;
-            line.LineWidth  = 2.5f;
-            line.MarkerSize = 0;
+            var line = plt.Add.ScatterLine(xs, ys);
+            line.Color     = Colors.RoyalBlue;
+            line.LineWidth = 2.5f;
 
             // ── Жирные оси ────────────────────────────────────────
             var hLine = plt.Add.HorizontalLine(0);
             hLine.Color     = Colors.Black;
             hLine.LineWidth = 1.5f;
-
             var vLine = plt.Add.VerticalLine(0);
             vLine.Color     = Colors.Black;
             vLine.LineWidth = 1.5f;
@@ -162,24 +161,31 @@ namespace MathPocket
                 double x0 = -b / k;
                 if (x0 >= xMin && x0 <= xMax)
                 {
-                    var zeroMark = plt.Add.Scatter(new[] { x0 }, new[] { 0.0 });
-                    zeroMark.Color      = Colors.RoyalBlue;
-                    zeroMark.MarkerSize = 12;
-                    zeroMark.LineWidth  = 0;
-                    zeroMark.LegendText = $"x₀ = {FmtLabel(x0)}  (нуль функции)";
+                    var zeroMarker = plt.Add.Marker(x0, 0);
+                    zeroMarker.Color      = Colors.RoyalBlue;
+                    zeroMarker.Size       = 12;
+                    zeroMarker.LegendText = $"x₀ = {FmtLabel(x0)}";
+
+                    var zeroText = plt.Add.Text($"x₀={FmtLabel(x0)}", x0, 0);
+                    zeroText.LabelFontSize        = 13;
+                    zeroText.LabelFontColor       = Colors.RoyalBlue;
+                    zeroText.LabelBold            = true;
+                    zeroText.LabelAlignment       = Alignment.UpperRight;
+                    zeroText.LabelBorderWidth     = 0;
+                    zeroText.LabelBackgroundColor = Colors.Transparent;
                 }
             }
 
             // ── Подписи зон ───────────────────────────────────────
             var posLabel = plt.Add.Annotation("y > 0");
-            posLabel.Alignment            = ScottPlot.Alignment.UpperRight;
+            posLabel.Alignment            = Alignment.UpperRight;
             posLabel.LabelFontColor       = Colors.DarkGreen;
             posLabel.LabelFontSize        = 14;
             posLabel.LabelBorderWidth     = 0;
             posLabel.LabelBackgroundColor = Colors.Transparent;
 
             var negLabel = plt.Add.Annotation("y < 0");
-            negLabel.Alignment            = ScottPlot.Alignment.LowerRight;
+            negLabel.Alignment            = Alignment.LowerRight;
             negLabel.LabelFontColor       = Colors.DarkRed;
             negLabel.LabelFontSize        = 14;
             negLabel.LabelBorderWidth     = 0;
@@ -189,16 +195,20 @@ namespace MathPocket
                          : b == 0  ? $"y = {FmtLabel(k)}x"
                          : b > 0   ? $"y = {FmtLabel(k)}x + {FmtLabel(b)}"
                          :           $"y = {FmtLabel(k)}x − {FmtLabel(-b)}";
-
             plt.Title(title, size: 16);
             plt.XLabel("x");
             plt.YLabel("y");
-            plt.ShowLegend(ScottPlot.Alignment.LowerRight);
+            plt.ShowLegend(Alignment.LowerRight);
+
+            double yMin = Math.Min(k * xMin + b, k * xMax + b);
+            double yMax = Math.Max(k * xMin + b, k * xMax + b);
+            double pad  = Math.Max((yMax - yMin) * 0.15, 1);
+            plt.Axes.SetLimits(xMin, xMax, yMin - pad, yMax + pad);
 
             return plt.GetImageBytes(Width, Height, ImageFormat.Png);
         }
 
-        private static string FmtLabel(double v)
+                private static string FmtLabel(double v)
         {
             if (v == Math.Floor(v) && Math.Abs(v) < 1e12) return ((long)v).ToString();
             return v.ToString("G4", System.Globalization.CultureInfo.InvariantCulture);
