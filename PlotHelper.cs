@@ -102,17 +102,12 @@ namespace MathPocket
             double[] xPos = MakePositions(xMin, xMax, step);
             double[] yPos = MakePositions(yMin, yMax, step);
 
-            // ScottPlot 5: используем AddMajor для каждого тика
-            var xGen = new NumericManual();
-            foreach (var v in xPos)
-                xGen.AddMajor(v, FormatTick(v, step));
+            string[] xLbl = xPos.Select(v => FormatTick(v, step)).ToArray();
+            string[] yLbl = yPos.Select(v => FormatTick(v, step)).ToArray();
 
-            var yGen = new NumericManual();
-            foreach (var v in yPos)
-                yGen.AddMajor(v, FormatTick(v, step));
-
-            plt.Axes.Bottom.TickGenerator = xGen;
-            plt.Axes.Left.TickGenerator   = yGen;
+            // SetTicks() — встроенный helper, заменяет TickGenerator на NumericManual
+            plt.Axes.Bottom.SetTicks(xPos, xLbl);
+            plt.Axes.Left.SetTicks(yPos, yLbl);
 
             plt.Axes.Bottom.TickLabelStyle.FontSize = 12;
             plt.Axes.Left.TickLabelStyle.FontSize   = 12;
@@ -200,8 +195,8 @@ namespace MathPocket
             plt.YLabel("y");
             plt.ShowLegend(Alignment.LowerRight);
 
-            plt.Axes.SetLimits(xMin, xMax, yMin, yMax);
             ApplyTicks(plt, xMin, xMax, yMin, yMax, step);
+            plt.Axes.SetLimits(xMin, xMax, yMin, yMax);
 
             return plt.GetImageBytes(Width, Height, ImageFormat.Png);
         }
@@ -286,8 +281,8 @@ namespace MathPocket
             plt.YLabel("y");
             plt.ShowLegend(Alignment.LowerRight);
 
-            plt.Axes.SetLimits(xMin, xMax, yMin, yMax);
             ApplyTicks(plt, xMin, xMax, yMin, yMax, step);
+            plt.Axes.SetLimits(xMin, xMax, yMin, yMax);
 
             return plt.GetImageBytes(Width, Height, ImageFormat.Png);
         }
