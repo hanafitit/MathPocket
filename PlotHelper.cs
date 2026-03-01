@@ -12,8 +12,8 @@ namespace MathPocket
     /// </summary>
     internal static class PlotHelper
     {
-        public const int Width  = 640;
-        public const int Height = 400;
+        public const int Width  = 700;
+        public const int Height = 500;
 
         // ─── Scatter / линейный график ────────────────────────────
 
@@ -137,6 +137,7 @@ namespace MathPocket
         {
             var (xMin, xMax, yMin, yMax, step) = CalcLinearRange(k, b);
             var plt = new Plot();
+            plt.Layout.Fixed(new ScottPlot.PixelPadding(50, 20, 40, 20));
 
             // Прямая
             double[] xs = Range(xMin, xMax);
@@ -210,6 +211,7 @@ namespace MathPocket
         {
             var (xMin, xMax, yMin, yMax, step) = CalcLinearRange(k, b);
             var plt = new Plot();
+            plt.Layout.Fixed(new ScottPlot.PixelPadding(50, 20, 40, 20));
 
             double[] xs    = Range(xMin, xMax);
             double[] ys    = xs.Select(x => k * x + b).ToArray();
