@@ -524,8 +524,12 @@ namespace MathPocket
                         $"⚠️ Не удалось отправить график: {ex.Message}",
                         replyMarkup: BackKeyboard());
                 }
-                await _bot.SendMessage(chatId, "Хочешь построить ещё раз? Нажми «◀️ Назад» и выбери функцию снова.");
+                await _bot.SendMessage(chatId, "Хочешь построить ещё раз? Выбери функцию снова или нажми «◀️ Назад».");
                 _inputSession.TryRemove(chatId, out _);
+                _selectedFunction.TryRemove(chatId, out _);
+                _userState[chatId] = "choose_function";
+                if (_selectedSection.TryGetValue(chatId, out var secAfterPlot))
+                    await SendFunctionMenu(chatId, secAfterPlot);
                 return;
             }
 
@@ -547,8 +551,12 @@ namespace MathPocket
             }
 
             await _bot.SendMessage(chatId, result, replyMarkup: BackKeyboard());
-            await _bot.SendMessage(chatId, "Хочешь посчитать ещё раз? Нажми «◀️ Назад» и выбери функцию снова.");
             _inputSession.TryRemove(chatId, out _);
+            _selectedFunction.TryRemove(chatId, out _);
+            _userState[chatId] = "choose_function";
+            await _bot.SendMessage(chatId, "Хочешь посчитать ещё раз? Выбери функцию снова или нажми «◀️ Назад».");
+            if (_selectedSection.TryGetValue(chatId, out var secAfterResult))
+                await SendFunctionMenu(chatId, secAfterResult);
         }
 
         private async Task HandleSingleLineInput(Message msg, FunctionBase func)

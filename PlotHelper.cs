@@ -50,40 +50,24 @@ namespace MathPocket
             // Ключевые точки: A(0; b) и B(-b/k; 0)
             double xB = Math.Abs(k) > 1e-12 ? -b / k : 0;
 
-            // Определяем нужный масштаб по максимальному из координат ключевых точек
+            // Базовое окно 10×10, всегда центрировано вокруг (0, 0), шаг = 1
+            double step = 1.0;
+            double xMin = -10.0;
+            double xMax =  10.0;
+            double yMin = -10.0;
+            double yMax =  10.0;
+
+            // Если ключевые точки не влезают — расширяем окно и увеличиваем шаг
             double maxCoord = Math.Max(Math.Abs(b), Math.Abs(xB));
-            maxCoord = Math.Max(maxCoord, 1.0); // минимум 1 чтобы не схлопнуться
-
-            // Выбираем шаг тика чтобы окно 5 клеток вмещало все точки с отступом
-            double rawStep = maxCoord / 3.5; // 3.5 клетки от центра до точки
-            double step = NiceNumber(rawStep);
-            step = Math.Max(step, 1.0); // шаг не меньше 1
-
-            // Окно всегда центрировано вокруг (0, 0): 5 клеток в каждую сторону по X, 4 по Y
-            double xMin = -5.0 * step;
-            double xMax =  5.0 * step;
-            double yMin = -4.0 * step;
-            double yMax =  4.0 * step;
-
-            // Гарантируем что ключевые точки видны с отступом 1.5 клетки
-            double pad = 1.5 * step;
-            if (xB - pad < xMin) xMin = xB - pad;
-            if (xB + pad > xMax) xMax = xB + pad;
-            if (b  - pad < yMin) yMin = b  - pad;
-            if (b  + pad > yMax) yMax = b  + pad;
-
-            // Гарантируем что начало координат всегда видно с отступом 1 клетка
-            double originPad = step;
-            if (-originPad < xMin) xMin = -originPad;
-            if ( originPad > xMax) xMax =  originPad;
-            if (-originPad < yMin) yMin = -originPad;
-            if ( originPad > yMax) yMax =  originPad;
-
-            // Округляем границы до кратных step
-            xMin = Math.Floor(xMin / step) * step;
-            xMax = Math.Ceiling(xMax / step) * step;
-            yMin = Math.Floor(yMin / step) * step;
-            yMax = Math.Ceiling(yMax / step) * step;
+            if (maxCoord > 8.0)
+            {
+                step = NiceNumber(maxCoord / 7.0);
+                step = Math.Max(step, 1.0);
+                xMin = -10.0 * step;
+                xMax =  10.0 * step;
+                yMin = -10.0 * step;
+                yMax =  10.0 * step;
+            }
 
             return (xMin, xMax, yMin, yMax, step);
         }
