@@ -69,9 +69,18 @@ namespace MathPocket
             double cxSnap = Math.Round(cx / step) * step;
             double cySnap = Math.Round(cy / step) * step;
 
-            return (cxSnap - spanX / 2.0, cxSnap + spanX / 2.0,
-                    cySnap - spanY / 2.0, cySnap + spanY / 2.0,
-                    step);
+            double xMin = cxSnap - spanX / 2.0;
+            double xMax = cxSnap + spanX / 2.0;
+            double yMin = cySnap - spanY / 2.0;
+            double yMax = cySnap + spanY / 2.0;
+
+            // Гарантируем, что начало координат (0, 0) видно с отступом ≥ 1 шаг
+            if (xMin > -step) { double shift = -step - xMin; xMin += shift; xMax += shift; }
+            if (xMax <  step) { double shift =  step - xMax; xMin += shift; xMax += shift; }
+            if (yMin > -step) { double shift = -step - yMin; yMin += shift; yMax += shift; }
+            if (yMax <  step) { double shift =  step - yMax; yMin += shift; yMax += shift; }
+
+            return (xMin, xMax, yMin, yMax, step);
         }
 
         private static double NiceNumber(double x)
