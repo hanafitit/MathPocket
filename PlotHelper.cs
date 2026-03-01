@@ -402,5 +402,214 @@ namespace MathPocket
                 xs[i] = xMin + i * s;
             return xs;
         }
+
+        // ─── Диапазон для параболы y = ax² ───────────────────────
+
+        private static (double xMin, double xMax, double yMin, double yMax, double step)
+            CalcQuadraticRange(double a, double extraY = 0)
+        {
+            double halfX  = 5.0;
+            double yAtEdge = Math.Abs(a) * halfX * halfX;
+            double ySpan   = Math.Max(Math.Max(yAtEdge, Math.Abs(extraY)) * 1.3, 5.0);
+
+            double step = NiceNumber(ySpan / 5.0);
+            step  = Math.Max(step, 0.5);
+            halfX = Math.Ceiling(halfX / step) * step;
+            ySpan = Math.Ceiling(ySpan / step) * step;
+
+            double yMin = a > 0 ? -step   : -ySpan;
+            double yMax = a > 0 ?  ySpan  :  step;
+            return (-halfX, halfX, yMin, yMax, step);
+        }
+
+        // ─── QuadraticPlot: y = ax² ───────────────────────────────
+
+        public static byte[] QuadraticPlot(double a)
+        {
+            var (xMin, xMax, yMin, yMax, step) = CalcQuadraticRange(a);
+            var plt = new Plot();
+
+            double[] xs = Range(xMin, xMax);
+            var curve = plt.Add.ScatterLine(xs, xs.Select(x => a * x * x).ToArray());
+            curve.Color = Colors.RoyalBlue; curve.LineWidth = 2.5f;
+            curve.LegendText = a == 1 ? "y = x²" : a == -1 ? "y = −x²" : $"y = {FmtLabel(a)}x²";
+
+            plt.Add.HorizontalLine(0).Color = Colors.Black;
+            plt.Add.VerticalLine(0).Color   = Colors.Black;
+
+            var vt = plt.Add.Text("O(0;0)", 0, 0);
+            vt.LabelFontSize = 12; vt.LabelFontColor = Colors.OrangeRed;
+            vt.LabelAlignment = Alignment.UpperRight;
+            vt.LabelBorderWidth = 0; vt.LabelBackgroundColor = Colors.Transparent;
+
+            plt.Title(curve.LegendText, size: 16);
+            plt.XLabel("x"); plt.YLabel("y");
+            plt.ShowLegend(Alignment.LowerRight);
+            ApplyTicks(plt, xMin, xMax, yMin, yMax, step);
+            plt.Axes.SetLimits(xMin, xMax, yMin, yMax);
+            return plt.GetImageBytes(Width, Height, ImageFormat.Png);
+        }
+
+        // ─── TwoQuadraticPlot: y = a₁x² и y = a₂x² ─────────────
+
+        public static byte[] TwoQuadraticPlot(double a1, double a2)
+        {
+            double aBig = Math.Abs(a1) > Math.Abs(a2) ? a1 : a2;
+            var (xMin, xMax, yMin, yMax, step) = CalcQuadraticRange(aBig);
+            var plt = new Plot();
+
+            double[] xs = Range(xMin, xMax);
+
+            var c1 = plt.Add.ScatterLine(xs, xs.Select(x => a1 * x * x).ToArray());
+            c1.Color = Colors.RoyalBlue; c1.LineWidth = 2.5f;
+            c1.LegendText = a1 == 1 ? "y = x²" : a1 == -1 ? "y = −x²" : $"y = {FmtLabel(a1)}x²";
+
+            var c2 = plt.Add.ScatterLine(xs, xs.Select(x => a2 * x * x).ToArray());
+            c2.Color = Colors.OrangeRed; c2.LineWidth = 2.5f;
+            c2.LegendText = a2 == 1 ? "y = x²" : a2 == -1 ? "y = −x²" : $"y = {FmtLabel(a2)}x²";
+
+            plt.Add.HorizontalLine(0).Color = Colors.Black;
+            plt.Add.VerticalLine(0).Color   = Colors.Black;
+
+            plt.Title($"{c1.LegendText}  и  {c2.LegendText}", size: 14);
+            plt.XLabel("x"); plt.YLabel("y");
+            plt.ShowLegend(Alignment.LowerRight);
+            ApplyTicks(plt, xMin, xMax, yMin, yMax, step);
+            plt.Axes.SetLimits(xMin, xMax, yMin, yMax);
+            return plt.GetImageBytes(Width, Height, ImageFormat.Png);
+        }
+
+        // ─── QuadraticWithLine: парабола + горизонтальная y = c ──
+
+        public static byte[] QuadraticWithLine(double a, double c)
+        {
+            var (xMin, xMax, yMin, yMax, step) = CalcQuadraticRange(a, c);
+            var plt = new Plot();
+
+            double[] xs = Range(xMin, xMax);
+            var curve = plt.Add.ScatterLine(xs, xs.Select(x => a * x * x).ToArray());
+            curve.Color = Colors.RoyalBlue; curve.LineWidth = 2.5f;
+            curve.LegendText = $"y = {FmtLabel(a)}x²";
+
+            var hline = plt.Add.HorizontalLine(c);
+            hline.Color = Colors.OrangeRed; hline.LineWidth = 2f;
+            hline.LegendText = $"y = {FmtLabel(c)}";
+
+            plt.Add.HorizontalLine(0).Color = Colors.Black;
+            plt.Add.VerticalLine(0).Color   = Colors.Black;
+
+            // Точки пересечения
+            double ratio = c / a;
+            if (ratio > 1e-9)
+            {
+                double xr = Math.Sqrt(ratio);
+                foreach (double xi in new[] { -xr, xr })
+                {
+                    if (xi >= xMin && xi <= xMax)
+                    {
+                        var m = plt.Add.Marker(xi, c);
+                        m.Color = Colors.SeaGreen; m.Size = 10;
+                        m.LegendText = $"({FmtLabel(xi)}; {FmtLabel(c)})";
+                    }
+                }
+            }
+            else if (Math.Abs(ratio) < 1e-9)
+            {
+                var m = plt.Add.Marker(0, 0);
+                m.Color = Colors.SeaGreen; m.Size = 10;
+            }
+
+            plt.ShowLegend(Alignment.LowerRight);
+            ApplyTicks(plt, xMin, xMax, yMin, yMax, step);
+            plt.Axes.SetLimits(xMin, xMax, yMin, yMax);
+            return plt.GetImageBytes(Width, Height, ImageFormat.Png);
+        }
+
+        // ─── QuadraticWithLinearLine: парабола + прямая kx+b ─────
+
+        public static byte[] QuadraticWithLinearLine(double a, double k, double b)
+        {
+            double maxY = Math.Max(Math.Abs(b), Math.Abs(a * 5 * 5));
+            var (xMin, xMax, yMin, yMax, step) = CalcQuadraticRange(a, maxY);
+            var plt = new Plot();
+
+            double[] xs = Range(xMin, xMax);
+
+            var curve = plt.Add.ScatterLine(xs, xs.Select(x => a * x * x).ToArray());
+            curve.Color = Colors.RoyalBlue; curve.LineWidth = 2.5f;
+            curve.LegendText = a == 1 ? "y = x²" : a == -1 ? "y = −x²" : $"y = {FmtLabel(a)}x²";
+
+            var line = plt.Add.ScatterLine(xs, xs.Select(x => k * x + b).ToArray());
+            line.Color = Colors.OrangeRed; line.LineWidth = 2f;
+            line.LegendText = FormatFunc(k, b);
+
+            plt.Add.HorizontalLine(0).Color = Colors.Black;
+            plt.Add.VerticalLine(0).Color   = Colors.Black;
+
+            // Точки пересечения: ax² - kx - b = 0
+            double A = a, B = -k, C = -b;
+            double D = B * B - 4 * A * C;
+            if (D >= 0)
+            {
+                double sqrtD = Math.Sqrt(D);
+                foreach (double xi in new[] { (-B - sqrtD) / (2 * A), (-B + sqrtD) / (2 * A) })
+                {
+                    double yi = a * xi * xi;
+                    if (xi >= xMin && xi <= xMax && yi >= yMin && yi <= yMax)
+                    {
+                        var m = plt.Add.Marker(xi, yi);
+                        m.Color = Colors.SeaGreen; m.Size = 10;
+                        m.LegendText = $"({FmtLabel(xi)}; {FmtLabel(yi)})";
+                    }
+                }
+            }
+
+            plt.ShowLegend(Alignment.LowerRight);
+            ApplyTicks(plt, xMin, xMax, yMin, yMax, step);
+            plt.Axes.SetLimits(xMin, xMax, yMin, yMax);
+            return plt.GetImageBytes(Width, Height, ImageFormat.Png);
+        }
+
+        // ─── QuadraticOnInterval: парабола с выделенным участком ─
+
+        public static byte[] QuadraticOnInterval(double a, double x1, double x2)
+        {
+            if (x1 > x2) (x1, x2) = (x2, x1);
+            double maxY = Math.Max(Math.Abs(a * x1 * x1), Math.Abs(a * x2 * x2));
+            var (xMin, xMax, yMin, yMax, step) = CalcQuadraticRange(a, maxY);
+            var plt = new Plot();
+
+            double[] xs = Range(xMin, xMax);
+
+            // Фоновая парабола
+            var bg = plt.Add.ScatterLine(xs, xs.Select(x => a * x * x).ToArray());
+            bg.Color = Colors.RoyalBlue.WithAlpha(0.2f); bg.LineWidth = 1.5f;
+
+            // Выделенный участок
+            double[] xSeg = Range(x1, x2, 200);
+            var seg = plt.Add.ScatterLine(xSeg, xSeg.Select(x => a * x * x).ToArray());
+            seg.Color = Colors.RoyalBlue; seg.LineWidth = 3.5f;
+            seg.LegendText = $"y={FmtLabel(a)}x² на [{FmtLabel(x1)};{FmtLabel(x2)}]";
+
+            // Концы
+            foreach (double xi in new[] { x1, x2 })
+            {
+                double yi = a * xi * xi;
+                var m = plt.Add.Marker(xi, yi);
+                m.Color = Colors.OrangeRed; m.Size = 10;
+                var t = plt.Add.Text($"({FmtLabel(xi)};{FmtLabel(yi)})", xi, yi);
+                t.LabelFontSize = 11; t.LabelFontColor = Colors.OrangeRed;
+                t.LabelAlignment = Alignment.UpperRight;
+                t.LabelBorderWidth = 0; t.LabelBackgroundColor = Colors.Transparent;
+            }
+
+            plt.Add.HorizontalLine(0).Color = Colors.Black;
+            plt.Add.VerticalLine(0).Color   = Colors.Black;
+
+            plt.ShowLegend(Alignment.LowerRight);
+            ApplyTicks(plt, xMin, xMax, yMin, yMax, step);
+            plt.Axes.SetLimits(xMin, xMax, yMin, yMax);
+            return plt.GetImageBytes(Width, Height, ImageFormat.Png);
+        }
     }
 }

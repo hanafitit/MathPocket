@@ -204,6 +204,23 @@ namespace MathPocket
                             new SystemEvalExpressionFunction(),
                         }
                     },
+                    new MathSection
+                    {
+                        Name = "📐 Функция y = ax²",
+                        Functions = new FunctionBase[]
+                        {
+                            new QuadraticPointBelongsFunction(),
+                            new QuadraticPlotFunction(),
+                            new QuadraticTwoGraphsFunction(),
+                            new QuadraticCompareValuesFunction(),
+                            new QuadraticRootsCountFunction(),
+                            new QuadraticIntersectsLinearFunction(),
+                            new QuadraticFindRootsFunction(),
+                            new QuadraticMonotonicFunction(),
+                            new QuadraticMinMaxFunction(),
+                            new QuadraticCanIntersectFunction(),
+                        }
+                    },
                 }
             },
 
