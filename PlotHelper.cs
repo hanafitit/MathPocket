@@ -102,18 +102,20 @@ namespace MathPocket
             double[] xPos = MakePositions(xMin, xMax, step);
             double[] yPos = MakePositions(yMin, yMax, step);
 
-            string[] xLbl = xPos.Select(v => FormatTick(v, step)).ToArray();
-            string[] yLbl = yPos.Select(v => FormatTick(v, step)).ToArray();
+            // ScottPlot 5: используем AddMajor для каждого тика
+            var xGen = new NumericManual();
+            foreach (var v in xPos)
+                xGen.AddMajor(v, FormatTick(v, step));
 
-            // ScottPlot 5: задаём тики через NumericManual
-            var xGen = new NumericManual(xPos, xLbl);
-            var yGen = new NumericManual(yPos, yLbl);
+            var yGen = new NumericManual();
+            foreach (var v in yPos)
+                yGen.AddMajor(v, FormatTick(v, step));
 
             plt.Axes.Bottom.TickGenerator = xGen;
             plt.Axes.Left.TickGenerator   = yGen;
 
-            plt.Axes.Bottom.TickLabelStyle.FontSize = 11;
-            plt.Axes.Left.TickLabelStyle.FontSize   = 11;
+            plt.Axes.Bottom.TickLabelStyle.FontSize = 12;
+            plt.Axes.Left.TickLabelStyle.FontSize   = 12;
         }
 
         private static double[] MakePositions(double min, double max, double step)
@@ -137,7 +139,6 @@ namespace MathPocket
         {
             var (xMin, xMax, yMin, yMax, step) = CalcLinearRange(k, b);
             var plt = new Plot();
-            plt.Layout.Fixed(new ScottPlot.PixelPadding(50, 20, 40, 20));
 
             // Прямая
             double[] xs = Range(xMin, xMax);
@@ -211,7 +212,6 @@ namespace MathPocket
         {
             var (xMin, xMax, yMin, yMax, step) = CalcLinearRange(k, b);
             var plt = new Plot();
-            plt.Layout.Fixed(new ScottPlot.PixelPadding(50, 20, 40, 20));
 
             double[] xs    = Range(xMin, xMax);
             double[] ys    = xs.Select(x => k * x + b).ToArray();
