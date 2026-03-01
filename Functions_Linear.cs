@@ -23,27 +23,51 @@ namespace MathPocket
                      .Replace("−", "-")
                      .Replace(",", ".");
 
-            // Нормализуем: заменяем -x → -1x, +x → +1x, ^x в начале → 1x
-            raw = System.Text.RegularExpressions.Regex.Replace(raw, @"(?<![0-9])x", "1x");
-            raw = System.Text.RegularExpressions.Regex.Replace(raw, @"(?<!\d)-1x", "-1x"); // уже корректно
+            if (string.IsNullOrEmpty(raw)) return null;
 
-            // Ищем коэффициент при x
-            var match = System.Text.RegularExpressions.Regex.Match(
-                raw, @"^([+-]?[0-9]*\.?[0-9]*)x([+-][0-9]*\.?[0-9]+)?$");
+            // Случай 1: только константа (нет x) → k=0, b=константа
+            if (!raw.Contains('x'))
+            {
+                if (double.TryParse(raw, NumberStyles.Any, CultureInfo.InvariantCulture, out double bOnly))
+                    return (0, bOnly);
+                return null;
+            }
 
-            if (!match.Success) return null;
+            // Случай 2: только x без числа вокруг → нормализуем
+            // -x → -1x,  +x → +1x,  x в начале → 1x
+            // Заменяем x, перед которым нет цифры, на 1x (с сохранением знака)
+            // b+kx или b-kx: константа ПЕРВАЯ, потом kx
+            // Паттерн: ^(число)([+-])(число?)x$
+            var m1 = System.Text.RegularExpressions.Regex.Match(raw, @"^([+-]?[0-9]*\.?[0-9]+)([+-])([0-9]*\.?[0-9]*)x$");
+            if (m1.Success)
+            {
+                double b1 = double.Parse(m1.Groups[1].Value, CultureInfo.InvariantCulture);
+                string sign = m1.Groups[2].Value;
+                string kRaw = m1.Groups[3].Value;
+                double k1 = string.IsNullOrEmpty(kRaw) ? 1 : double.Parse(kRaw, CultureInfo.InvariantCulture);
+                if (sign == "-") k1 = -k1;
+                return (k1, b1);
+            }
 
-            string kStr = match.Groups[1].Value;
-            string bStr = match.Groups[2].Value;
+            // kx+b или kx-b или kx: коэффициент ПЕРВЫЙ
+            // Паттерн: ^([+-]?число?)x([+-]число)?$
+            var m2 = System.Text.RegularExpressions.Regex.Match(raw, @"^([+-]?[0-9]*\.?[0-9]*)x([+-][0-9]*\.?[0-9]+)?$");
+            if (m2.Success)
+            {
+                string kStr = m2.Groups[1].Value;
+                string bStr = m2.Groups[2].Value;
 
-            double k = string.IsNullOrEmpty(kStr) || kStr == "+" ? 1
-                     : kStr == "-" ? -1
-                     : double.Parse(kStr, CultureInfo.InvariantCulture);
+                double k2 = string.IsNullOrEmpty(kStr) || kStr == "+" ? 1
+                          : kStr == "-" ? -1
+                          : double.Parse(kStr, CultureInfo.InvariantCulture);
 
-            double b = string.IsNullOrEmpty(bStr) ? 0
-                     : double.Parse(bStr, CultureInfo.InvariantCulture);
+                double b2 = string.IsNullOrEmpty(bStr) ? 0
+                          : double.Parse(bStr, CultureInfo.InvariantCulture);
 
-            return (k, b);
+                return (k2, b2);
+            }
+
+            return null;
         }
 
         /// <summary>Форматирует число: целое без .0, дробное через /</summary>
