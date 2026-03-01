@@ -56,19 +56,33 @@ namespace MathPocket
             double[] ys = xs.Select(x => k * x + b).ToArray();
 
             var line = plt.Add.Scatter(xs, ys);
-            line.Color     = Colors.RoyalBlue;
-            line.LineWidth = 2;
+            line.Color      = Colors.RoyalBlue;
+            line.LineWidth  = 2.5f;
             line.MarkerSize = 0;
 
-            // ── Оси координат ─────────────────────────────────────
-            AddAxes(plt);
+            // ── Жирные оси координат ──────────────────────────────
+            var hLine = plt.Add.HorizontalLine(0);
+            hLine.Color     = Colors.Black;
+            hLine.LineWidth = 1.5f;
+
+            var vLine = plt.Add.VerticalLine(0);
+            vLine.Color     = Colors.Black;
+            vLine.LineWidth = 1.5f;
 
             // ── Точка пересечения с осью Oy (x = 0) ──────────────
             var oyPoint = plt.Add.Scatter(new[] { 0.0 }, new[] { b });
             oyPoint.Color      = Colors.OrangeRed;
-            oyPoint.MarkerSize = 8;
+            oyPoint.MarkerSize = 12;
             oyPoint.LineWidth  = 0;
-            oyPoint.LegendText = $"Oy: (0; {FmtLabel(b)})";
+            oyPoint.LegendText = $"A(0; {FmtLabel(b)})  — ось Oy";
+
+            // ── Подпись точки Oy ──────────────────────────────────
+            var oyLabel = plt.Add.Text($"A(0; {FmtLabel(b)})", 0, b);
+            oyLabel.LabelFontSize = 13;
+            oyLabel.LabelFontColor = Colors.OrangeRed;
+            oyLabel.LabelAlignment = ScottPlot.Alignment.LowerLeft;
+            oyLabel.LabelBorderWidth = 0;
+            oyLabel.LabelBackgroundColor = Colors.Transparent;
 
             // ── Точка пересечения с осью Ox (y = 0) ──────────────
             if (Math.Abs(k) > 1e-12)
@@ -78,22 +92,29 @@ namespace MathPocket
                 {
                     var oxPoint = plt.Add.Scatter(new[] { x0 }, new[] { 0.0 });
                     oxPoint.Color      = Colors.SeaGreen;
-                    oxPoint.MarkerSize = 8;
+                    oxPoint.MarkerSize = 12;
                     oxPoint.LineWidth  = 0;
-                    oxPoint.LegendText = $"Ox: ({FmtLabel(x0)}; 0)";
+                    oxPoint.LegendText = $"B({FmtLabel(x0)}; 0)  — ось Ox";
+
+                    var oxLabel = plt.Add.Text($"B({FmtLabel(x0)}; 0)", x0, 0);
+                    oxLabel.LabelFontSize = 13;
+                    oxLabel.LabelFontColor = Colors.SeaGreen;
+                    oxLabel.LabelAlignment = ScottPlot.Alignment.UpperLeft;
+                    oxLabel.LabelBorderWidth = 0;
+                    oxLabel.LabelBackgroundColor = Colors.Transparent;
                 }
             }
 
-            // ── Подпись и легенда ─────────────────────────────────
-            string title = k == 0   ? $"y = {FmtLabel(b)}"
-                         : b == 0   ? $"y = {FmtLabel(k)}x"
-                         : b > 0    ? $"y = {FmtLabel(k)}x + {FmtLabel(b)}"
-                         :            $"y = {FmtLabel(k)}x − {FmtLabel(-b)}";
+            // ── Заголовок и подписи осей ──────────────────────────
+            string title = k == 0  ? $"y = {FmtLabel(b)}"
+                         : b == 0  ? $"y = {FmtLabel(k)}x"
+                         : b > 0   ? $"y = {FmtLabel(k)}x + {FmtLabel(b)}"
+                         :           $"y = {FmtLabel(k)}x − {FmtLabel(-b)}";
 
-            plt.Title(title);
+            plt.Title(title, size: 16);
             plt.XLabel("x");
             plt.YLabel("y");
-            plt.ShowLegend();
+            plt.ShowLegend(ScottPlot.Alignment.LowerRight);
 
             return plt.GetImageBytes(Width, Height, ImageFormat.Png);
         }
@@ -105,31 +126,35 @@ namespace MathPocket
         {
             var plt = new Plot();
 
-            double[] xs = Range(xMin, xMax);
-            double[] ys = xs.Select(x => k * x + b).ToArray();
-
-            // ── Закрашенные области ───────────────────────────────
-            // Зелёная: y > 0 — между прямой и осью X сверху
+            double[] xs    = Range(xMin, xMax);
+            double[] ys    = xs.Select(x => k * x + b).ToArray();
+            double[] zeros = xs.Select(_ => 0.0).ToArray();
             double[] ysPos = ys.Select(y => Math.Max(y, 0)).ToArray();
             double[] ysNeg = ys.Select(y => Math.Min(y, 0)).ToArray();
-            double[] zeros = xs.Select(_ => 0.0).ToArray();
 
+            // ── Закрашенные области ───────────────────────────────
             var fillPos = plt.Add.FillY(xs, zeros, ysPos);
-            fillPos.FillColor = Colors.LightGreen.WithAlpha(0.4f);
+            fillPos.FillColor = Colors.LightGreen.WithAlpha(0.45f);
             fillPos.LineWidth = 0;
 
             var fillNeg = plt.Add.FillY(xs, ysNeg, zeros);
-            fillNeg.FillColor = Colors.LightCoral.WithAlpha(0.4f);
+            fillNeg.FillColor = Colors.LightCoral.WithAlpha(0.45f);
             fillNeg.LineWidth = 0;
 
             // ── Прямая ────────────────────────────────────────────
             var line = plt.Add.Scatter(xs, ys);
-            line.Color     = Colors.RoyalBlue;
-            line.LineWidth = 2;
+            line.Color      = Colors.RoyalBlue;
+            line.LineWidth  = 2.5f;
             line.MarkerSize = 0;
 
-            // ── Оси ───────────────────────────────────────────────
-            AddAxes(plt);
+            // ── Жирные оси ────────────────────────────────────────
+            var hLine = plt.Add.HorizontalLine(0);
+            hLine.Color     = Colors.Black;
+            hLine.LineWidth = 1.5f;
+
+            var vLine = plt.Add.VerticalLine(0);
+            vLine.Color     = Colors.Black;
+            vLine.LineWidth = 1.5f;
 
             // ── Нуль функции ──────────────────────────────────────
             if (Math.Abs(k) > 1e-12)
@@ -139,21 +164,36 @@ namespace MathPocket
                 {
                     var zeroMark = plt.Add.Scatter(new[] { x0 }, new[] { 0.0 });
                     zeroMark.Color      = Colors.RoyalBlue;
-                    zeroMark.MarkerSize = 8;
+                    zeroMark.MarkerSize = 12;
                     zeroMark.LineWidth  = 0;
-                    zeroMark.LegendText = $"x₀ = {FmtLabel(x0)}";
+                    zeroMark.LegendText = $"x₀ = {FmtLabel(x0)}  (нуль функции)";
                 }
             }
 
-            string title = k == 0   ? $"y = {FmtLabel(b)}"
-                         : b == 0   ? $"y = {FmtLabel(k)}x"
-                         : b > 0    ? $"y = {FmtLabel(k)}x + {FmtLabel(b)}"
-                         :            $"y = {FmtLabel(k)}x − {FmtLabel(-b)}";
+            // ── Подписи зон ───────────────────────────────────────
+            var posLabel = plt.Add.Annotation("y > 0");
+            posLabel.Alignment            = ScottPlot.Alignment.UpperRight;
+            posLabel.LabelFontColor       = Colors.DarkGreen;
+            posLabel.LabelFontSize        = 14;
+            posLabel.LabelBorderWidth     = 0;
+            posLabel.LabelBackgroundColor = Colors.Transparent;
 
-            plt.Title(title);
+            var negLabel = plt.Add.Annotation("y < 0");
+            negLabel.Alignment            = ScottPlot.Alignment.LowerRight;
+            negLabel.LabelFontColor       = Colors.DarkRed;
+            negLabel.LabelFontSize        = 14;
+            negLabel.LabelBorderWidth     = 0;
+            negLabel.LabelBackgroundColor = Colors.Transparent;
+
+            string title = k == 0  ? $"y = {FmtLabel(b)}"
+                         : b == 0  ? $"y = {FmtLabel(k)}x"
+                         : b > 0   ? $"y = {FmtLabel(k)}x + {FmtLabel(b)}"
+                         :           $"y = {FmtLabel(k)}x − {FmtLabel(-b)}";
+
+            plt.Title(title, size: 16);
             plt.XLabel("x");
             plt.YLabel("y");
-            plt.ShowLegend();
+            plt.ShowLegend(ScottPlot.Alignment.LowerRight);
 
             return plt.GetImageBytes(Width, Height, ImageFormat.Png);
         }
