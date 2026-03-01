@@ -54,31 +54,33 @@ namespace MathPocket
             double cx = (xA + xB) / 2.0;
             double cy = (yA + 0)  / 2.0;
 
-            // Шаг: расстояние между точками ≈ 3 клетки
-            double distX   = Math.Max(Math.Abs(xB - xA), 1e-6);
-            double distY   = Math.Max(Math.Abs(yA),       1e-6);
-            double rawStep = Math.Max(distX, distY) / 3.0;
-            double step    = NiceNumber(rawStep);
-            step = Math.Max(step, 1.0);
-
-            // Окно 10×6 клеток
-            double spanX = step * 10.0;
-            double spanY = step * 6.0;
+            // Шаг всегда = 1: одна клетка = одна единица
+            double step = 1.0;
 
             // Привязка центра к сетке
             double cxSnap = Math.Round(cx / step) * step;
             double cySnap = Math.Round(cy / step) * step;
 
-            double xMin = cxSnap - spanX / 2.0;
-            double xMax = cxSnap + spanX / 2.0;
-            double yMin = cySnap - spanY / 2.0;
-            double yMax = cySnap + spanY / 2.0;
+            // Базовое окно 10×8 клеток
+            double xMin = cxSnap - 5.0;
+            double xMax = cxSnap + 5.0;
+            double yMin = cySnap - 4.0;
+            double yMax = cySnap + 4.0;
 
-            // Гарантируем, что начало координат (0, 0) видно с отступом ≥ 1 шаг
-            if (xMin > -step) { double shift = -step - xMin; xMin += shift; xMax += shift; }
-            if (xMax <  step) { double shift =  step - xMax; xMin += shift; xMax += shift; }
-            if (yMin > -step) { double shift = -step - yMin; yMin += shift; yMax += shift; }
-            if (yMax <  step) { double shift =  step - yMax; yMin += shift; yMax += shift; }
+            // Гарантируем что обе ключевые точки видны с отступом 1.5 клетки
+            double pad = 1.5;
+            if (xA - pad < xMin) { double shift = xMin - (xA - pad); xMin -= shift; xMax -= shift; }
+            if (xA + pad > xMax) { double shift = (xA + pad) - xMax; xMin += shift; xMax += shift; }
+            if (xB - pad < xMin) { double shift = xMin - (xB - pad); xMin -= shift; xMax -= shift; }
+            if (xB + pad > xMax) { double shift = (xB + pad) - xMax; xMin += shift; xMax += shift; }
+            if (yA - pad < yMin) { double shift = yMin - (yA - pad); yMin -= shift; yMax -= shift; }
+            if (yA + pad > yMax) { double shift = (yA + pad) - yMax; yMin += shift; yMax += shift; }
+
+            // Гарантируем что начало координат видно с отступом 1 клетка
+            if (0 - pad < xMin) { double shift = xMin - (0 - pad); xMin -= shift; xMax -= shift; }
+            if (0 + pad > xMax) { double shift = (0 + pad) - xMax; xMin += shift; xMax += shift; }
+            if (0 - pad < yMin) { double shift = yMin - (0 - pad); yMin -= shift; yMax -= shift; }
+            if (0 + pad > yMax) { double shift = (0 + pad) - yMax; yMin += shift; yMax += shift; }
 
             return (xMin, xMax, yMin, yMax, step);
         }
