@@ -51,19 +51,24 @@ namespace MathPocket
         /// </summary>
         private static (double xMin, double xMax, double yMin, double yMax) CalcLinearRange(double k, double b)
         {
-            double xOy   = 0;
-            double xOx   = Math.Abs(k) > 1e-12 ? -b / k : 0;
-            double cx    = (xOy + xOx) / 2.0;
-            double spread = Math.Abs(xOx - xOy);
-            double halfX  = Math.Max(spread * 1.5, 5);
-            double xMin   = cx - halfX;
-            double xMax   = cx + halfX;
-            double yAtMin = k * xMin + b;
-            double yAtMax = k * xMax + b;
-            double yMin   = Math.Min(yAtMin, yAtMax);
-            double yMax   = Math.Max(yAtMin, yAtMax);
-            double padY   = Math.Max((yMax - yMin) * 0.15, 2);
-            return (xMin, xMax, yMin - padY, yMax + padY);
+            // Центрируемся между двумя ключевыми точками: A(0;b) и B(-b/k; 0)
+            double xOy = 0;
+            double xOx = Math.Abs(k) > 1e-12 ? -b / k : 0;
+            double cx  = (xOy + xOx) / 2.0;
+            double cy  = (b + 0.0) / 2.0;
+
+            // Фиксированный диапазон X = 8 единиц — как стандартный вид Desmos
+            // Диапазон Y подбирается из соотношения сторон изображения (640x400 = 1.6)
+            // чтобы масштаб по обеим осям был одинаковым
+            double xRange = 8.0;
+            double yRange = xRange * Height / (double)Width; // = 5.0
+
+            double xMin = cx - xRange / 2.0;
+            double xMax = cx + xRange / 2.0;
+            double yMin = cy - yRange / 2.0;
+            double yMax = cy + yRange / 2.0;
+
+            return (xMin, xMax, yMin, yMax);
         }
 
         public static byte[] LinearFunction(double k, double b)
@@ -132,6 +137,7 @@ namespace MathPocket
             plt.ShowLegend(Alignment.LowerRight);
 
             plt.Axes.SetLimits(xMin, xMax, yMin, yMax);
+            plt.Axes.SquareUnits();
 
             return plt.GetImageBytes(Width, Height, ImageFormat.Png);
         }
@@ -218,6 +224,7 @@ namespace MathPocket
             plt.ShowLegend(Alignment.LowerRight);
 
             plt.Axes.SetLimits(xMin, xMax, yMin, yMax);
+            plt.Axes.SquareUnits();
 
             return plt.GetImageBytes(Width, Height, ImageFormat.Png);
         }
