@@ -524,12 +524,11 @@ namespace MathPocket
                         $"⚠️ Не удалось отправить график: {ex.Message}",
                         replyMarkup: BackKeyboard());
                 }
-                await _bot.SendMessage(chatId, "Хочешь построить ещё раз? Выбери функцию снова или нажми «◀️ Назад».");
                 _inputSession.TryRemove(chatId, out _);
                 _selectedFunction.TryRemove(chatId, out _);
                 _userState[chatId] = "choose_function";
                 if (_selectedSection.TryGetValue(chatId, out var secAfterPlot))
-                    await SendFunctionMenu(chatId, secAfterPlot);
+                    await SendFunctionMenu(chatId, secAfterPlot, "Выбери функцию снова или нажми «◀️ Назад»:");
                 return;
             }
 
@@ -554,9 +553,8 @@ namespace MathPocket
             _inputSession.TryRemove(chatId, out _);
             _selectedFunction.TryRemove(chatId, out _);
             _userState[chatId] = "choose_function";
-            await _bot.SendMessage(chatId, "Хочешь посчитать ещё раз? Выбери функцию снова или нажми «◀️ Назад».");
             if (_selectedSection.TryGetValue(chatId, out var secAfterResult))
-                await SendFunctionMenu(chatId, secAfterResult);
+                await SendFunctionMenu(chatId, secAfterResult, "Выбери функцию снова или нажми «◀️ Назад»:");
         }
 
         private async Task HandleSingleLineInput(Message msg, FunctionBase func)
@@ -687,14 +685,17 @@ namespace MathPocket
                 replyMarkup: new ReplyKeyboardMarkup(rows) { ResizeKeyboard = true });
         }
 
-        private async Task SendFunctionMenu(long chatId, MathSection section)
+        private async Task SendFunctionMenu(long chatId, MathSection section) =>
+            await SendFunctionMenu(chatId, section, $"📂 {section.Name} — выберите функцию:");
+
+        private async Task SendFunctionMenu(long chatId, MathSection section, string header)
         {
             var rows = section.Functions
                 .Select(f => new KeyboardButton[] { f.Name })
                 .Append([BtnBack])
                 .ToArray();
 
-            await _bot.SendMessage(chatId, $"📂 {section.Name} — выберите функцию:",
+            await _bot.SendMessage(chatId, header,
                 replyMarkup: new ReplyKeyboardMarkup(rows) { ResizeKeyboard = true });
         }
 
