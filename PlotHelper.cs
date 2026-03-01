@@ -45,10 +45,30 @@ namespace MathPocket
         /// График линейной функции y = kx + b.
         /// Рисует прямую, оси, нуль функции и пересечение с Oy.
         /// </summary>
-        public static byte[] LinearFunction(
-            double k, double b,
-            double xMin = -10, double xMax = 10)
+        /// <summary>
+        /// Вычисляет диапазон осей так, чтобы прямая выглядела наклонной,
+        /// а обе ключевые точки (A и B) были хорошо видны.
+        /// </summary>
+        private static (double xMin, double xMax, double yMin, double yMax) CalcLinearRange(double k, double b)
         {
+            double xOy   = 0;
+            double xOx   = Math.Abs(k) > 1e-12 ? -b / k : 0;
+            double cx    = (xOy + xOx) / 2.0;
+            double spread = Math.Abs(xOx - xOy);
+            double halfX  = Math.Max(spread * 1.5, 5);
+            double xMin   = cx - halfX;
+            double xMax   = cx + halfX;
+            double yAtMin = k * xMin + b;
+            double yAtMax = k * xMax + b;
+            double yMin   = Math.Min(yAtMin, yAtMax);
+            double yMax   = Math.Max(yAtMin, yAtMax);
+            double padY   = Math.Max((yMax - yMin) * 0.15, 2);
+            return (xMin, xMax, yMin - padY, yMax + padY);
+        }
+
+        public static byte[] LinearFunction(double k, double b)
+        {
+            var (xMin, xMax, yMin, yMax) = CalcLinearRange(k, b);
             var plt = new Plot();
 
             // ── Прямая (линия без маркеров) ───────────────────────
@@ -111,11 +131,7 @@ namespace MathPocket
             plt.YLabel("y");
             plt.ShowLegend(Alignment.LowerRight);
 
-            // Убедимся что обе точки и нули попадают в область видимости
-            double yMin = Math.Min(k * xMin + b, k * xMax + b);
-            double yMax = Math.Max(k * xMin + b, k * xMax + b);
-            double pad  = Math.Max((yMax - yMin) * 0.15, 1);
-            plt.Axes.SetLimits(xMin, xMax, yMin - pad, yMax + pad);
+            plt.Axes.SetLimits(xMin, xMax, yMin, yMax);
 
             return plt.GetImageBytes(Width, Height, ImageFormat.Png);
         }
@@ -123,8 +139,9 @@ namespace MathPocket
         /// <summary>
         /// График знака линейной функции: прямая + закрашенные области y>0 (зелёная) и y<0 (красная).
         /// </summary>
-        public static byte[] LinearSignPlot(double k, double b, double xMin = -10, double xMax = 10)
+        public static byte[] LinearSignPlot(double k, double b)
         {
+            var (xMin, xMax, yMin, yMax) = CalcLinearRange(k, b);
             var plt = new Plot();
 
             double[] xs    = Range(xMin, xMax);
@@ -200,10 +217,7 @@ namespace MathPocket
             plt.YLabel("y");
             plt.ShowLegend(Alignment.LowerRight);
 
-            double yMin = Math.Min(k * xMin + b, k * xMax + b);
-            double yMax = Math.Max(k * xMin + b, k * xMax + b);
-            double pad  = Math.Max((yMax - yMin) * 0.15, 1);
-            plt.Axes.SetLimits(xMin, xMax, yMin - pad, yMax + pad);
+            plt.Axes.SetLimits(xMin, xMax, yMin, yMax);
 
             return plt.GetImageBytes(Width, Height, ImageFormat.Png);
         }
