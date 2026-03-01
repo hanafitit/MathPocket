@@ -374,6 +374,97 @@ namespace MathPocket
                 sb.AppendLine($"  Точка B({LinearHelper.Fmt(x0)}; 0)");
             }
 
+            sb.AppendLine();
+            sb.AppendLine("─────────────────────────────");
+            sb.AppendLine();
+
+            // 1. Область определения
+            sb.AppendLine("📌 Область определения:");
+            sb.AppendLine("  D(f) = (−∞; +∞)");
+            sb.AppendLine("  Функция определена при любом x.");
+            sb.AppendLine();
+
+            // 2. Область значений
+            sb.AppendLine("📌 Область значений:");
+            if (Math.Abs(k) < 1e-12)
+            {
+                sb.AppendLine($"  E(f) = {{{LinearHelper.Fmt(b)}}}");
+                sb.AppendLine($"  Функция постоянная, y всегда равно {LinearHelper.Fmt(b)}.");
+            }
+            else
+            {
+                sb.AppendLine("  E(f) = (−∞; +∞)");
+                sb.AppendLine("  y принимает любые значения.");
+            }
+            sb.AppendLine();
+
+            // 3. Нули функции
+            sb.AppendLine("📌 Нули функции (y = 0):");
+            if (Math.Abs(k) < 1e-12)
+            {
+                sb.AppendLine(Math.Abs(b) < 1e-9
+                    ? "  Вся ось Ox — функция тождественно равна нулю."
+                    : "  Нулей нет.");
+            }
+            else
+            {
+                double x0 = -b / k;
+                sb.AppendLine($"  x = {LinearHelper.Fmt(x0)}");
+            }
+            sb.AppendLine();
+
+            // 4. Возрастание / убывание
+            sb.AppendLine("📌 Возрастание и убывание:");
+            if (Math.Abs(k) < 1e-12)
+            {
+                sb.AppendLine("  Функция постоянная — не возрастает и не убывает.");
+            }
+            else if (k > 0)
+            {
+                sb.AppendLine($"  k = {LinearHelper.Fmt(k)} > 0 — функция возрастающая.");
+                sb.AppendLine("  Возрастает на всей числовой прямой: (−∞; +∞).");
+            }
+            else
+            {
+                sb.AppendLine($"  k = {LinearHelper.Fmt(k)} < 0 — функция убывающая.");
+                sb.AppendLine("  Убывает на всей числовой прямой: (−∞; +∞).");
+            }
+            sb.AppendLine();
+
+            // 5. Промежутки знакопостоянства
+            sb.AppendLine("📌 Промежутки знакопостоянства:");
+            if (Math.Abs(k) < 1e-12)
+            {
+                if (b > 1e-9)
+                {
+                    sb.AppendLine($"  y = {LinearHelper.Fmt(b)} > 0 при любом x.");
+                    sb.AppendLine("  y > 0: (−∞; +∞)");
+                }
+                else if (b < -1e-9)
+                {
+                    sb.AppendLine($"  y = {LinearHelper.Fmt(b)} < 0 при любом x.");
+                    sb.AppendLine("  y < 0: (−∞; +∞)");
+                }
+                else
+                {
+                    sb.AppendLine("  y = 0 всегда — нет промежутков знакопостоянства.");
+                }
+            }
+            else
+            {
+                double x0 = -b / k;
+                if (k > 0)
+                {
+                    sb.AppendLine($"  y < 0 при x ∈ (−∞; {LinearHelper.Fmt(x0)})");
+                    sb.AppendLine($"  y > 0 при x ∈ ({LinearHelper.Fmt(x0)}; +∞)");
+                }
+                else
+                {
+                    sb.AppendLine($"  y > 0 при x ∈ (−∞; {LinearHelper.Fmt(x0)})");
+                    sb.AppendLine($"  y < 0 при x ∈ ({LinearHelper.Fmt(x0)}; +∞)");
+                }
+            }
+
             return sb.ToString().TrimEnd();
         }
     }
