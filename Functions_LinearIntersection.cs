@@ -495,11 +495,11 @@ namespace MathPocket
 
         public override string CalculateFromAnswers(List<string> answers)
         {
-            var (k, _) = LinearHelper.ParseLinear(answers[0])!.Value;
+            var (k, b0) = LinearHelper.ParseLinear(answers[0])!.Value;
             double b   = LinearHelper.ParseNumber(answers[1]);
             var sb     = new StringBuilder();
 
-            sb.AppendLine($"Данная функция: {LinearHelper.FormatLinear(k, _)}");
+            sb.AppendLine($"Данная функция: {LinearHelper.FormatLinear(k, b0)}");
             sb.AppendLine($"Точка на оси Oy: (0; {LinearHelper.Fmt(b)})");
             sb.AppendLine();
             sb.AppendLine("Параллельная функция имеет тот же k:");
@@ -804,12 +804,12 @@ namespace MathPocket
 
         public override string CalculateFromAnswers(List<string> answers)
         {
-            var (k, _) = LinearHelper.ParseLinear(answers[0])!.Value;
+            var (k, b0) = LinearHelper.ParseLinear(answers[0])!.Value;
             double px  = LinearHelper.ParseNumber(answers[1]);
             double py  = LinearHelper.ParseNumber(answers[2]);
             var sb     = new StringBuilder();
 
-            sb.AppendLine($"Данная функция: {LinearHelper.FormatLinear(k, _)}  →  k = {LinearHelper.Fmt(k)}");
+            sb.AppendLine($"Данная функция: {LinearHelper.FormatLinear(k, b0)}  →  k = {LinearHelper.Fmt(k)}");
             sb.AppendLine($"Точка A: ({LinearHelper.Fmt(px)}; {LinearHelper.Fmt(py)})");
             sb.AppendLine();
             sb.AppendLine("Шаг 1. Берём k из данной функции:");
