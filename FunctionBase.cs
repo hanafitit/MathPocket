@@ -47,5 +47,17 @@ namespace MathPocket
         public virtual string? GetPreview(List<string> answers) => null;
 
         public virtual byte[]? GetPlotBytes(List<string> answers) => null;
+
+        /// <summary>
+        /// Откатывает сессию на один шаг назад.
+        /// Базовая реализация подходит для линейных последовательностей шагов.
+        /// Функции с нелинейным маппингом (пропуск шагов) должны переопределить этот метод.
+        /// </summary>
+        public virtual void RollbackStep(StepInputSession session)
+        {
+            session.CurrentStep--;
+            if (session.Answers.Count > 0)
+                session.Answers.RemoveAt(session.Answers.Count - 1);
+        }
     }
 }

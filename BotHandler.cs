@@ -76,6 +76,8 @@ namespace MathPocket
         {
             if (update.Message is { } msg)
                 await OnMessage(msg);
+            else
+                WriteError($"[{DateTime.Now:HH:mm:ss}] [IGNORED] тип обновления: {update.Type}");
         }
 
         public Task HandleErrorAsync(
@@ -90,24 +92,11 @@ namespace MathPocket
 
         // Логирование
 
-        private static readonly object _logLock = new();
-
-        private static string LogFilePath()
-        {
-            var dir = Path.Combine(AppContext.BaseDirectory, "logs");
-            Directory.CreateDirectory(dir);
-            return Path.Combine(dir, $"steps_{DateTime.Now:yyyy-MM-dd}.log");
-        }
-
-        private static void WriteLog(string line)
-        {
+        private static void WriteLog(string line) =>
             Console.WriteLine(line);
-            lock (_logLock)
-            {
-                try { File.AppendAllText(LogFilePath(), line + Environment.NewLine, Encoding.UTF8); }
-                catch { /* игнорируем ошибки файловой системы */ }
-            }
-        }
+
+        private static void WriteError(string line) =>
+            Console.Error.WriteLine(line);
 
         private static void LogStep(
             string tag, long chatId, FunctionBase func, StepInputSession session,
@@ -133,7 +122,10 @@ namespace MathPocket
             if (extra is not null)
                 sb.Append($" | {extra}");
 
-            WriteLog(sb.ToString());
+            if (tag == "ОШИБКА_ВАЛИДАЦИИ")
+                WriteError(sb.ToString());
+            else
+                WriteLog(sb.ToString());
         }
 
         private static void LogSessionEnd(
@@ -149,7 +141,10 @@ namespace MathPocket
             if (result is not null) sb.Append($" | результат=\"{result}\"");
             if (error  is not null) sb.Append($" | ОШИБКА: {error}");
 
-            WriteLog(sb.ToString());
+            if (error is not null)
+                WriteError(sb.ToString());
+            else
+                WriteLog(sb.ToString());
         }
 
         // Роутинг
@@ -255,9 +250,7 @@ namespace MathPocket
 
             if (session is not null && func?.Steps is not null && session.CurrentStep > 0)
             {
-                session.CurrentStep--;
-                if (session.Answers.Count > 0)
-                    session.Answers.RemoveAt(session.Answers.Count - 1);
+                func.RollbackStep(session);
 
                 WriteLog($"[{DateTime.Now:HH:mm:ss}] [ОТКАТ] user={chatId} | func=\"{func.Name}\" | возврат к шагу {session.CurrentStep + 1} | накоплено={session.Answers.Count}");
                 await AskCurrentStep(chatId, func, session);
@@ -575,12 +568,17 @@ namespace MathPocket
             if (func is MonomialMultiplyFunction)
                 return MonomialMultiplyFunction.StepIndex(session.Answers, session.CurrentStep);
 
-            if (func is MonomialStandardFormFunction or MonomialPowerFunction)
+            // MonomialPowerFunction: Steps = [выбор, коэфф, degA, degB, степень] (5 эл.)
+            // При !twoVars нужен порядок 0→1→2→4, поэтому прыгаем через degB (индекс 3).
+            if (func is MonomialPowerFunction)
             {
                 bool twoVars = session.Answers.Count > 0 && session.Answers[0] == "2";
                 if (!twoVars && session.CurrentStep >= 3)
                     return session.CurrentStep + 1;
             }
+
+            // MonomialStandardFormFunction: Steps = [выбор, коэфф, degA, degB] (4 эл.)
+            // При !twoVars ActiveStepCount=3, сессия завершается на CurrentStep==3 — прыгать некуда.
 
             return session.CurrentStep;
         }

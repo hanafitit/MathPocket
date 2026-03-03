@@ -255,6 +255,25 @@ namespace MathPocket
         public override int ActiveStepCount(List<string> answers) =>
             answers.Count > 0 && answers[0] == "2" ? 5 : 4;
 
+        /// <summary>
+        /// При !twoVars логический шаг 3 (degB) пропускается.
+        /// Steps = [выбор, коэфф, degA, degB, степень] — при откате с шага 4 (степень)
+        /// нужно вернуться на шаг 2 (degA), минуя скрытый шаг 3.
+        /// </summary>
+        public override void RollbackStep(StepInputSession session)
+        {
+            session.CurrentStep--;
+            if (session.Answers.Count > 0)
+                session.Answers.RemoveAt(session.Answers.Count - 1);
+
+            bool twoVars = session.Answers.Count > 0 && session.Answers[0] == "2";
+            if (!twoVars && session.CurrentStep == 3)
+            {
+                session.CurrentStep--;
+                // Ответ для шага 3 не записывался — Answers не трогаем.
+            }
+        }
+
         public override string? GetPreview(List<string> answers)
         {
             if (answers.Count == 0) return null;
@@ -369,6 +388,26 @@ namespace MathPocket
         // Две переменные:  7 шагов (0..6)
         public override int ActiveStepCount(List<string> answers) =>
             answers.Count > 0 && answers[0] == "2" ? 7 : 5;
+
+        /// <summary>
+        /// При !twoVars логический шаг 3 (degB первого одночлена) пропускается.
+        /// Если откатываемся с шага 4 — нужно вернуться на 2, а не на 3 (который никогда не показывался).
+        /// </summary>
+        public override void RollbackStep(StepInputSession session)
+        {
+            session.CurrentStep--;
+            if (session.Answers.Count > 0)
+                session.Answers.RemoveAt(session.Answers.Count - 1);
+
+            // После декремента проверяем: если попали на "скрытый" шаг 3 (!twoVars),
+            // откатываемся ещё на один — пользователь его не видел и не отвечал на него.
+            bool twoVars = session.Answers.Count > 0 && session.Answers[0] == "2";
+            if (!twoVars && session.CurrentStep == 3)
+            {
+                session.CurrentStep--;
+                // Ответ для шага 3 не записывался — Answers не трогаем.
+            }
+        }
 
         /// <summary>Сопоставляет логический шаг с реальным индексом в Steps[].</summary>
         public static int StepIndex(List<string> answers, int logicalStep)
