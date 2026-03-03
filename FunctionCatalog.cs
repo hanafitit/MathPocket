@@ -1,19 +1,14 @@
 namespace MathPocket
 {
-    // ═══════════════════════════════════════════════════════════════
-    //  Каталог всех разделов и функций бота
-    // ═══════════════════════════════════════════════════════════════
-
     internal static class FunctionCatalog
     {
-        public static readonly MathCategory[] All = new MathCategory[]
-        {
-            // ── ⚡ Степень ────────────────────────────────────────
-            new MathCategory
+        public static readonly MathCategory[] All =
+        [
+            new()
             {
                 Name = "⚡ Степень",
-                Functions = new FunctionBase[]
-                {
+                Functions =
+                [
                     new PowerFunction(),
                     new EvaluateAtValueFunction(),
                     new PowerProductFunction(),
@@ -23,34 +18,32 @@ namespace MathPocket
                     new PowerOfFractionFunction(),
                     new ComparePowersFunction(),
                     new FindBaseOrExponentFunction(),
-                }
+                ]
             },
 
-            // ── 🔢 Одночлены ──────────────────────────────────────
-            new MathCategory
+            new()
             {
                 Name = "🔢 Одночлены",
-                Functions = new FunctionBase[]
-                {
+                Functions =
+                [
                     new MonomialStandardFormFunction(),
                     new MonomialPowerFunction(),
                     new MonomialMultiplyFunction(),
                     new MonomialDivideFunction(),
                     new MonomialDivideEvalFunction(),
-                }
+                ]
             },
 
-            // ── 🔣 Многочлены (с подразделами) ────────────────────
-            new MathCategory
+            new()
             {
                 Name = "🔣 Многочлены",
-                SubSections = new MathSection[]
-                {
-                    new MathSection
+                SubSections =
+                [
+                    new()
                     {
                         Name = "🔣 Основы многочленов",
-                        Functions = new FunctionBase[]
-                        {
+                        Functions =
+                        [
                             new PolynomialFromMonomialsFunction(),
                             new PolynomialStandardMembersFunction(),
                             new PolynomialNameMembersFunction(),
@@ -58,89 +51,88 @@ namespace MathPocket
                             new PolynomialStandardFormFunction(),
                             new PolynomialValueFunction(),
                             new PolynomialValueTwoVarsFunction(),
-                        }
+                        ]
                     },
-                    new MathSection
+                    new()
                     {
                         Name = "➕ Сложение и вычитание",
-                        Functions = new FunctionBase[]
-                        {
+                        Functions =
+                        [
                             new PolynomialLikeTermsFunction(),
                             new PolynomialAddFunction(),
                             new PolynomialSubtractFunction(),
-                        }
+                        ]
                     },
-                    new MathSection
+                    new()
                     {
                         Name = "✖️ Умножение многочленов",
-                        Functions = new FunctionBase[]
-                        {
+                        Functions =
+                        [
                             new PolyTimesMonomial(),
                             new PolyTimesPolyFunction(),
                             new PolySimplifyExpression(),
                             new PolyEvalProduct(),
                             new PolyEquation(),
                             new PolyProveIdentity(),
-                        }
+                        ]
                     },
-                    new MathSection
+                    new()
                     {
                         Name = "➗ Деление на одночлен",
-                        Functions = new FunctionBase[]
-                        {
+                        Functions =
+                        [
                             new MonomialDividePolyFunction(),
                             new PolynomialDivideByMonomialFunction(),
                             new PolyDivideSimplifyFunction(),
                             new PolyDivideEvalFunction(),
-                        }
+                        ]
                     },
-                    new MathSection
+                    new()
                     {
                         Name = "🔧 Разложение на множители",
-                        Functions = new FunctionBase[]
-                        {
+                        Functions =
+                        [
                             new FactorOutGcfFunction(),
                             new FactorOutPolyFunction(),
                             new FactorEquationFunction(),
                             new GroupingFourTermsFunction(),
                             new GroupingSixTermsFunction(),
                             new GroupingEquationFunction(),
-                        }
+                        ]
                     },
-                    new MathSection
+                    new()
                     {
                         Name = "🔄 Тождественные преобразования",
-                        Functions = new FunctionBase[]
-                        {
+                        Functions =
+                        [
                             new IdentitySimplifyFunction(),
                             new IdentitySumAsProductFunction(),
                             new IdentityInequalityIntegerFunction(),
-                        }
+                        ]
                     },
-                    new MathSection
+                    new()
                     {
                         Name = "✅ Проверь себя",
-                        Functions = new FunctionBase[]
-                        {
+                        Functions =
+                        [
                             new PolyDivideByMonomialFunction(),
                             new PolyFindEqualXFunction(),
                             new PolyFindGcmExpressionFunction(),
-                        }
+                        ]
                     },
-                }
+                ]
             },
 
-            // ── 📈 Функции и графики ─────────────────────────────
-            new MathCategory
+            new()
             {
                 Name = "📈 Функции и графики",
-                SubSections = new MathSection[]
-                {
-                    new MathSection
+                SubSections =
+                [
+                    new()
                     {
                         Name = "📌 Понятие функции",
-                        Functions = new FunctionBase[]
-                        {
+                        Functions =
+                        [
                             new IsFunctionFunction(),
                             new DomainFunction(),
                             new DomainFromTableFunction(),
@@ -148,22 +140,22 @@ namespace MathPocket
                             new IsIncreasingDecreasingFunction(),
                             new FormulaFromTableFunction(),
                             new TableFromFormulaFunction(),
-                        }
+                        ]
                     },
-                    new MathSection
+                    new()
                     {
                         Name = "📊 Табличная функция",
-                        Functions = new FunctionBase[]
-                        {
+                        Functions =
+                        [
                             new TableAnalysisFunction(),
                             new DetectFormulaFunction(),
-                        }
+                        ]
                     },
-                    new MathSection
+                    new()
                     {
                         Name = "📏 Линейная функция и её график",
-                        Functions = new FunctionBase[]
-                        {
+                        Functions =
+                        [
                             new IsLinearFunction(),
                             new LinearEvalFunction(),
                             new LinearPointBelongsFunction(),
@@ -171,13 +163,13 @@ namespace MathPocket
                             new LinearFindKFunction(),
                             new LinearPlotFunction(),
                             new LinearSignFunction(),
-                        }
+                        ]
                     },
-                    new MathSection
+                    new()
                     {
                         Name = "🔀 Взаимное расположение функций",
-                        Functions = new FunctionBase[]
-                        {
+                        Functions =
+                        [
                             new LinearRelationFunction(),
                             new LinearIntersectionPointFunction(),
                             new LinearProveIntersectFunction(),
@@ -189,26 +181,26 @@ namespace MathPocket
                             new LinearFindByPointOnOyFunction(),
                             new LinearParallelThroughPointFunction(),
                             new LinearFindFormulaByPointAndOyFunction(),
-                        }
+                        ]
                     },
-                    new MathSection
+                    new()
                     {
                         Name = "📐 Системы уравнений (графический способ)",
-                        Functions = new FunctionBase[]
-                        {
+                        Functions =
+                        [
                             new SystemGraphOxFunction(),
                             new SystemGraphOyFunction(),
                             new SystemGraphPlotFunction(),
                             new SystemSolveGraphicallyFunction(),
                             new SystemCountSolutionsFunction(),
                             new SystemEvalExpressionFunction(),
-                        }
+                        ]
                     },
-                    new MathSection
+                    new()
                     {
                         Name = "📐 Функция y = ax²",
-                        Functions = new FunctionBase[]
-                        {
+                        Functions =
+                        [
                             new QuadraticPointBelongsFunction(),
                             new QuadraticPlotFunction(),
                             new QuadraticTwoGraphsFunction(),
@@ -219,26 +211,26 @@ namespace MathPocket
                             new QuadraticMonotonicFunction(),
                             new QuadraticMinMaxFunction(),
                             new QuadraticCanIntersectFunction(),
-                        }
+                        ]
                     },
-                }
+                ]
             },
 
-            new MathCategory { Name = "✂️ Формулы сокращённого умножения" },
-            new MathCategory { Name = "➗ Алгебраические дроби" },
-            new MathCategory { Name = "√ Квадратные корни" },
-            new MathCategory { Name = "🔲 Квадратные уравнения" },
-            new MathCategory { Name = "⚖️ Неравенства" },
-            new MathCategory { Name = "🔀 Системы уравнений и неравенств" },
-            new MathCategory { Name = "🎲 Комбинаторика" },
-            new MathCategory { Name = "🔢 Последовательности" },
-            new MathCategory { Name = "📐 Тригонометрия" },
-            new MathCategory
+            new() { Name = "✂️ Формулы сокращённого умножения" },
+            new() { Name = "➗ Алгебраические дроби" },
+            new() { Name = "√ Квадратные корни" },
+            new() { Name = "🔲 Квадратные уравнения" },
+            new() { Name = "⚖️ Неравенства" },
+            new() { Name = "🔀 Системы уравнений и неравенств" },
+            new() { Name = "🎲 Комбинаторика" },
+            new() { Name = "🔢 Последовательности" },
+            new() { Name = "📐 Тригонометрия" },
+            new()
             {
                 Name = "🎯 Теория вероятностей",
-                Functions = new FunctionBase[] { new PercentOfNumberFunction() }
+                Functions = [new PercentOfNumberFunction()]
             },
-            new MathCategory { Name = "📊 Элементы статистики" },
-        };
+            new() { Name = "📊 Элементы статистики" },
+        ];
     }
 }

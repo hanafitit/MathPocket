@@ -6,14 +6,10 @@ using System.Text;
 
 namespace MathPocket
 {
-    // ═══════════════════════════════════════════════════════════════
     //  § 24. Решение систем двух линейных уравнений с двумя
     //        переменными графическим способом
-    // ═══════════════════════════════════════════════════════════════
 
-    // ───────────────────────────────────────────────────────────────
     //  Вспомогательный парсер уравнений вида ax + by = c
-    // ───────────────────────────────────────────────────────────────
 
     internal static class LinearEquationParser
     {
@@ -135,16 +131,14 @@ namespace MathPocket
         }
     }
 
-    // ───────────────────────────────────────────────────────────────
     //  24.1 Найти координаты точек пересечения с осью Ox
-    // ───────────────────────────────────────────────────────────────
 
     public class SystemGraphOxFunction : FunctionBase
     {
         public override string   Name       => "Пересечение графика уравнения с осью Ox";
         public override string   Formula    => "ax + by = c при y = 0";
         public override string[] Keywords   => new[] { "пересечение", "ось ox", "уравнение" };
-        public override string[] Parameters => Array.Empty<string>();
+        public override string[] Parameters => [];
         public override double   Calculate(double[] _) => throw new NotSupportedException();
 
         public override InputStep[] Steps => new[]
@@ -197,16 +191,14 @@ namespace MathPocket
         }
     }
 
-    // ───────────────────────────────────────────────────────────────
     //  24.2 Найти координаты точек пересечения с осью Oy
-    // ───────────────────────────────────────────────────────────────
 
     public class SystemGraphOyFunction : FunctionBase
     {
         public override string   Name       => "Пересечение графика уравнения с осью Oy";
         public override string   Formula    => "ax + by = c при x = 0";
         public override string[] Keywords   => new[] { "пересечение", "ось oy", "уравнение" };
-        public override string[] Parameters => Array.Empty<string>();
+        public override string[] Parameters => [];
         public override double   Calculate(double[] _) => throw new NotSupportedException();
 
         public override InputStep[] Steps => new[]
@@ -256,16 +248,14 @@ namespace MathPocket
         }
     }
 
-    // ───────────────────────────────────────────────────────────────
     //  24.3 Построить график уравнения ax + by = c
-    // ───────────────────────────────────────────────────────────────
 
     public class SystemGraphPlotFunction : FunctionBase
     {
         public override string   Name       => "Построить график уравнения";
         public override string   Formula    => "ax + by = c → прямая";
         public override string[] Keywords   => new[] { "построить", "график", "уравнение" };
-        public override string[] Parameters => Array.Empty<string>();
+        public override string[] Parameters => [];
         public override double   Calculate(double[] _) => throw new NotSupportedException();
 
         public override InputStep[] Steps => new[]
@@ -335,16 +325,14 @@ namespace MathPocket
         }
     }
 
-    // ───────────────────────────────────────────────────────────────
     //  24.4 / 24.5 Решить систему графически
-    // ───────────────────────────────────────────────────────────────
 
     public class SystemSolveGraphicallyFunction : FunctionBase
     {
         public override string   Name       => "Решить систему уравнений графически";
         public override string   Formula    => "Построить два графика, найти точку пересечения";
         public override string[] Keywords   => new[] { "система", "решить графически", "два уравнения" };
-        public override string[] Parameters => Array.Empty<string>();
+        public override string[] Parameters => [];
         public override double   Calculate(double[] _) => throw new NotSupportedException();
 
         public override InputStep[] Steps => new[]
@@ -474,16 +462,14 @@ namespace MathPocket
         }
     }
 
-    // ───────────────────────────────────────────────────────────────
     //  24.8 Сколько решений имеет система?
-    // ───────────────────────────────────────────────────────────────
 
     public class SystemCountSolutionsFunction : FunctionBase
     {
         public override string   Name       => "Сколько решений имеет система";
         public override string   Formula    => "0, 1 или бесконечно много";
         public override string[] Keywords   => new[] { "сколько решений", "система", "определить" };
-        public override string[] Parameters => Array.Empty<string>();
+        public override string[] Parameters => [];
         public override double   Calculate(double[] _) => throw new NotSupportedException();
 
         public override InputStep[] Steps => new[]
@@ -566,17 +552,15 @@ namespace MathPocket
         }
     }
 
-    // ───────────────────────────────────────────────────────────────
     //  24.9 Найти значение выражения 7x₀ + 3y₀, если (x₀; y₀)
     //  является решением системы
-    // ───────────────────────────────────────────────────────────────
 
     public class SystemEvalExpressionFunction : FunctionBase
     {
         public override string   Name       => "Найти значение выражения по решению системы";
         public override string   Formula    => "Решить систему → подставить в выражение";
         public override string[] Keywords   => new[] { "значение выражения", "решение системы", "подставить" };
-        public override string[] Parameters => Array.Empty<string>();
+        public override string[] Parameters => [];
         public override double   Calculate(double[] _) => throw new NotSupportedException();
 
         public override InputStep[] Steps => new[]

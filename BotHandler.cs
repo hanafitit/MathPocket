@@ -12,54 +12,35 @@ using Telegram.Bot.Types.ReplyMarkups;
 
 namespace MathPocket
 {
-    // ═══════════════════════════════════════════════════════════════
-    //  Модели каталога
-    // ═══════════════════════════════════════════════════════════════
-
-    /// <summary>
-    /// Группа функций (используется как прямой список или как подраздел категории).
-    /// </summary>
     public sealed class MathSection
     {
-        public string         Name      { get; init; } = string.Empty;
+        public string Name { get; init; } = string.Empty;
         public FunctionBase[] Functions { get; init; } = [];
     }
 
-    /// <summary>
-    /// Категория верхнего уровня.
-    /// Содержит либо <see cref="SubSections"/> (вложенное меню),
-    /// либо <see cref="Functions"/> напрямую — но не оба сразу.
-    /// </summary>
     public sealed class MathCategory
     {
-        public string       Name        { get; init; } = string.Empty;
+        public string Name { get; init; } = string.Empty;
         public MathSection[] SubSections { get; init; } = [];
-        public FunctionBase[] Functions  { get; init; } = [];
+        public FunctionBase[] Functions { get; init; } = [];
 
         public bool HasSubSections => SubSections.Length > 0;
     }
 
-    // ═══════════════════════════════════════════════════════════════
-    //  BotHandler
-    // ═══════════════════════════════════════════════════════════════
-
     internal sealed class BotHandler
     {
         private readonly ITelegramBotClient _bot;
-        private readonly MathCategory[]     _categories;
-        private readonly Material[]         _materials;
+        private readonly MathCategory[] _categories;
+        private readonly Material[] _materials;
 
-        // ── Состояние пользователей (per-chat) ────────────────────
-        private readonly ConcurrentDictionary<long, string>           _userState       = new();
-        private readonly ConcurrentDictionary<long, MathCategory>     _selectedCategory = new();
-        private readonly ConcurrentDictionary<long, MathSection>      _selectedSection  = new();
-        private readonly ConcurrentDictionary<long, FunctionBase>     _selectedFunction = new();
-        private readonly ConcurrentDictionary<long, StepInputSession> _inputSession     = new();
+        private readonly ConcurrentDictionary<long, string> _userState = new();
+        private readonly ConcurrentDictionary<long, MathCategory> _selectedCategory = new();
+        private readonly ConcurrentDictionary<long, MathSection> _selectedSection = new();
+        private readonly ConcurrentDictionary<long, FunctionBase> _selectedFunction = new();
+        private readonly ConcurrentDictionary<long, StepInputSession> _inputSession = new();
 
-        // ── Диспетчер состояний ───────────────────────────────────
         private readonly Dictionary<string, Func<Message, Task>> _stateHandlers;
 
-        // ── Команды верхнего уровня ───────────────────────────────
         private const string BtnSections   = "📂 Разделы";
         private const string BtnCalculator = "🧮 Калькулятор";
         private const string BtnBack       = "◀️ Назад";
@@ -88,10 +69,6 @@ namespace MathPocket
             };
         }
 
-        // ═══════════════════════════════════════════════════════════
-        //  Входная точка
-        // ═══════════════════════════════════════════════════════════
-
         public async Task HandleUpdateAsync(
             ITelegramBotClient _,
             Update update,
@@ -111,9 +88,7 @@ namespace MathPocket
             return Task.CompletedTask;
         }
 
-        // ═══════════════════════════════════════════════════════════
-        //  Логирование
-        // ═══════════════════════════════════════════════════════════
+        // Логирование
 
         private static readonly object _logLock = new();
 
@@ -142,7 +117,7 @@ namespace MathPocket
             sb.Append($"[{DateTime.Now:HH:mm:ss}] [{tag}] user={chatId} | func=\"{func.Name}\"");
 
             int stepNum = session.CurrentStep + 1;
-            int total   = GetTotalSteps(func, session);  // динамический подсчёт, а не func.Steps?.Length
+            int total   = GetTotalSteps(func, session);
 
             sb.Append(userAnswer is not null
                 ? $" | шаг {stepNum}/{total} | ответ=\"{userAnswer}\""
@@ -177,9 +152,7 @@ namespace MathPocket
             WriteLog(sb.ToString());
         }
 
-        // ═══════════════════════════════════════════════════════════
-        //  Роутинг сообщений
-        // ═══════════════════════════════════════════════════════════
+        // Роутинг
 
         private async Task OnMessage(Message msg)
         {
@@ -194,7 +167,6 @@ namespace MathPocket
 
             WriteLog($"[{DateTime.Now:HH:mm:ss}] [СООБЩЕНИЕ] user={chatId} (@{msg.Chat.Username ?? "no_username"}) | текст=\"{text}\"");
 
-            // ── Глобальные команды ────────────────────────────────
             if (text.StartsWith("/start"))
             {
                 ClearState(chatId);
@@ -226,7 +198,6 @@ namespace MathPocket
                 return;
             }
 
-            // ── Обработка по текущему состоянию ──────────────────
             if (_userState.TryGetValue(chatId, out var state) &&
                 _stateHandlers.TryGetValue(state, out var handler))
             {
@@ -237,16 +208,13 @@ namespace MathPocket
             await _bot.SendMessage(chatId, "Я вас не понял. Нажмите /start для перезапуска.");
         }
 
-        // ═══════════════════════════════════════════════════════════
-        //  Кнопка «Назад»
-        //
-        //  Дерево навигации:
-        //    Главное меню
-        //      └─ choose_category
-        //           └─ choose_subsection (если есть подразделы)
-        //                └─ choose_function
-        //                     └─ input_data
-        // ═══════════════════════════════════════════════════════════
+        // Назад
+        // Дерево навигации:
+        //   Главное меню
+        //     └─ choose_category
+        //          └─ choose_subsection (если есть подразделы)
+        //               └─ choose_function
+        //                    └─ input_data
 
         private async Task HandleBack(long chatId)
         {
@@ -282,11 +250,9 @@ namespace MathPocket
 
         private async Task HandleBackFromInput(long chatId)
         {
-            // Получаем сессию и функцию один раз
             _inputSession.TryGetValue(chatId, out var session);
             _selectedFunction.TryGetValue(chatId, out var func);
 
-            // Шаг назад внутри пошагового диалога
             if (session is not null && func?.Steps is not null && session.CurrentStep > 0)
             {
                 session.CurrentStep--;
@@ -298,11 +264,8 @@ namespace MathPocket
                 return;
             }
 
-            // Выход к списку функций — логируем отмену если есть что логировать
             if (session is not null && func is not null)
-            {
                 WriteLog($"[{DateTime.Now:HH:mm:ss}] [ОТМЕНА] user={chatId} | func=\"{func.Name}\" | прервано на шаге {session.CurrentStep + 1}");
-            }
 
             _inputSession.TryRemove(chatId, out _);
             _selectedFunction.TryRemove(chatId, out _);
@@ -331,9 +294,7 @@ namespace MathPocket
             }
         }
 
-        // ═══════════════════════════════════════════════════════════
-        //  Обработчики состояний
-        // ═══════════════════════════════════════════════════════════
+        // Обработчики состояний
 
         private async Task HandleChooseCategory(Message msg)
         {
@@ -363,7 +324,6 @@ namespace MathPocket
                 return;
             }
 
-            // Напрямую к функциям — оборачиваем в временный MathSection
             var section = new MathSection { Name = category.Name, Functions = category.Functions };
             _selectedSection[msg.Chat.Id] = section;
             _userState[msg.Chat.Id]       = "choose_function";
@@ -422,7 +382,6 @@ namespace MathPocket
 
             if (func.Steps is not null)
             {
-                // ── Пошаговый ввод ────────────────────────────────
                 var session = new StepInputSession();
                 _inputSession[msg.Chat.Id] = session;
 
@@ -436,7 +395,6 @@ namespace MathPocket
             }
             else
             {
-                // ── Однострочный режим ────────────────────────────
                 await _bot.SendMessage(msg.Chat.Id,
                     $"✅ {func.Name}\n" +
                     $"Формула: {func.Formula}\n\n" +
@@ -445,9 +403,7 @@ namespace MathPocket
             }
         }
 
-        // ═══════════════════════════════════════════════════════════
-        //  Обработчик ввода данных
-        // ═══════════════════════════════════════════════════════════
+        // Ввод данных
 
         private async Task HandleInputData(Message msg)
         {
@@ -502,7 +458,6 @@ namespace MathPocket
 
         private async Task FinishStepSession(long chatId, FunctionBase func, StepInputSession session)
         {
-            // ── Попытка получить график ───────────────────────────
             byte[]? plotBytes = null;
             try { plotBytes = func.GetPlotBytes(session.Answers); }
             catch { /* если график не вышел — продолжаем без него */ }
@@ -532,7 +487,6 @@ namespace MathPocket
                 return;
             }
 
-            // ── Обычный текстовый результат ───────────────────────
             string result;
             try
             {
@@ -542,7 +496,7 @@ namespace MathPocket
             catch (Exception ex)
             {
                 LogSessionEnd("ИТОГ", chatId, func, session.Answers, error: ex.Message);
-                _inputSession.TryRemove(chatId, out _);   // сессия завершена даже при ошибке
+                _inputSession.TryRemove(chatId, out _);
                 await _bot.SendMessage(chatId,
                     $"⚠️ Что-то пошло не так: {ex.Message}",
                     replyMarkup: BackKeyboard());
@@ -605,10 +559,6 @@ namespace MathPocket
             }
         }
 
-        // ═══════════════════════════════════════════════════════════
-        //  Пошаговый ввод: задать вопрос текущего шага
-        // ═══════════════════════════════════════════════════════════
-
         private async Task AskCurrentStep(long chatId, FunctionBase func, StepInputSession session)
         {
             int stepIndex = GetStepIndex(func, session);
@@ -620,15 +570,11 @@ namespace MathPocket
                 replyMarkup: BackKeyboard());
         }
 
-        // ─── Динамические шаги: сопоставление логического шага с индексом в Steps[] ──
-
         private static int GetStepIndex(FunctionBase func, StepInputSession session)
         {
-            if (func is MonomialMultiplyFunction mf)
+            if (func is MonomialMultiplyFunction)
                 return MonomialMultiplyFunction.StepIndex(session.Answers, session.CurrentStep);
 
-            // MonomialStandardFormFunction и MonomialPowerFunction пропускают Steps[3] (степень b)
-            // когда переменная одна: логические шаги 0,1,2 → Steps[0,1,2]; шаг 3 → Steps[4]
             if (func is MonomialStandardFormFunction or MonomialPowerFunction)
             {
                 bool twoVars = session.Answers.Count > 0 && session.Answers[0] == "2";
@@ -648,9 +594,7 @@ namespace MathPocket
                 _                               => func.Steps?.Length ?? 0,
             };
 
-        // ═══════════════════════════════════════════════════════════
-        //  Меню
-        // ═══════════════════════════════════════════════════════════
+        // Меню
 
         public async Task SendStartMessage(long chatId)
         {
@@ -702,9 +646,7 @@ namespace MathPocket
         private static ReplyKeyboardMarkup BackKeyboard() =>
             new(new[] { new KeyboardButton[] { BtnBack } }) { ResizeKeyboard = true };
 
-        // ═══════════════════════════════════════════════════════════
-        //  Вспомогательное
-        // ═══════════════════════════════════════════════════════════
+        // Утилиты
 
         private void ClearState(long chatId)
         {

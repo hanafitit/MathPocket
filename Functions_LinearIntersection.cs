@@ -6,21 +6,17 @@ using System.Text;
 
 namespace MathPocket
 {
-    // ═══════════════════════════════════════════════════════════════
     //  § 23. Взаимное расположение графиков линейных функций
-    // ═══════════════════════════════════════════════════════════════
 
-    // ───────────────────────────────────────────────────────────────
     //  23.1 Определить взаимное расположение двух функций
     //  (пересекаются / параллельны / совпадают)
-    // ───────────────────────────────────────────────────────────────
 
     public class LinearRelationFunction : FunctionBase
     {
         public override string   Name       => "Взаимное расположение двух функций";
         public override string   Formula    => "y = k₁x + b₁  и  y = k₂x + b₂";
         public override string[] Keywords   => new[] { "взаимное", "расположение", "параллельны", "пересекаются", "совпадают" };
-        public override string[] Parameters => Array.Empty<string>();
+        public override string[] Parameters => [];
         public override double   Calculate(double[] _) => throw new NotSupportedException();
 
         public override InputStep[] Steps => new[]
@@ -99,17 +95,15 @@ namespace MathPocket
         }
     }
 
-    // ───────────────────────────────────────────────────────────────
     //  23.2 / 23.3 Написать формулу параллельной / пересекающейся /
     //  совпадающей функции по условию
-    // ───────────────────────────────────────────────────────────────
 
     public class LinearWriteRelatedFunction : FunctionBase
     {
         public override string   Name       => "Написать формулу параллельной / совпадающей функции";
         public override string   Formula    => "y = kx + b  →  параллельная / совпадающая";
         public override string[] Keywords   => new[] { "параллельная", "совпадающая", "написать формулу", "пересекает" };
-        public override string[] Parameters => Array.Empty<string>();
+        public override string[] Parameters => [];
         public override double   Calculate(double[] _) => throw new NotSupportedException();
 
         public override InputStep[] Steps => new[]
@@ -186,16 +180,14 @@ namespace MathPocket
         }
     }
 
-    // ───────────────────────────────────────────────────────────────
     //  23.5 Найти координаты точки пересечения двух функций
-    // ───────────────────────────────────────────────────────────────
 
     public class LinearIntersectionPointFunction : FunctionBase
     {
         public override string   Name       => "Найти точку пересечения двух функций";
         public override string   Formula    => "k₁x + b₁ = k₂x + b₂  →  (x; y)";
         public override string[] Keywords   => new[] { "точка пересечения", "координаты", "два графика" };
-        public override string[] Parameters => Array.Empty<string>();
+        public override string[] Parameters => [];
         public override double   Calculate(double[] _) => throw new NotSupportedException();
 
         public override InputStep[] Steps => new[]
@@ -262,16 +254,14 @@ namespace MathPocket
         }
     }
 
-    // ───────────────────────────────────────────────────────────────
     //  23.6 Доказать что графики пересекаются
-    // ───────────────────────────────────────────────────────────────
 
     public class LinearProveIntersectFunction : FunctionBase
     {
         public override string   Name       => "Доказать что графики пересекаются";
         public override string   Formula    => "k₁ ≠ k₂  →  пересекаются";
         public override string[] Keywords   => new[] { "доказать", "пересекаются", "доказательство" };
-        public override string[] Parameters => Array.Empty<string>();
+        public override string[] Parameters => [];
         public override double   Calculate(double[] _) => throw new NotSupportedException();
 
         public override InputStep[] Steps => new[]
@@ -333,16 +323,14 @@ namespace MathPocket
         }
     }
 
-    // ───────────────────────────────────────────────────────────────
     //  23.8 Написать несколько формул параллельных функций
-    // ───────────────────────────────────────────────────────────────
 
     public class LinearParallelExamplesFunction : FunctionBase
     {
         public override string   Name       => "Примеры параллельных функций";
         public override string   Formula    => "y = kx + b₁,  y = kx + b₂, ...";
         public override string[] Keywords   => new[] { "параллельные", "несколько", "примеры" };
-        public override string[] Parameters => Array.Empty<string>();
+        public override string[] Parameters => [];
         public override double   Calculate(double[] _) => throw new NotSupportedException();
 
         public override InputStep[] Steps => new[]
@@ -387,16 +375,14 @@ namespace MathPocket
         }
     }
 
-    // ───────────────────────────────────────────────────────────────
     //  23.9 Построить два графика в одной системе координат
-    // ───────────────────────────────────────────────────────────────
 
     public class LinearTwoGraphsFunction : FunctionBase
     {
         public override string   Name       => "Построить два графика в одной системе";
         public override string   Formula    => "y = k₁x + b₁  и  y = k₂x + b₂";
         public override string[] Keywords   => new[] { "два графика", "одна система", "построить" };
-        public override string[] Parameters => Array.Empty<string>();
+        public override string[] Parameters => [];
         public override double   Calculate(double[] _) => throw new NotSupportedException();
 
         public override InputStep[] Steps => new[]
@@ -457,17 +443,15 @@ namespace MathPocket
         }
     }
 
-    // ───────────────────────────────────────────────────────────────
     //  23.10 Написать формулу функции, график которой пересекает
     //  ось ординат в точке (0; b) и параллелен данной функции
-    // ───────────────────────────────────────────────────────────────
 
     public class LinearFindByPointOnOyFunction : FunctionBase
     {
         public override string   Name       => "Функция по точке на Oy и параллельности";
         public override string   Formula    => "График через (0; b) параллельный данной";
         public override string[] Keywords   => new[] { "пересекает ось ординат", "параллельна", "найти формулу" };
-        public override string[] Parameters => Array.Empty<string>();
+        public override string[] Parameters => [];
         public override double   Calculate(double[] _) => throw new NotSupportedException();
 
         public override InputStep[] Steps => new[]
@@ -512,17 +496,15 @@ namespace MathPocket
         }
     }
 
-    // ───────────────────────────────────────────────────────────────
     //  23.11 Найти b, зная что два графика пересекаются
     //  в одной и той же точке с третьим графиком
-    // ───────────────────────────────────────────────────────────────
 
     public class LinearFindBFromIntersectionFunction : FunctionBase
     {
         public override string   Name       => "Найти b из условия общей точки";
         public override string   Formula    => "Графики пересекаются в одной точке с y = kx + b";
         public override string[] Keywords   => new[] { "найти b", "общая точка", "пересекаются в одной точке" };
-        public override string[] Parameters => Array.Empty<string>();
+        public override string[] Parameters => [];
         public override double   Calculate(double[] _) => throw new NotSupportedException();
 
         public override InputStep[] Steps => new[]
@@ -592,16 +574,14 @@ namespace MathPocket
         }
     }
 
-    // ───────────────────────────────────────────────────────────────
     //  23.12 В каких четвертях расположен график y = kx + b
-    // ───────────────────────────────────────────────────────────────
 
     public class LinearQuadrantsFunction : FunctionBase
     {
         public override string   Name       => "В каких четвертях расположен график";
         public override string   Formula    => "Знак k и b определяют четверти";
         public override string[] Keywords   => new[] { "четверти", "координатные четверти", "расположен" };
-        public override string[] Parameters => Array.Empty<string>();
+        public override string[] Parameters => [];
         public override double   Calculate(double[] _) => throw new NotSupportedException();
 
         public override InputStep[] Steps => new[]
@@ -686,16 +666,14 @@ namespace MathPocket
         }
     }
 
-    // ───────────────────────────────────────────────────────────────
     //  23.13 Написать формулу функции по точке и точке на оси Oy
-    // ───────────────────────────────────────────────────────────────
 
     public class LinearFindFormulaByPointAndOyFunction : FunctionBase
     {
         public override string   Name       => "Формула функции по точке и пересечению с Oy";
         public override string   Formula    => "График через A(x₀; y₀) и (0; b)";
         public override string[] Keywords   => new[] { "формула", "точка", "пересекает ось ординат", "найти формулу" };
-        public override string[] Parameters => Array.Empty<string>();
+        public override string[] Parameters => [];
         public override double   Calculate(double[] _) => throw new NotSupportedException();
 
         public override InputStep[] Steps => new[]
@@ -762,17 +740,15 @@ namespace MathPocket
         }
     }
 
-    // ───────────────────────────────────────────────────────────────
     //  23.14 Найти формулу функции параллельной данной
     //  и проходящей через заданную точку
-    // ───────────────────────────────────────────────────────────────
 
     public class LinearParallelThroughPointFunction : FunctionBase
     {
         public override string   Name       => "Параллельная функция через заданную точку";
         public override string   Formula    => "y = kx + b: тот же k, через точку A";
         public override string[] Keywords   => new[] { "параллельная", "через точку", "найти формулу" };
-        public override string[] Parameters => Array.Empty<string>();
+        public override string[] Parameters => [];
         public override double   Calculate(double[] _) => throw new NotSupportedException();
 
         public override InputStep[] Steps => new[]

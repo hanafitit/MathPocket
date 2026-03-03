@@ -5,9 +5,7 @@ using System.Text;
 
 namespace MathPocket
 {
-    // ═══════════════════════════════════════════════════════════════
     //  Вспомогательные утилиты для функции y = ax²
-    // ═══════════════════════════════════════════════════════════════
 
     internal static class QuadraticHelper
     {
@@ -131,16 +129,14 @@ namespace MathPocket
         }
     }
 
-    // ═══════════════════════════════════════════════════════════════
     //  25.1  Принадлежит ли точка графику y = ax²
-    // ═══════════════════════════════════════════════════════════════
 
     public class QuadraticPointBelongsFunction : FunctionBase
     {
         public override string   Name     => "Точка на графике y = ax²?";
         public override string   Formula  => "Проверить: принадлежит ли (x₀; y₀) графику y = ax²";
         public override string[] Keywords => new[] { "парабола", "принадлежит", "точка", "ax²" };
-        public override string[] Parameters => Array.Empty<string>();
+        public override string[] Parameters => [];
         public override double   Calculate(double[] _) => throw new NotSupportedException();
 
         public override InputStep[] Steps => new[]
@@ -191,16 +187,14 @@ namespace MathPocket
         }
     }
 
-    // ═══════════════════════════════════════════════════════════════
     //  25.2  Построить y = ax², все свойства
-    // ═══════════════════════════════════════════════════════════════
 
     public class QuadraticPlotFunction : FunctionBase
     {
         public override string   Name     => "Построить y = ax²";
         public override string   Formula  => "y = ax² — парабола: свойства и график";
         public override string[] Keywords => new[] { "парабола", "ax²", "построить", "квадратичная", "возрастание" };
-        public override string[] Parameters => Array.Empty<string>();
+        public override string[] Parameters => [];
         public override double   Calculate(double[] _) => throw new NotSupportedException();
 
         public override InputStep[] Steps => new[]
@@ -233,16 +227,14 @@ namespace MathPocket
         }
     }
 
-    // ═══════════════════════════════════════════════════════════════
     //  25.3  Два графика в одной системе координат
-    // ═══════════════════════════════════════════════════════════════
 
     public class QuadraticTwoGraphsFunction : FunctionBase
     {
         public override string   Name     => "Два графика y = a₁x² и y = a₂x²";
         public override string   Formula  => "Построить и сравнить две параболы в одной системе";
         public override string[] Keywords => new[] { "парабола", "два графика", "сравнить", "растяжение" };
-        public override string[] Parameters => Array.Empty<string>();
+        public override string[] Parameters => [];
         public override double   Calculate(double[] _) => throw new NotSupportedException();
 
         public override InputStep[] Steps => new[]
@@ -312,16 +304,14 @@ namespace MathPocket
         }
     }
 
-    // ═══════════════════════════════════════════════════════════════
     //  25.4  Сравнить значения ax₁² и ax₂²
-    // ═══════════════════════════════════════════════════════════════
 
     public class QuadraticCompareValuesFunction : FunctionBase
     {
         public override string   Name     => "Сравнить значения y = ax² при двух x";
         public override string   Formula  => "Сравнить ax₁² и ax₂² используя свойства параболы";
         public override string[] Keywords => new[] { "парабола", "сравнить", "значения", "ax²" };
-        public override string[] Parameters => Array.Empty<string>();
+        public override string[] Parameters => [];
         public override double   Calculate(double[] _) => throw new NotSupportedException();
 
         public override InputStep[] Steps => new[]
@@ -387,16 +377,14 @@ namespace MathPocket
         }
     }
 
-    // ═══════════════════════════════════════════════════════════════
     //  25.5  Число корней ax² = c  (графически)
-    // ═══════════════════════════════════════════════════════════════
 
     public class QuadraticRootsCountFunction : FunctionBase
     {
         public override string   Name     => "Число корней ax² = c (графически)";
         public override string   Formula  => "Пересечение параболы y = ax² с прямой y = c";
         public override string[] Keywords => new[] { "парабола", "корни", "число корней", "ax²=c" };
-        public override string[] Parameters => Array.Empty<string>();
+        public override string[] Parameters => [];
         public override double   Calculate(double[] _) => throw new NotSupportedException();
 
         public override InputStep[] Steps => new[]
@@ -459,16 +447,14 @@ namespace MathPocket
         }
     }
 
-    // ═══════════════════════════════════════════════════════════════
     //  25.6  Пересекаются ли y = ax² и y = kx + b
-    // ═══════════════════════════════════════════════════════════════
 
     public class QuadraticIntersectsLinearFunction : FunctionBase
     {
         public override string   Name     => "Пересечение y = ax² и y = kx + b";
         public override string   Formula  => "Найти точки пересечения параболы и прямой";
         public override string[] Keywords => new[] { "парабола", "прямая", "пересечение", "ax²" };
-        public override string[] Parameters => Array.Empty<string>();
+        public override string[] Parameters => [];
         public override double   Calculate(double[] _) => throw new NotSupportedException();
 
         public override InputStep[] Steps => new[]
@@ -546,16 +532,14 @@ namespace MathPocket
         }
     }
 
-    // ═══════════════════════════════════════════════════════════════
     //  25.7  Найти корни уравнения ax² + bx + c = 0 графически
-    // ═══════════════════════════════════════════════════════════════
 
     public class QuadraticFindRootsFunction : FunctionBase
     {
         public override string   Name     => "Корни ax² + bx + c = 0 (графически)";
         public override string   Formula  => "Пересечение y = ax² с y = −bx − c";
         public override string[] Keywords => new[] { "парабола", "корни", "уравнение", "графически", "квадратное" };
-        public override string[] Parameters => Array.Empty<string>();
+        public override string[] Parameters => [];
         public override double   Calculate(double[] _) => throw new NotSupportedException();
 
         public override InputStep[] Steps => new[]
@@ -640,16 +624,14 @@ namespace MathPocket
         }
     }
 
-    // ═══════════════════════════════════════════════════════════════
     //  25.8  Является ли y = ax² возрастающей/убывающей на промежутке
-    // ═══════════════════════════════════════════════════════════════
 
     public class QuadraticMonotonicFunction : FunctionBase
     {
         public override string   Name     => "Монотонность y = ax² на промежутке";
         public override string   Formula  => "Возрастающая или убывающая на [a; b]?";
         public override string[] Keywords => new[] { "парабола", "возрастающая", "убывающая", "промежуток", "ax²" };
-        public override string[] Parameters => Array.Empty<string>();
+        public override string[] Parameters => [];
         public override double   Calculate(double[] _) => throw new NotSupportedException();
 
         public override InputStep[] Steps => new[]
@@ -739,16 +721,14 @@ namespace MathPocket
         }
     }
 
-    // ═══════════════════════════════════════════════════════════════
     //  25.9  Наибольшее и наименьшее значение на промежутке
-    // ═══════════════════════════════════════════════════════════════
 
     public class QuadraticMinMaxFunction : FunctionBase
     {
         public override string   Name     => "Наибольшее и наименьшее значение y = ax²";
         public override string   Formula  => "max и min функции y = ax² на промежутке [a; b]";
         public override string[] Keywords => new[] { "парабола", "наибольшее", "наименьшее", "максимум", "минимум" };
-        public override string[] Parameters => Array.Empty<string>();
+        public override string[] Parameters => [];
         public override double   Calculate(double[] _) => throw new NotSupportedException();
 
         public override InputStep[] Steps => new[]
@@ -824,16 +804,14 @@ namespace MathPocket
         }
     }
 
-    // ═══════════════════════════════════════════════════════════════
     //  25.10  Пересечение y = ax² и y = ax − c
-    // ═══════════════════════════════════════════════════════════════
 
     public class QuadraticCanIntersectFunction : FunctionBase
     {
         public override string   Name     => "Пересечение y = ax² и y = ax − c";
         public override string   Formula  => "Могут ли пересечься y = ax² и y = ax − c?";
         public override string[] Keywords => new[] { "парабола", "пересечение", "ax²", "ax−c" };
-        public override string[] Parameters => Array.Empty<string>();
+        public override string[] Parameters => [];
         public override double   Calculate(double[] _) => throw new NotSupportedException();
 
         public override InputStep[] Steps => new[]

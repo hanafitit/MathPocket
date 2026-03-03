@@ -6,9 +6,7 @@ using System.Text;
 
 namespace MathPocket
 {
-    // ═══════════════════════════════════════════════════════════════
     //  Общие шаги для табличных функций
-    // ═══════════════════════════════════════════════════════════════
 
     internal static class TableSteps
     {
@@ -40,16 +38,14 @@ namespace MathPocket
         }
     }
 
-    // ═══════════════════════════════════════════════════════════════
     //  Является ли зависимость функцией?
-    // ═══════════════════════════════════════════════════════════════
 
     public class IsFunctionFunction : FunctionBase
     {
         public override string   Name       => "Является ли функцией";
         public override string   Formula    => "каждому x — ровно одно y";
         public override string[] Keywords   => new[] { "функция", "является", "таблица" };
-        public override string[] Parameters => Array.Empty<string>();
+        public override string[] Parameters => [];
         public override double   Calculate(double[] _) => throw new NotSupportedException();
 
         public override InputStep[] Steps => new[]
@@ -138,16 +134,14 @@ namespace MathPocket
         }
     }
 
-    // ═══════════════════════════════════════════════════════════════
     //  Возрастающая или убывающая функция?
-    // ═══════════════════════════════════════════════════════════════
 
     public class IsIncreasingDecreasingFunction : FunctionBase
     {
         public override string   Name       => "Возрастающая или убывающая";
         public override string   Formula    => "x₁ < x₂ → f(x₁) < f(x₂)";
         public override string[] Keywords   => new[] { "возрастающая", "убывающая", "функция" };
-        public override string[] Parameters => Array.Empty<string>();
+        public override string[] Parameters => [];
         public override double   Calculate(double[] _) => throw new NotSupportedException();
 
         public override InputStep[] Steps => new[]
@@ -241,19 +235,17 @@ namespace MathPocket
         }
     }
 
-    // ═══════════════════════════════════════════════════════════════
     //  ФУНКЦИЯ 1: Анализ функции по таблице
     //  — является ли функцией
     //  — область определения и множество значений
     //  — возрастающая / убывающая / смешанная
-    // ═══════════════════════════════════════════════════════════════
 
     public class TableAnalysisFunction : FunctionBase
     {
         public override string   Name       => "Анализ функции по таблице";
         public override string   Formula    => "D(f), E(f), возрастание/убывание";
         public override string[] Keywords   => new[] { "таблица", "функция", "анализ", "возрастающая", "убывающая", "область" };
-        public override string[] Parameters => Array.Empty<string>();
+        public override string[] Parameters => [];
         public override double   Calculate(double[] _) => throw new NotSupportedException();
 
         public override InputStep[] Steps => new[]
@@ -416,7 +408,6 @@ namespace MathPocket
         }
     }
 
-    // ═══════════════════════════════════════════════════════════════
     //  ФУНКЦИЯ 2: Область определения функции
     //
     //  Пользователь вводит правую часть: 3x-5  или  1/(x^2-5x+6)
@@ -429,14 +420,13 @@ namespace MathPocket
     //    · deg = 1            → одно исключение
     //    · deg = 2            → дискриминант, 0/1/2 исключения
     //    · deg > 2            → числовой поиск корней
-    // ═══════════════════════════════════════════════════════════════
 
     public class DomainFunction : FunctionBase
     {
         public override string   Name       => "Область определения";
         public override string   Formula    => "D(f): при каких x функция существует";
         public override string[] Keywords   => new[] { "область определения", "D(f)", "функция" };
-        public override string[] Parameters => Array.Empty<string>();
+        public override string[] Parameters => [];
         public override double   Calculate(double[] _) => throw new NotSupportedException();
 
         public override InputStep[] Steps => new[]
@@ -732,16 +722,14 @@ namespace MathPocket
                 { return $"Не могу разобрать знаменатель: {ex.Message}"; }
         }
     }
-    // ═══════════════════════════════════════════════════════════════
     //  Область определения и множество значений по таблице
-    // ═══════════════════════════════════════════════════════════════
 
     public class DomainFromTableFunction : FunctionBase
     {
         public override string   Name       => "Область определения по таблице";
         public override string   Formula    => "D(f) = {x₁; x₂; ...},  E(f) = {y₁; y₂; ...}";
         public override string[] Keywords   => new[] { "область определения", "множество значений", "таблица" };
-        public override string[] Parameters => Array.Empty<string>();
+        public override string[] Parameters => [];
         public override double   Calculate(double[] _) => throw new NotSupportedException();
 
         public override InputStep[] Steps => new[]
@@ -798,17 +786,15 @@ namespace MathPocket
         }
     }
 
-    // ═══════════════════════════════════════════════════════════════
     //  Определить закономерность по таблице
     //  Проверяет: y=kx+b, y=kx, y=kx², y=kx²+b, y=kx³, y=k/x, y=|x|
-    // ═══════════════════════════════════════════════════════════════
 
     public class DetectFormulaFunction : FunctionBase
     {
         public override string   Name       => "Назвать функцию по таблице";
         public override string   Formula    => "y = ? (бот находит сам)";
         public override string[] Keywords   => new[] { "закономерность", "формула", "определить", "найти" };
-        public override string[] Parameters => Array.Empty<string>();
+        public override string[] Parameters => [];
         public override double   Calculate(double[] _) => throw new NotSupportedException();
 
         public override InputStep[] Steps => new[]
@@ -993,16 +979,14 @@ namespace MathPocket
         }
     }
 
-    // ═══════════════════════════════════════════════════════════════
     //  Угадать формулу по таблице
-    // ═══════════════════════════════════════════════════════════════
 
     public class FormulaFromTableFunction : FunctionBase
     {
         public override string   Name       => "Угадать формулу по таблице";
         public override string   Formula    => "y = kx + b";
         public override string[] Keywords   => new[] { "формула", "таблица", "угадать", "найти" };
-        public override string[] Parameters => Array.Empty<string>();
+        public override string[] Parameters => [];
         public override double   Calculate(double[] _) => throw new NotSupportedException();
 
         public override InputStep[] Steps => new[]
@@ -1152,16 +1136,14 @@ namespace MathPocket
         }
     }
 
-    // ═══════════════════════════════════════════════════════════════
     //  Заполнить таблицу по формуле
-    // ═══════════════════════════════════════════════════════════════
 
     public class TableFromFormulaFunction : FunctionBase
     {
         public override string   Name       => "Заполнить таблицу по формуле";
         public override string   Formula    => "y = f(x) → подставляем x, находим y";
         public override string[] Keywords   => new[] { "таблица", "формула", "заполнить", "подставить" };
-        public override string[] Parameters => Array.Empty<string>();
+        public override string[] Parameters => [];
         public override double   Calculate(double[] _) => throw new NotSupportedException();
 
         public override InputStep[] Steps => new[]
@@ -1286,17 +1268,15 @@ namespace MathPocket
         }
     }
 
-    // ═══════════════════════════════════════════════════════════════
     //  Записать область определения по концам отрезка/луча/прямой
     //  Пользователь снимает границы с графика и вводит числами.
-    // ═══════════════════════════════════════════════════════════════
 
     public class GraphDomainFunction : FunctionBase
     {
         public override string   Name       => "Записать область определения по графику";
         public override string   Formula    => "D(f) = [a; b] / (a; b) / [a; +∞) / ...";
         public override string[] Keywords   => new[] { "область определения", "график", "отрезок", "луч" };
-        public override string[] Parameters => Array.Empty<string>();
+        public override string[] Parameters => [];
         public override double   Calculate(double[] _) => throw new NotSupportedException();
 
         public override InputStep[] Steps => new[]

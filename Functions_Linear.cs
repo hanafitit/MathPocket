@@ -6,9 +6,7 @@ using System.Text;
 
 namespace MathPocket
 {
-    // ═══════════════════════════════════════════════════════════════
     //  Вспомогательные утилиты для линейных функций
-    // ═══════════════════════════════════════════════════════════════
 
     internal static class LinearHelper
     {
@@ -129,16 +127,14 @@ namespace MathPocket
                 NumberStyles.Any, CultureInfo.InvariantCulture);
     }
 
-    // ═══════════════════════════════════════════════════════════════
     //  22.1 Является ли линейной функцией?
-    // ═══════════════════════════════════════════════════════════════
 
     public class IsLinearFunction : FunctionBase
     {
         public override string   Name       => "Является ли линейной функцией";
         public override string   Formula    => "y = kx + b";
         public override string[] Keywords   => new[] { "линейная", "является", "функция" };
-        public override string[] Parameters => Array.Empty<string>();
+        public override string[] Parameters => [];
         public override double   Calculate(double[] _) => throw new NotSupportedException();
 
         public override InputStep[] Steps => new[]
@@ -222,16 +218,14 @@ namespace MathPocket
         }
     }
 
-    // ═══════════════════════════════════════════════════════════════
     //  22.2/22.3 Найти y по x или x по y
-    // ═══════════════════════════════════════════════════════════════
 
     public class LinearEvalFunction : FunctionBase
     {
         public override string   Name       => "Найти y по x или x по y";
         public override string   Formula    => "y = kx + b";
         public override string[] Keywords   => new[] { "линейная", "найти", "значение", "подставить" };
-        public override string[] Parameters => Array.Empty<string>();
+        public override string[] Parameters => [];
         public override double   Calculate(double[] _) => throw new NotSupportedException();
 
         public override InputStep[] Steps => new[]
@@ -310,16 +304,14 @@ namespace MathPocket
         }
     }
 
-    // ═══════════════════════════════════════════════════════════════
     //  22.9 Построить график, вычислить точки пересечения с осями
-    // ═══════════════════════════════════════════════════════════════
 
     public class LinearPlotFunction : FunctionBase
     {
         public override string   Name       => "Построить график функции";
         public override string   Formula    => "y = kx + b → график + пересечения с осями";
         public override string[] Keywords   => new[] { "линейная", "построить", "график", "пересечение", "оси" };
-        public override string[] Parameters => Array.Empty<string>();
+        public override string[] Parameters => [];
         public override double   Calculate(double[] _) => throw new NotSupportedException();
 
         public override InputStep[] Steps => new[]
@@ -469,16 +461,14 @@ namespace MathPocket
         }
     }
 
-    // ═══════════════════════════════════════════════════════════════
     //  22.7 Принадлежит ли точка графику?
-    // ═══════════════════════════════════════════════════════════════
 
     public class LinearPointBelongsFunction : FunctionBase
     {
         public override string   Name       => "Принадлежит ли точка графику";
         public override string   Formula    => "Подставить x, проверить y";
         public override string[] Keywords   => new[] { "линейная", "точка", "принадлежит", "график" };
-        public override string[] Parameters => Array.Empty<string>();
+        public override string[] Parameters => [];
         public override double   Calculate(double[] _) => throw new NotSupportedException();
 
         public override InputStep[] Steps => new[]
@@ -544,16 +534,14 @@ namespace MathPocket
         }
     }
 
-    // ═══════════════════════════════════════════════════════════════
     //  22.10–22.11 Найти b, зная k и точку
-    // ═══════════════════════════════════════════════════════════════
 
     public class LinearFindBFunction : FunctionBase
     {
         public override string   Name       => "Найти b по точке и k";
         public override string   Formula    => "b = y − kx";
         public override string[] Keywords   => new[] { "линейная", "найти b", "свободный член" };
-        public override string[] Parameters => Array.Empty<string>();
+        public override string[] Parameters => [];
         public override double   Calculate(double[] _) => throw new NotSupportedException();
 
         public override InputStep[] Steps => new[]
@@ -604,16 +592,14 @@ namespace MathPocket
         }
     }
 
-    // ═══════════════════════════════════════════════════════════════
     //  22.12–22.13 Найти k, зная b и точку
-    // ═══════════════════════════════════════════════════════════════
 
     public class LinearFindKFunction : FunctionBase
     {
         public override string   Name       => "Найти k по точке и b";
         public override string   Formula    => "k = (y − b) / x";
         public override string[] Keywords   => new[] { "линейная", "найти k", "угловой коэффициент" };
-        public override string[] Parameters => Array.Empty<string>();
+        public override string[] Parameters => [];
         public override double   Calculate(double[] _) => throw new NotSupportedException();
 
         public override InputStep[] Steps => new[]
@@ -674,16 +660,14 @@ namespace MathPocket
         }
     }
 
-    // ═══════════════════════════════════════════════════════════════
     //  22.14 Знак функции: при каких x значение y > 0 или y < 0
-    // ═══════════════════════════════════════════════════════════════
 
     public class LinearSignFunction : FunctionBase
     {
         public override string   Name       => "Знак функции (y > 0 и y < 0)";
         public override string   Formula    => "y = kx + b: при каких x положительна/отрицательна";
         public override string[] Keywords   => new[] { "линейная", "знак", "положительная", "отрицательная" };
-        public override string[] Parameters => Array.Empty<string>();
+        public override string[] Parameters => [];
         public override double   Calculate(double[] _) => throw new NotSupportedException();
 
         public override InputStep[] Steps => new[]

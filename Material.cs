@@ -1,6 +1,5 @@
 namespace MathPocket
 {
-    /// <summary>Теоретический материал (справка), доступный пользователю.</summary>
     public sealed class Material
     {
         public string   Name     { get; init; } = string.Empty;

@@ -62,7 +62,6 @@ namespace MathPocket
             }
         }
 
-        // ─── Обработчик ошибок polling ────────────────────────────
 
         private static async Task HandlePollingError(
             Exception exception,
@@ -80,7 +79,6 @@ namespace MathPocket
             }
         }
 
-        // ─── Веб-сервер для health-check (Render / Railway) ───────
 
         private static async Task RunWebServer(CancellationToken ct)
         {
