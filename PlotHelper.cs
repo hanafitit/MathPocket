@@ -51,24 +51,27 @@ namespace MathPocket
             double xA = 0, yA = b;
             double xB = Math.Abs(k) > 1e-12 ? -b / k : 0;
 
+            // Шаг: подбираем так, чтобы ключевые точки помещались в 10×10 клеток
+            double maxCoord = Math.Max(
+                Math.Max(Math.Abs(xA), Math.Abs(xB)),
+                Math.Max(Math.Abs(yA), 0));
+            double step = NiceNumber(Math.Max(maxCoord / 18.0, 0.5));
+            step = Math.Max(step, 1.0);
+
+            // Центр окна — середина между ключевыми точками, привязанная к сетке
             double cx = (xA + xB) / 2.0;
             double cy = (yA + 0)  / 2.0;
-
-            // Шаг всегда = 1: одна клетка = одна единица
-            double step = 1.0;
-
-            // Привязка центра к сетке
             double cxSnap = Math.Round(cx / step) * step;
             double cySnap = Math.Round(cy / step) * step;
 
-            // Базовое окно 10×8 клеток
-            double xMin = cxSnap - 5.0;
-            double xMax = cxSnap + 5.0;
-            double yMin = cySnap - 4.0;
-            double yMax = cySnap + 4.0;
+            // Базовое окно 20×20 клеток
+            double xMin = cxSnap - 10.0 * step;
+            double xMax = cxSnap + 10.0 * step;
+            double yMin = cySnap - 10.0 * step;
+            double yMax = cySnap + 10.0 * step;
 
             // Гарантируем что обе ключевые точки видны с отступом 1.5 клетки
-            double pad = 1.5;
+            double pad = 1.5 * step;
             if (xA - pad < xMin) { double shift = xMin - (xA - pad); xMin -= shift; xMax -= shift; }
             if (xA + pad > xMax) { double shift = (xA + pad) - xMax; xMin += shift; xMax += shift; }
             if (xB - pad < xMin) { double shift = xMin - (xB - pad); xMin -= shift; xMax -= shift; }
@@ -77,10 +80,11 @@ namespace MathPocket
             if (yA + pad > yMax) { double shift = (yA + pad) - yMax; yMin += shift; yMax += shift; }
 
             // Гарантируем что начало координат видно с отступом 1 клетка
-            if (0 - pad < xMin) { double shift = xMin - (0 - pad); xMin -= shift; xMax -= shift; }
-            if (0 + pad > xMax) { double shift = (0 + pad) - xMax; xMin += shift; xMax += shift; }
-            if (0 - pad < yMin) { double shift = yMin - (0 - pad); yMin -= shift; yMax -= shift; }
-            if (0 + pad > yMax) { double shift = (0 + pad) - yMax; yMin += shift; yMax += shift; }
+            double padO = 1.0 * step;
+            if (-padO < xMin) { double shift = xMin - (-padO); xMin -= shift; xMax -= shift; }
+            if ( padO > xMax) { double shift = ( padO) - xMax; xMin += shift; xMax += shift; }
+            if (-padO < yMin) { double shift = yMin - (-padO); yMin -= shift; yMax -= shift; }
+            if ( padO > yMax) { double shift = ( padO) - yMax; yMin += shift; yMax += shift; }
 
             return (xMin, xMax, yMin, yMax, step);
         }
@@ -291,23 +295,28 @@ namespace MathPocket
 
         public static byte[] TwoLinearFunctions(double k1, double b1, double k2, double b2)
         {
-            // Диапазон: стандартный 10×10
-            double xMin = -10.0, xMax = 10.0, yMin = -10.0, yMax = 10.0, step = 1.0;
-
-            // Расширяем если точки не влезают
+            // Учитываем точку пересечения прямых при расчёте диапазона
             double maxCoord = Math.Max(
                 Math.Max(Math.Abs(b1), Math.Abs(b2)),
                 Math.Max(
                     Math.Abs(k1) > 1e-12 ? Math.Abs(b1 / k1) : 0,
                     Math.Abs(k2) > 1e-12 ? Math.Abs(b2 / k2) : 0));
 
+            if (Math.Abs(k1 - k2) > 1e-9)
+            {
+                double xi = (b2 - b1) / (k1 - k2);
+                double yi = k1 * xi + b1;
+                maxCoord = Math.Max(maxCoord, Math.Max(Math.Abs(xi), Math.Abs(yi)));
+            }
+
+            double step = 1.0;
             if (maxCoord > 8.0)
             {
                 step = NiceNumber(maxCoord / 7.0);
                 step = Math.Max(step, 1.0);
-                xMin = -10.0 * step; xMax = 10.0 * step;
-                yMin = -10.0 * step; yMax = 10.0 * step;
             }
+            double xMin = -10.0 * step, xMax = 10.0 * step;
+            double yMin = -10.0 * step, yMax = 10.0 * step;
 
             var plt = new Plot();
 
@@ -408,7 +417,12 @@ namespace MathPocket
         private static (double xMin, double xMax, double yMin, double yMax, double step)
             CalcQuadraticRange(double a, double extraY = 0)
         {
-            double halfX  = 5.0;
+            // Подбираем halfX так, чтобы парабола занимала ~70% высоты:
+            // при большом |a| — сужаем окно по X, при малом — расширяем.
+            double halfX = Math.Abs(a) > 1e-12
+                ? Math.Min(5.0, Math.Max(1.5, Math.Sqrt(5.0 / Math.Abs(a))))
+                : 5.0;
+
             double yAtEdge = Math.Abs(a) * halfX * halfX;
             double ySpan   = Math.Max(Math.Max(yAtEdge, Math.Abs(extraY)) * 1.3, 5.0);
 
@@ -498,9 +512,12 @@ namespace MathPocket
             plt.Add.HorizontalLine(0).Color = Colors.Black;
             plt.Add.VerticalLine(0).Color   = Colors.Black;
 
-            // Точки пересечения
+            // Точки пересечения: ax² = c  →  x² = c/a  →  решение есть только при c/a ≥ 0
+            // Баг: если a<0 и c<0 то ratio>0, но sqrt(c/a) = sqrt(отриц.) → NaN.
+            // Правильная проверка: оба знака совпадают (оба >0 или оба <0).
             double ratio = c / a;
-            if (ratio > 1e-9)
+            bool sameSign = (a > 0 && c > 0) || (a < 0 && c < 0);
+            if (sameSign && ratio > 1e-9)
             {
                 double xr = Math.Sqrt(ratio);
                 foreach (double xi in new[] { -xr, xr })

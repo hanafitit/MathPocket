@@ -80,16 +80,6 @@ namespace MathPocket
                 WriteError($"[{DateTime.Now:HH:mm:ss}] [IGNORED] тип обновления: {update.Type}");
         }
 
-        public Task HandleErrorAsync(
-            ITelegramBotClient _,
-            Exception exception,
-            Telegram.Bot.Polling.HandleErrorSource source,
-            CancellationToken ct)
-        {
-            Console.WriteLine($"[ОШИБКА] {exception.Message} (источник: {source})");
-            return Task.CompletedTask;
-        }
-
         // Логирование
 
         private static void WriteLog(string line) =>

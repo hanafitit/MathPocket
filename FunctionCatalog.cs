@@ -156,13 +156,13 @@ namespace MathPocket
                         Name = "📏 Линейная функция и её график",
                         Functions =
                         [
-                            new IsLinearFunction(),
-                            new LinearEvalFunction(),
-                            new LinearPointBelongsFunction(),
-                            new LinearFindBFunction(),
-                            new LinearFindKFunction(),
-                            new LinearPlotFunction(),
-                            new LinearSignFunction(),
+                            new IsLinearFunction(),             // 1. понятие
+                            new LinearPlotFunction(),           // 2. построить график — основа
+                            new LinearEvalFunction(),           // 3. найти y/x по формуле
+                            new LinearPointBelongsFunction(),   // 4. точка на графике
+                            new LinearSignFunction(),           // 5. знак функции
+                            new LinearFindKFunction(),          // 6. найти k
+                            new LinearFindBFunction(),          // 7. найти b
                         ]
                     },
                     new()
@@ -170,17 +170,17 @@ namespace MathPocket
                         Name = "🔀 Взаимное расположение функций",
                         Functions =
                         [
-                            new LinearRelationFunction(),
-                            new LinearIntersectionPointFunction(),
-                            new LinearProveIntersectFunction(),
-                            new LinearWriteRelatedFunction(),
-                            new LinearParallelExamplesFunction(),
-                            new LinearTwoGraphsFunction(),
-                            new LinearQuadrantsFunction(),
-                            new LinearFindBFromIntersectionFunction(),
-                            new LinearFindByPointOnOyFunction(),
-                            new LinearParallelThroughPointFunction(),
-                            new LinearFindFormulaByPointAndOyFunction(),
+                            new LinearRelationFunction(),               // 1. теория: виды расположения
+                            new LinearTwoGraphsFunction(),              // 2. построить два графика — наглядность
+                            new LinearParallelExamplesFunction(),       // 3. примеры параллельных
+                            new LinearWriteRelatedFunction(),           // 4. написать формулу параллельной
+                            new LinearIntersectionPointFunction(),      // 5. найти точку пересечения
+                            new LinearProveIntersectFunction(),         // 6. доказать пересечение
+                            new LinearQuadrantsFunction(),              // 7. в каких четвертях
+                            new LinearFindBFromIntersectionFunction(),  // 8. найти b из общей точки
+                            new LinearFindByPointOnOyFunction(),        // 9. функция по точке на Oy
+                            new LinearParallelThroughPointFunction(),   // 10. параллельная через точку
+                            new LinearFindFormulaByPointAndOyFunction(),// 11. формула по точке и Oy
                         ]
                     },
                     new()
