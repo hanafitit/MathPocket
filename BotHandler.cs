@@ -409,8 +409,19 @@ namespace MathPocket
         private async Task HandleStepInput(Message msg, FunctionBase func, StepInputSession session)
         {
             int stepIndex = GetStepIndex(func, session);
-            var step      = func.Steps![stepIndex];
-            var answer    = msg.Text!.Trim();
+
+            if (stepIndex < 0 || stepIndex >= func.Steps!.Length)
+            {
+                WriteError($"[{DateTime.Now:HH:mm:ss}] [GUARD] user={msg.Chat.Id} | func=\"{func.Name}\" | stepIndex={stepIndex} вышел за границы Steps[{func.Steps.Length}] | CurrentStep={session.CurrentStep} | answers={session.Answers.Count}");
+                _inputSession.TryRemove(msg.Chat.Id, out _);
+                await _bot.SendMessage(msg.Chat.Id,
+                    "⚠️ Произошла внутренняя ошибка. Начнём заново.",
+                    replyMarkup: BackKeyboard());
+                return;
+            }
+
+            var step   = func.Steps![stepIndex];
+            var answer = msg.Text!.Trim();
 
             var error = step.Validate(answer);
             if (error is not null)
@@ -473,6 +484,11 @@ namespace MathPocket
             string result;
             try
             {
+                int expected = func.ActiveStepCount(session.Answers);
+                if (session.Answers.Count != expected)
+                    throw new InvalidOperationException(
+                        $"Ожидалось {expected} ответов, получено {session.Answers.Count}.");
+
                 result = func.CalculateFromAnswers(session.Answers);
                 LogSessionEnd("ИТОГ", chatId, func, session.Answers, result: result);
             }
@@ -545,8 +561,19 @@ namespace MathPocket
         private async Task AskCurrentStep(long chatId, FunctionBase func, StepInputSession session)
         {
             int stepIndex = GetStepIndex(func, session);
-            var step      = func.Steps![stepIndex];
-            int total     = GetTotalSteps(func, session);
+
+            if (stepIndex < 0 || stepIndex >= func.Steps!.Length)
+            {
+                WriteError($"[{DateTime.Now:HH:mm:ss}] [GUARD] user={chatId} | func=\"{func.Name}\" | stepIndex={stepIndex} вышел за границы Steps[{func.Steps.Length}] | CurrentStep={session.CurrentStep} | answers={session.Answers.Count}");
+                _inputSession.TryRemove(chatId, out _);
+                await _bot.SendMessage(chatId,
+                    "⚠️ Произошла внутренняя ошибка. Начнём заново.",
+                    replyMarkup: BackKeyboard());
+                return;
+            }
+
+            var step  = func.Steps![stepIndex];
+            int total = GetTotalSteps(func, session);
 
             await _bot.SendMessage(chatId,
                 $"Шаг {session.CurrentStep + 1} из {total}\n\n{step.Question}",
