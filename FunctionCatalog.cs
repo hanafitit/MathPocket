@@ -249,7 +249,28 @@ namespace MathPocket
                 Name = "🎯 Теория вероятностей",
                 Functions = [new PercentOfNumberFunction()]
             },
-            new() { Name = "📊 Элементы статистики" },
+            new()
+            {
+                Name = "📊 Элементы статистики",
+                SubSections =
+                [
+                    new()
+                    {
+                        Name = "📋 Вариационные ряды",
+                        Functions =
+                        [
+                            new PopulationAndSampleFunction(),
+                            new IsVariationRowFunction(),
+                            new MakeVariationRowFunction(),
+                            new MinMaxVariantFunction(),
+                            new FrequencyVariantFunction(),
+                            new VariationRowFromTableFunction(),
+                            new VariationRowAnalysisFunction(),
+                            new FillTableThreeFunctionsFunction(),
+                        ]
+                    },
+                ]
+            },
         ];
     }
 }
