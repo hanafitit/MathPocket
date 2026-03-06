@@ -599,4 +599,483 @@ namespace MathPocket
             return sb.ToString().TrimEnd();
         }
     }
+
+    // ═══════════════════════════════════════════════════════════════
+    // §29. АБСОЛЮТНАЯ И ОТНОСИТЕЛЬНАЯ ЧАСТОТА. ТАБЛИЦА ЧАСТОТ
+    // ═══════════════════════════════════════════════════════════════
+
+    // ─── 29.1  Найти абсолютную и относительную частоту ──────────
+
+    public class AbsRelFrequencyFunction : FunctionBase
+    {
+        public override string   Name     => "Абсолютная и относительная частота";
+        public override string   Formula  => "w = n_i / n  (относительная частота)";
+        public override string[] Keywords => new[] { "частота", "абсолютная", "относительная", "варианта" };
+        public override string[] Parameters => [];
+        public override double   Calculate(double[] _) => throw new NotSupportedException();
+
+        public override InputStep[] Steps => new[]
+        {
+            new InputStep
+            {
+                Question =
+                    "📘 Абсолютная и относительная частота\n\n" +
+                    "Абсолютная частота — сколько раз встречается варианта.\n" +
+                    "Относительная частота:\n" +
+                    "  w = n_i / n,  где n — общее число наблюдений\n\n" +
+                    "Пример: 14 наблюдений, вариант −7° встретилась 2 раза\n" +
+                    "  w = 2/14 = 1/7 ≈ 0.14\n\n" +
+                    "✏️ Введи данные через запятую:\n" +
+                    "  Пример: 20, 20, 30, 10, 20, 30, 20, 30, 20",
+                Validate = StatHelper.ValidateNumbers
+            }
+        };
+
+        public override string CalculateFromAnswers(List<string> answers)
+        {
+            var data = StatHelper.ParseNumbers(answers[0])!;
+            int n    = data.Count;
+            var sb   = new StringBuilder();
+
+            sb.AppendLine($"Данные: {string.Join(", ", data.Select(StatHelper.Fmt))}");
+            sb.AppendLine($"Общее число наблюдений: n = {n}");
+            sb.AppendLine();
+
+            var groups = data.GroupBy(x => x)
+                             .Select(g => (value: g.Key, abs: g.Count()))
+                             .OrderBy(p => p.value)
+                             .ToList();
+
+            sb.AppendLine("Таблица частот:");
+            sb.AppendLine($"  {"Варианта",-12} {"Абс. n_i",-14} {"Отн. w_i",-14} {"В %"}");
+            sb.AppendLine($"  {new string('─', 52)}");
+
+            double totalRel = 0;
+            foreach (var (value, abs) in groups)
+            {
+                double rel = (double)abs / n;
+                totalRel  += rel;
+                string frac = FormatFraction(abs, n);
+                sb.AppendLine($"  {StatHelper.Fmt(value),-12} {abs,-14} {frac,-14} {rel * 100:F1}%");
+            }
+
+            sb.AppendLine($"  {new string('─', 52)}");
+            sb.AppendLine($"  {"Σ",-12} {n,-14} {"≈1.00"}");
+            sb.AppendLine();
+            sb.AppendLine("📌 Свойства таблицы частот:");
+            sb.AppendLine($"   Сумма абсолютных частот = {n}  (= n)");
+            sb.AppendLine($"   Сумма относительных частот ≈ 1");
+
+            return sb.ToString().TrimEnd();
+        }
+
+        private static string FormatFraction(int num, int den)
+        {
+            int g = Gcd(num, den);
+            int n = num / g, d = den / g;
+            double v = (double)num / den;
+            string frac = d == 1 ? n.ToString() : $"{n}/{d}";
+            return $"{frac} ≈ {v:F2}";
+        }
+
+        private static int Gcd(int a, int b) => b == 0 ? a : Gcd(b, a % b);
+    }
+
+    // ─── 29.2  Составить таблицу частот ──────────────────────────
+
+    public class FrequencyTableFunction : FunctionBase
+    {
+        public override string   Name     => "Таблица частот (абс. и отн.)";
+        public override string   Formula  => "Варианты → абсолютные и относительные частоты";
+        public override string[] Keywords => new[] { "таблица частот", "абсолютная", "относительная", "составить" };
+        public override string[] Parameters => [];
+        public override double   Calculate(double[] _) => throw new NotSupportedException();
+
+        public override InputStep[] Steps => new[]
+        {
+            new InputStep
+            {
+                Question =
+                    "📘 Составить таблицу частот\n\n" +
+                    "По данным бот построит таблицу:\n" +
+                    "  · варианты (уникальные значения)\n" +
+                    "  · абсолютная частота n_i\n" +
+                    "  · относительная частота w_i = n_i / n\n\n" +
+                    "✏️ Введи данные через запятую или пробел:\n" +
+                    "  Пример: 2, 2, 3, 3, 3, 4, 2, 3, 5, 3",
+                Validate = StatHelper.ValidateNumbers
+            }
+        };
+
+        public override string CalculateFromAnswers(List<string> answers)
+        {
+            var data   = StatHelper.ParseNumbers(answers[0])!;
+            int n      = data.Count;
+            var sorted = StatHelper.ToVariationRow(data);
+            var sb     = new StringBuilder();
+
+            sb.AppendLine($"Исходный ряд: {string.Join(", ", data.Select(StatHelper.Fmt))}");
+            sb.AppendLine($"Вариационный ряд: {string.Join(", ", sorted.Select(StatHelper.Fmt))}");
+            sb.AppendLine($"Общее число наблюдений: n = {n}");
+            sb.AppendLine();
+
+            var groups = data.GroupBy(x => x)
+                             .Select(g => (value: g.Key, abs: g.Count()))
+                             .OrderBy(p => p.value)
+                             .ToList();
+
+            var varRow  = "Варианты:   " + string.Join("  ", groups.Select(g => $"{StatHelper.Fmt(g.value),5}"));
+            var absRow  = "Абс. n_i:   " + string.Join("  ", groups.Select(g => $"{g.abs,5}"));
+            var relStrs = groups.Select(g => {
+                int gcd = Gcd(g.abs, n);
+                int num = g.abs / gcd, den = n / gcd;
+                return den == 1 ? num.ToString() : $"{num}/{den}";
+            }).ToList();
+            var relRow  = "Отн. w_i:   " + string.Join("  ", relStrs.Select(s => $"{s,5}"));
+            var pctRow  = "В %:        " + string.Join("  ", groups.Select(g =>
+                $"{(double)g.abs / n * 100,4:F0}%"));
+
+            sb.AppendLine("📊 Таблица частот:");
+            sb.AppendLine();
+            sb.AppendLine(varRow);
+            sb.AppendLine(absRow);
+            sb.AppendLine(relRow);
+            sb.AppendLine(pctRow);
+            sb.AppendLine();
+
+            double sumRel = groups.Sum(g => (double)g.abs / n);
+            sb.AppendLine($"📌 Сумма абсолютных частот = {n}  (= n)");
+            sb.AppendLine($"   Сумма относительных частот = {sumRel:F4} ≈ 1");
+            sb.AppendLine();
+
+            int maxAbs  = groups.Max(g => g.abs);
+            var popular = groups.Where(g => g.abs == maxAbs).Select(g => StatHelper.Fmt(g.value));
+            sb.AppendLine($"   Наиболее популярная варианта: {string.Join(", ", popular)}  (n_i = {maxAbs})");
+
+            return sb.ToString().TrimEnd();
+        }
+
+        private static int Gcd(int a, int b) => b == 0 ? a : Gcd(b, a % b);
+    }
+
+    // ─── 29.3  Частота конкретной варианты ───────────────────────
+
+    public class SpecificVariantFrequencyFunction : FunctionBase
+    {
+        public override string   Name     => "Частота конкретной варианты";
+        public override string   Formula  => "Найти абс. и отн. частоту заданного значения";
+        public override string[] Keywords => new[] { "частота", "варианта", "конкретная", "найти" };
+        public override string[] Parameters => [];
+        public override double   Calculate(double[] _) => throw new NotSupportedException();
+
+        public override InputStep[] Steps => new[]
+        {
+            new InputStep
+            {
+                Question =
+                    "📘 Найти частоту конкретной варианты\n\n" +
+                    "✏️ Введи все данные через запятую:\n" +
+                    "  Пример: 2, 3, 3, 4, 2, 3, 5, 3, 4, 3",
+                Validate = StatHelper.ValidateNumbers
+            },
+            new InputStep
+            {
+                Question =
+                    "✏️ Введи значение варианты, частоту которой нужно найти:\n" +
+                    "  Пример: 3",
+                Validate = s =>
+                {
+                    s = s.Trim().Replace(",", ".").Replace("−", "-");
+                    if (!double.TryParse(s, NumberStyles.Any, CultureInfo.InvariantCulture, out _))
+                        return "Введи число.";
+                    return null;
+                }
+            }
+        };
+
+        public override string CalculateFromAnswers(List<string> answers)
+        {
+            var data   = StatHelper.ParseNumbers(answers[0])!;
+            double val = double.Parse(answers[1].Trim().Replace(",", ".").Replace("−", "-"),
+                            NumberStyles.Any, CultureInfo.InvariantCulture);
+            int n      = data.Count;
+            int abs    = data.Count(x => Math.Abs(x - val) < 1e-9);
+            var sb     = new StringBuilder();
+
+            sb.AppendLine($"Данные: {string.Join(", ", data.Select(StatHelper.Fmt))}");
+            sb.AppendLine($"Всего наблюдений: n = {n}");
+            sb.AppendLine($"Ищем варианту: {StatHelper.Fmt(val)}");
+            sb.AppendLine();
+
+            if (abs == 0)
+            {
+                sb.AppendLine($"Варианта {StatHelper.Fmt(val)} в данных не встречается.");
+                sb.AppendLine($"📌 Абсолютная частота = 0");
+                sb.AppendLine($"   Относительная частота = 0");
+            }
+            else
+            {
+                double rel = (double)abs / n;
+                int g = Gcd(abs, n);
+                string frac = (n / g == 1) ? (abs / g).ToString() : $"{abs / g}/{n / g}";
+                sb.AppendLine($"Шаг 1. Считаем сколько раз встречается {StatHelper.Fmt(val)}:");
+                sb.AppendLine($"  n_i = {abs}");
+                sb.AppendLine();
+                sb.AppendLine($"Шаг 2. Вычисляем относительную частоту:");
+                sb.AppendLine($"  w = n_i / n = {abs} / {n} = {frac} ≈ {rel:F4}");
+                sb.AppendLine();
+                sb.AppendLine($"📌 Абсолютная частота = {abs}");
+                sb.AppendLine($"   Относительная частота = {frac} ≈ {rel:F2}  ({rel * 100:F1}%)");
+            }
+
+            return sb.ToString().TrimEnd();
+        }
+
+        private static int Gcd(int a, int b) => b == 0 ? a : Gcd(b, a % b);
+    }
+
+    // ─── 29.4  Статистический ряд → таблица частот ───────────────
+
+    public class StatRowToFreqTableFunction : FunctionBase
+    {
+        public override string   Name     => "Статистический ряд → таблица частот";
+        public override string   Formula  => "Вариационный ряд + абс./отн. частоты по варианте";
+        public override string[] Keywords => new[] { "статистический ряд", "вариационный ряд", "таблица", "частота" };
+        public override string[] Parameters => [];
+        public override double   Calculate(double[] _) => throw new NotSupportedException();
+
+        public override InputStep[] Steps => new[]
+        {
+            new InputStep
+            {
+                Question =
+                    "📘 Из статистического ряда — вариационный ряд и таблица частот\n\n" +
+                    "Введи статистический ряд (данные в порядке наблюдений).\n\n" +
+                    "Пример: 2 2 3 3 3 3 4 2 3 3 3 2 3 4 3 3 2 3 5 3\n\n" +
+                    "✏️ Введи данные через запятую или пробел:",
+                Validate = StatHelper.ValidateNumbers
+            },
+            new InputStep
+            {
+                Question =
+                    "✏️ Для каких вариант найти частоту?\n" +
+                    "  Введи через запятую или слово «все»:\n" +
+                    "  Пример: 3, 4  или  все",
+                Validate = s =>
+                {
+                    if (string.IsNullOrWhiteSpace(s)) return "Введи значения или слово «все»";
+                    if (s.Trim().ToLower() == "все") return null;
+                    if (StatHelper.ParseNumbers(s) == null)
+                        return "Введи числа через запятую или слово «все»";
+                    return null;
+                }
+            }
+        };
+
+        public override string CalculateFromAnswers(List<string> answers)
+        {
+            var data   = StatHelper.ParseNumbers(answers[0])!;
+            int n      = data.Count;
+            var sorted = StatHelper.ToVariationRow(data);
+            var sb     = new StringBuilder();
+
+            sb.AppendLine($"Статистический ряд ({n} наблюдений):");
+            sb.AppendLine($"  {string.Join(", ", data.Select(StatHelper.Fmt))}");
+            sb.AppendLine();
+            sb.AppendLine("Вариационный ряд:");
+            sb.AppendLine($"  {string.Join(", ", sorted.Select(StatHelper.Fmt))}");
+            sb.AppendLine();
+
+            var groups = data.GroupBy(x => x)
+                             .Select(g => (value: g.Key, abs: g.Count()))
+                             .OrderBy(p => p.value)
+                             .ToList();
+
+            sb.AppendLine("📊 Полная таблица частот:");
+            sb.AppendLine($"  {"Варианта",-12} {"n_i",-8} {"w_i",-12} {"%"}");
+            sb.AppendLine($"  {new string('─', 40)}");
+            foreach (var (value, abs) in groups)
+            {
+                double rel = (double)abs / n;
+                int g = Gcd(abs, n);
+                string frac = (n / g == 1) ? (abs / g).ToString() : $"{abs / g}/{n / g}";
+                sb.AppendLine($"  {StatHelper.Fmt(value),-12} {abs,-8} {frac,-12} {rel * 100:F1}%");
+            }
+            sb.AppendLine($"  {new string('─', 40)}");
+            sb.AppendLine($"  {"Σ",-12} {n,-8} {"≈1.00",-12} 100%");
+            sb.AppendLine();
+
+            string query = answers[1].Trim().ToLower();
+            List<double> targets = query == "все"
+                ? groups.Select(g => g.value).ToList()
+                : StatHelper.ParseNumbers(answers[1])!;
+
+            sb.AppendLine("📌 Запрошенные варианты:");
+            foreach (double t in targets)
+            {
+                var match = groups.FirstOrDefault(g => Math.Abs(g.value - t) < 1e-9);
+                if (match == default)
+                {
+                    sb.AppendLine($"   {StatHelper.Fmt(t)}: не встречается (n_i = 0, w = 0)");
+                    continue;
+                }
+                int abs    = match.abs;
+                double rel = (double)abs / n;
+                int g      = Gcd(abs, n);
+                string frac = (n / g == 1) ? (abs / g).ToString() : $"{abs / g}/{n / g}";
+                sb.AppendLine($"   {StatHelper.Fmt(t)}: n_i = {abs},  w = {frac} ≈ {rel:F2}  ({rel * 100:F1}%)");
+            }
+
+            return sb.ToString().TrimEnd();
+        }
+
+        private static int Gcd(int a, int b) => b == 0 ? a : Gcd(b, a % b);
+    }
+
+    // ─── 29.5  Найти w по таблице с n_i ──────────────────────────
+
+    public class FindRelFreqFromTableFunction : FunctionBase
+    {
+        public override string   Name     => "Найти относительную частоту по таблице";
+        public override string   Formula  => "w_i = n_i / n,  n = Σ n_i";
+        public override string[] Keywords => new[] { "относительная частота", "таблица", "найти w", "дополнить" };
+        public override string[] Parameters => [];
+        public override double   Calculate(double[] _) => throw new NotSupportedException();
+
+        public override InputStep[] Steps => new[]
+        {
+            new InputStep
+            {
+                Question =
+                    "📘 Найти относительную частоту по таблице\n\n" +
+                    "Дана таблица: варианты и их абсолютные частоты n_i.\n" +
+                    "Нужно найти n и w_i для каждой варианты.\n\n" +
+                    "✏️ Введи абсолютные частоты n_i через запятую:\n" +
+                    "  (строка «Абсолютная частота» из таблицы)\n" +
+                    "  Пример: 4, 4, 5, 6, 4, 4, 2, 1",
+                Validate = s =>
+                {
+                    if (string.IsNullOrWhiteSpace(s)) return "Введи числа";
+                    var nums = StatHelper.ParseNumbers(s);
+                    if (nums == null) return "Введи числа через запятую";
+                    if (nums.Any(x => x < 0)) return "Частоты не могут быть отрицательными";
+                    return null;
+                }
+            },
+            new InputStep
+            {
+                Question =
+                    "✏️ Введи варианты через запятую:\n" +
+                    "  (строка «Варианты» из таблицы)\n" +
+                    "  Пример: 20, 21, 22, 23, 24, 25, 26, 27",
+                Validate = StatHelper.ValidateNumbers
+            }
+        };
+
+        public override string CalculateFromAnswers(List<string> answers)
+        {
+            var freqs    = StatHelper.ParseNumbers(answers[0])!;
+            var variants = StatHelper.ParseNumbers(answers[1])!;
+            var sb       = new StringBuilder();
+
+            if (freqs.Count != variants.Count)
+                return $"⚠️ Количество вариант ({variants.Count}) не совпадает с количеством частот ({freqs.Count}).";
+
+            int n = (int)freqs.Sum();
+            sb.AppendLine($"Общее число наблюдений: n = Σ n_i = {n}");
+            sb.AppendLine();
+            sb.AppendLine("Вычисляем w_i = n_i / n:");
+            sb.AppendLine();
+            sb.AppendLine($"  {"Варианта",-12} {"n_i",-8} {"w_i",-16} {"До 0.01"}");
+            sb.AppendLine($"  {new string('─', 48)}");
+
+            double sumRel = 0;
+            for (int i = 0; i < variants.Count; i++)
+            {
+                int abs    = (int)freqs[i];
+                double rel = (double)abs / n;
+                sumRel    += rel;
+                int g      = Gcd(abs, n);
+                string frac = (n / g == 1) ? (abs / g).ToString() : $"{abs/g}/{n/g}";
+                sb.AppendLine($"  {StatHelper.Fmt(variants[i]),-12} {abs,-8} {frac,-16} {rel:F2}");
+            }
+
+            sb.AppendLine($"  {new string('─', 48)}");
+            sb.AppendLine($"  {"Σ",-12} {n,-8} {"≈1",-16} {sumRel:F2}");
+            sb.AppendLine();
+
+            int maxAbs  = (int)freqs.Max();
+            var popular = variants.Zip(freqs, (v, f) => (v, f))
+                                  .Where(p => (int)p.f == maxAbs)
+                                  .Select(p => StatHelper.Fmt(p.v));
+            sb.AppendLine($"📌 Самая популярная варианта: {string.Join(", ", popular)}  (n_i = {maxAbs})");
+            sb.AppendLine($"   Проверка: Σ w_i = {sumRel:F4} ≈ 1  ✅");
+
+            return sb.ToString().TrimEnd();
+        }
+
+        private static int Gcd(int a, int b) => b == 0 ? a : Gcd(b, a % b);
+    }
+
+    // ─── 29.6  Абс. частота конкретного результата ───────────────
+
+    public class HomeworkFrequencyFunction : FunctionBase
+    {
+        public override string   Name     => "Абс. частота за серию наблюдений";
+        public override string   Formula  => "n_i — число результатов с заданным значением";
+        public override string[] Keywords => new[] { "абсолютная частота", "четверть", "оценка", "задание" };
+        public override string[] Parameters => [];
+        public override double   Calculate(double[] _) => throw new NotSupportedException();
+
+        public override InputStep[] Steps => new[]
+        {
+            new InputStep
+            {
+                Question =
+                    "📘 Абсолютная частота конкретного результата\n\n" +
+                    "Найдём, сколько раз в серии наблюдений получено\n" +
+                    "определённое значение.\n\n" +
+                    "✏️ Введи все результаты через запятую:\n" +
+                    "  Пример: 5, 4, 5, 5, 4, 5, 5, 4",
+                Validate = StatHelper.ValidateNumbers
+            },
+            new InputStep
+            {
+                Question =
+                    "✏️ Какое значение ищем?\n" +
+                    "  Пример: 5",
+                Validate = s =>
+                {
+                    s = s.Trim().Replace(",", ".");
+                    if (!double.TryParse(s, NumberStyles.Any, CultureInfo.InvariantCulture, out _))
+                        return "Введи число";
+                    return null;
+                }
+            }
+        };
+
+        public override string CalculateFromAnswers(List<string> answers)
+        {
+            var data   = StatHelper.ParseNumbers(answers[0])!;
+            double val = double.Parse(answers[1].Trim().Replace(",", "."),
+                            NumberStyles.Any, CultureInfo.InvariantCulture);
+            int n      = data.Count;
+            int absEq  = data.Count(x => Math.Abs(x - val) < 1e-9);
+            int absNeq = n - absEq;
+            var sb     = new StringBuilder();
+
+            sb.AppendLine($"Результаты: {string.Join(", ", data.Select(StatHelper.Fmt))}");
+            sb.AppendLine($"Всего наблюдений: n = {n}");
+            sb.AppendLine($"Ищем значение: {StatHelper.Fmt(val)}");
+            sb.AppendLine();
+
+            double rel = (double)absEq / n;
+            sb.AppendLine($"📌 Абсолютная частота {StatHelper.Fmt(val)}: {absEq}");
+            sb.AppendLine($"   Относительная частота: {absEq}/{n} ≈ {rel:F2}  ({rel * 100:F1}%)");
+            sb.AppendLine();
+            sb.AppendLine($"   Значение, отличное от {StatHelper.Fmt(val)}: {absNeq} раз");
+
+            return sb.ToString().TrimEnd();
+        }
+    }
 }

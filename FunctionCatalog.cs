@@ -269,6 +269,19 @@ namespace MathPocket
                             new FillTableThreeFunctionsFunction(),
                         ]
                     },
+                    new()
+                    {
+                        Name = "📊 Абсолютная и относительная частота",
+                        Functions =
+                        [
+                            new AbsRelFrequencyFunction(),
+                            new FrequencyTableFunction(),
+                            new SpecificVariantFrequencyFunction(),
+                            new StatRowToFreqTableFunction(),
+                            new FindRelFreqFromTableFunction(),
+                            new HomeworkFrequencyFunction(),
+                        ]
+                    },
                 ]
             },
         ];
