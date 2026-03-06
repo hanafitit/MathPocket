@@ -13,7 +13,7 @@ namespace MathPocket
     /// Деление одночлена на одночлен.
     /// Пример: 40xy³ ÷ 0,5y² = 80xy
     /// </summary>
-    public class MonomialDividePolyFunction : FunctionBase
+    internal class MonomialDividePolyFunction : FunctionBase
     {
         public override string   Name       => "Одночлен ÷ одночлен";
         public override string   Formula    => "k₁xᵐ ÷ k₂xⁿ = (k₁/k₂)xᵐ⁻ⁿ";

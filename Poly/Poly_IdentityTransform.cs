@@ -14,7 +14,7 @@ namespace MathPocket
     /// Упрощение суммы нескольких произведений:
     /// A·B + C·D + ... → раскрыть все скобки → привести подобные
     /// </summary>
-    public class IdentitySimplifyFunction : FunctionBase
+    internal class IdentitySimplifyFunction : FunctionBase
     {
         public override string   Name       => "Упростить (несколько произведений)";
         public override string   Formula    => "A·B ± C·D ± ... → раскрыть и привести подобные";

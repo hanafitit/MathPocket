@@ -5,7 +5,7 @@ using System.Text;
 
 namespace MathPocket
 {
-    public class FactorOutGcfFunction : FunctionBase
+    internal class FactorOutGcfFunction : FunctionBase
     {
         public override string   Name       => "Вынести общий множитель";
         public override string   Formula    => "ax + ay = a(x + y)";

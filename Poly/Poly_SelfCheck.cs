@@ -15,7 +15,7 @@ namespace MathPocket
     /// Деление многочлена на одночлен:
     /// каждый член многочлена делим на одночлен
     /// </summary>
-    public class PolyDivideByMonomialFunction : FunctionBase
+    internal class PolyDivideByMonomialFunction : FunctionBase
     {
         public override string   Name       => "Многочлен ÷ одночлен";
         public override string   Formula    => "(aₙxⁿ + … + a₀) ÷ kxᵐ";

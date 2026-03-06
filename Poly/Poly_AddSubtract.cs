@@ -5,7 +5,7 @@ using System.Text;
 
 namespace MathPocket
 {
-    public class PolynomialAddFunction : FunctionBase
+    internal class PolynomialAddFunction : FunctionBase
     {
         public override string   Name       => "Сложение многочленов";
         public override string   Formula    => "(A) + (B) = приведение подобных";

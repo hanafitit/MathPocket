@@ -5,7 +5,7 @@ using System.Text;
 
 namespace MathPocket
 {
-    public class PolynomialDegreeFunction : FunctionBase
+    internal class PolynomialDegreeFunction : FunctionBase
     {
         public override string   Name       => "Степень многочлена";
         public override string   Formula    => "степень = наибольший показатель x после приведения подобных";
