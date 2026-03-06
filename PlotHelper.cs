@@ -628,5 +628,176 @@ namespace MathPocket
             plt.Axes.SetLimits(xMin, xMax, yMin, yMax);
             return plt.GetImageBytes(Width, Height, ImageFormat.Png);
         }
+
+        // ─── Диапазон для гиперболы ───────────────────────────────
+
+        private static (double xMin, double xMax, double yMin, double yMax, double step)
+            CalcHyperbolaRange(double k)
+        {
+            double absK = Math.Abs(k);
+            // Подбираем так, чтобы были хорошо видны ветви
+            double half = Math.Max(NiceNumber(Math.Sqrt(absK) * 2.5), 2.0);
+            double step = NiceNumber(half / 5.0);
+            step = Math.Max(step, 0.5);
+            return (-half, half, -half, half, step);
+        }
+
+        // ─── HyperbolaPlot: y = k/x ───────────────────────────────
+
+        public static byte[] HyperbolaPlot(double k)
+        {
+            var (xMin, xMax, yMin, yMax, step) = CalcHyperbolaRange(k);
+            var plt = new Plot();
+
+            // Рисуем две ветви: левую (x < 0) и правую (x > 0)
+            double eps = (xMax - xMin) / 400.0;
+            double[] xsPos = Range(eps, xMax, 300);
+            double[] xsNeg = Range(xMin, -eps, 300);
+
+            var cPos = plt.Add.ScatterLine(xsPos, xsPos.Select(x => k / x).ToArray());
+            cPos.Color = Colors.RoyalBlue; cPos.LineWidth = 2.5f;
+            cPos.LegendText = k == 1 ? "y = 1/x" : k == -1 ? "y = −1/x" : $"y = {FmtLabel(k)}/x";
+
+            var cNeg = plt.Add.ScatterLine(xsNeg, xsNeg.Select(x => k / x).ToArray());
+            cNeg.Color = Colors.RoyalBlue; cNeg.LineWidth = 2.5f;
+
+            plt.Add.HorizontalLine(0).Color = Colors.Black;
+            plt.Add.VerticalLine(0).Color   = Colors.Black;
+
+            plt.Title(cPos.LegendText, size: 16);
+            plt.XLabel("x"); plt.YLabel("y");
+            plt.ShowLegend(Alignment.LowerRight);
+            ApplyTicks(plt, xMin, xMax, yMin, yMax, step);
+            plt.Axes.SetLimits(xMin, xMax, yMin, yMax);
+            return plt.GetImageBytes(Width, Height, ImageFormat.Png);
+        }
+
+        // ─── TwoHyperbolaPlot: y = k₁/x и y = k₂/x ─────────────
+
+        public static byte[] TwoHyperbolaPlot(double k1, double k2)
+        {
+            double kBig = Math.Abs(k1) > Math.Abs(k2) ? k1 : k2;
+            var (xMin, xMax, yMin, yMax, step) = CalcHyperbolaRange(kBig);
+            var plt = new Plot();
+
+            double eps = (xMax - xMin) / 400.0;
+            double[] xsPos = Range(eps, xMax, 300);
+            double[] xsNeg = Range(xMin, -eps, 300);
+
+            string lbl1 = k1 == 1 ? "y = 1/x" : k1 == -1 ? "y = −1/x" : $"y = {FmtLabel(k1)}/x";
+            string lbl2 = k2 == 1 ? "y = 1/x" : k2 == -1 ? "y = −1/x" : $"y = {FmtLabel(k2)}/x";
+
+            var c1p = plt.Add.ScatterLine(xsPos, xsPos.Select(x => k1 / x).ToArray());
+            c1p.Color = Colors.RoyalBlue; c1p.LineWidth = 2.5f; c1p.LegendText = lbl1;
+            var c1n = plt.Add.ScatterLine(xsNeg, xsNeg.Select(x => k1 / x).ToArray());
+            c1n.Color = Colors.RoyalBlue; c1n.LineWidth = 2.5f;
+
+            var c2p = plt.Add.ScatterLine(xsPos, xsPos.Select(x => k2 / x).ToArray());
+            c2p.Color = Colors.OrangeRed; c2p.LineWidth = 2.5f; c2p.LegendText = lbl2;
+            var c2n = plt.Add.ScatterLine(xsNeg, xsNeg.Select(x => k2 / x).ToArray());
+            c2n.Color = Colors.OrangeRed; c2n.LineWidth = 2.5f;
+
+            plt.Add.HorizontalLine(0).Color = Colors.Black;
+            plt.Add.VerticalLine(0).Color   = Colors.Black;
+
+            plt.Title($"{lbl1}  и  {lbl2}", size: 14);
+            plt.XLabel("x"); plt.YLabel("y");
+            plt.ShowLegend(Alignment.LowerRight);
+            ApplyTicks(plt, xMin, xMax, yMin, yMax, step);
+            plt.Axes.SetLimits(xMin, xMax, yMin, yMax);
+            return plt.GetImageBytes(Width, Height, ImageFormat.Png);
+        }
+
+        // ─── HyperbolaWithFunction: y = k/x + вторая функция ─────
+
+        public static byte[]? HyperbolaWithFunction(double k, string fRaw)
+        {
+            var (xMin, xMax, yMin, yMax, step) = CalcHyperbolaRange(k);
+            var plt = new Plot();
+
+            double eps = (xMax - xMin) / 400.0;
+            double[] xsPos = Range(eps, xMax, 300);
+            double[] xsNeg = Range(xMin, -eps, 300);
+            double[] xsAll = Range(xMin, xMax, 400);
+
+            // Гипербола
+            string lbl = k == 1 ? "y = 1/x" : k == -1 ? "y = −1/x" : $"y = {FmtLabel(k)}/x";
+            var c1p = plt.Add.ScatterLine(xsPos, xsPos.Select(x => k / x).ToArray());
+            c1p.Color = Colors.RoyalBlue; c1p.LineWidth = 2.5f; c1p.LegendText = lbl;
+            var c1n = plt.Add.ScatterLine(xsNeg, xsNeg.Select(x => k / x).ToArray());
+            c1n.Color = Colors.RoyalBlue; c1n.LineWidth = 2.5f;
+
+            // Вторая функция
+            string rawN = fRaw.Trim().Replace(" ", "").Replace("−", "-").Replace(",", ".");
+
+            // Попытки распознать
+            Func<double, double>? f2 = null;
+            string lbl2 = fRaw;
+
+            // Число
+            if (double.TryParse(rawN, System.Globalization.NumberStyles.Any,
+                    System.Globalization.CultureInfo.InvariantCulture, out double cv))
+            {
+                f2 = _ => cv;
+                lbl2 = $"y = {FmtLabel(cv)}";
+            }
+            // Линейная
+            else if (LinearHelper.ParseLinear(rawN) is var linParsed && linParsed != null)
+            {
+                var (kL, b) = linParsed.Value;
+                f2 = x => kL * x + b;
+                lbl2 = LinearHelper.FormatLinear(kL, b);
+            }
+            // Квадратичная
+            else if (QuadraticHelper.ParseQuadratic(rawN) is double qa)
+            {
+                f2 = x => qa * x * x;
+                lbl2 = $"y = {FmtLabel(qa)}x²";
+            }
+
+            if (f2 != null)
+            {
+                var c2 = plt.Add.ScatterLine(xsAll, xsAll.Select(f2).ToArray());
+                c2.Color = Colors.OrangeRed; c2.LineWidth = 2f; c2.LegendText = lbl2;
+            }
+
+            plt.Add.HorizontalLine(0).Color = Colors.Black;
+            plt.Add.VerticalLine(0).Color   = Colors.Black;
+
+            plt.ShowLegend(Alignment.LowerRight);
+            ApplyTicks(plt, xMin, xMax, yMin, yMax, step);
+            plt.Axes.SetLimits(xMin, xMax, yMin, yMax);
+            return plt.GetImageBytes(Width, Height, ImageFormat.Png);
+        }
+
+        // ─── HyperbolaAbsPlot: y = k/|x| ─────────────────────────
+
+        public static byte[] HyperbolaAbsPlot(double k)
+        {
+            var (xMin, xMax, yMin, yMax, step) = CalcHyperbolaRange(k);
+            var plt = new Plot();
+
+            double eps = (xMax - xMin) / 400.0;
+            double[] xsPos = Range(eps, xMax, 300);
+            double[] xsNeg = Range(xMin, -eps, 300);
+
+            string lbl = $"y = {FmtLabel(k)}/|x|";
+
+            var cPos = plt.Add.ScatterLine(xsPos, xsPos.Select(x => k / Math.Abs(x)).ToArray());
+            cPos.Color = Colors.RoyalBlue; cPos.LineWidth = 2.5f; cPos.LegendText = lbl;
+
+            var cNeg = plt.Add.ScatterLine(xsNeg, xsNeg.Select(x => k / Math.Abs(x)).ToArray());
+            cNeg.Color = Colors.RoyalBlue; cNeg.LineWidth = 2.5f;
+
+            plt.Add.HorizontalLine(0).Color = Colors.Black;
+            plt.Add.VerticalLine(0).Color   = Colors.Black;
+
+            plt.Title(lbl, size: 16);
+            plt.XLabel("x"); plt.YLabel("y");
+            plt.ShowLegend(Alignment.LowerRight);
+            ApplyTicks(plt, xMin, xMax, yMin, yMax, step);
+            plt.Axes.SetLimits(xMin, xMax, yMin, yMax);
+            return plt.GetImageBytes(Width, Height, ImageFormat.Png);
+        }
     }
 }

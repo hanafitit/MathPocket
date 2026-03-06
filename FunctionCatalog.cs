@@ -216,6 +216,25 @@ namespace MathPocket
                 ]
             },
 
+            new()
+            {
+                Name = "📉 Функция y = k/x (гипербола)",
+                Functions =
+                [
+                    new HyperbolaPointBelongsFunction(),
+                    new HyperbolaPlotFunction(),
+                    new HyperbolaTwoGraphsFunction(),
+                    new HyperbolaTableFunction(),
+                    new HyperbolaRootsFunction(),
+                    new HyperbolaSolveGraphicallyFunction(),
+                    new HyperbolaIntersectFunction(),
+                    new HyperbolaCanIntersectFunction(),
+                    new HyperbolaAbsFunction(),
+                    new HyperbolaMinMaxFunction(),
+                    new HyperbolaFindKFunction(),
+                ]
+            },
+
             new() { Name = "✂️ Формулы сокращённого умножения" },
             new() { Name = "➗ Алгебраические дроби" },
             new() { Name = "√ Квадратные корни" },
