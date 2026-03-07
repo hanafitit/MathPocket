@@ -235,7 +235,98 @@ namespace MathPocket
                 ]
             },
 
-            new() { Name = "✂️ Формулы сокращённого умножения" },
+            new()
+            {
+                Name = "✂️ Формулы сокращённого умножения",
+                SubSections =
+                [
+                    new()
+                    {
+                        Name = "➖ Разность квадратов",
+                        Functions =
+                        [
+                            new DiffSqExpandFunction(),
+                            new DiffSqFactorFunction(),
+                            new DiffSqComputeFunction(),
+                            new DiffSqProductTrickFunction(),
+                            new DiffSqSimplifyFunction(),
+                            new DiffSqEvalFunction(),
+                            new DiffSqEquationFunction(),
+                            new DiffSqProveIdentityFunction(),
+                        ]
+                    },
+                    new()
+                    {
+                        Name = "🔲 Квадрат суммы и квадрат разности",
+                        Functions =
+                        [
+                            new SqSumExpandFunction(),
+                            new SqSumComputeFunction(),
+                            new SqSumRecognizeFunction(),
+                            new SqSumSimplifyFunction(),
+                            new SqSumFactorFunction(),
+                            new SqSumAdvancedSimplifyFunction(),
+                            new SqSumPolyToSquareFunction(),
+                            new SqSumFactorPolyFunction(),
+                            new SqSumEquationFunction(),
+                            new SqSumInequalityFunction(),
+                            new SqSumProveSignFunction(),
+                        ]
+                    },
+                    new()
+                    {
+                        Name = "🔷 Куб суммы и куб разности",
+                        Functions =
+                        [
+                            new CubeSumExpandFunction(),
+                            new CubeSumRecognizeFunction(),
+                            new CubeSumSimplifyEvalFunction(),
+                            new CubeSumEquationFunction(),
+                            new CubeSumProveIdentityFunction(),
+                            new CubeSumSimplifyFunction(),
+                            new CubeSumEquationAdvancedFunction(),
+                            new CubeSumInequalityFunction(),
+                            new CubeSumProveZeroFunction(),
+                        ]
+                    },
+                    new()
+                    {
+                        Name = "🔶 Сумма и разность кубов",
+                        Functions =
+                        [
+                            new CubeSumFactorFunction(),
+                            new CubeSumProductExpandFunction(),
+                            new CubeSumSimplify2Function(),
+                            new CubeSumFactorEquationFunction(),
+                            new CubeSumFactorInequalityFunction(),
+                            new CubeSumFactorProveFunction(),
+                            new CubeSumWriteAsProductFunction(),
+                            new CubeSumAllFSUSimplifyFunction(),
+                            new CubeSumAdvancedEquationFunction(),
+                            new CubeSumAllFSUProveFunction(),
+                        ]
+                    },
+                    new()
+                    {
+                        Name = "⚗️ Тождественные преобразования",
+                        Functions =
+                        [
+                            new IdentitySimplify2Function(),
+                            new IdentityEquationFunction(),
+                            new IdentityFindRootsFunction(),
+                            new IdentityProductZeroFunction(),
+                            new IdentityComplexEquationFunction(),
+                            new IdentityInequalityFunction(),
+                            new IdentityProveAllFSUFunction(),
+                            new IdentityAdvancedSimplifyFunction(),
+                            new IdentityHighDegreeEquationFunction(),
+                            new IdentityAdvancedInequalityFunction(),
+                            new IdentityIntegerSolutionFunction(),
+                            new IdentityProveAdvancedFunction(),
+                        ]
+                    },
+                ]
+            },
             new() { Name = "➗ Алгебраические дроби" },
             new() { Name = "√ Квадратные корни" },
             new() { Name = "🔲 Квадратные уравнения" },
