@@ -213,25 +213,24 @@ namespace MathPocket
                             new QuadraticCanIntersectFunction(),
                         ]
                     },
-                ]
-            },
-
-            new()
-            {
-                Name = "📉 Функция y = k/x (гипербола)",
-                Functions =
-                [
-                    new HyperbolaPointBelongsFunction(),
-                    new HyperbolaPlotFunction(),
-                    new HyperbolaTwoGraphsFunction(),
-                    new HyperbolaTableFunction(),
-                    new HyperbolaRootsFunction(),
-                    new HyperbolaSolveGraphicallyFunction(),
-                    new HyperbolaIntersectFunction(),
-                    new HyperbolaCanIntersectFunction(),
-                    new HyperbolaAbsFunction(),
-                    new HyperbolaMinMaxFunction(),
-                    new HyperbolaFindKFunction(),
+                    new()
+                    {
+                        Name = "📉 Функция y = k/x (гипербола)",
+                        Functions =
+                        [
+                            new HyperbolaPointBelongsFunction(),
+                            new HyperbolaPlotFunction(),
+                            new HyperbolaTwoGraphsFunction(),
+                            new HyperbolaTableFunction(),
+                            new HyperbolaRootsFunction(),
+                            new HyperbolaSolveGraphicallyFunction(),
+                            new HyperbolaIntersectFunction(),
+                            new HyperbolaCanIntersectFunction(),
+                            new HyperbolaAbsFunction(),
+                            new HyperbolaMinMaxFunction(),
+                            new HyperbolaFindKFunction(),
+                        ]
+                    },
                 ]
             },
 
