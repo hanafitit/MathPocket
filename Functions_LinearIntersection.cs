@@ -66,11 +66,11 @@ namespace MathPocket
                 sb.AppendLine();
                 sb.AppendLine("Шаг 2. Находим точку пересечения:");
                 sb.AppendLine($"  k₁x + b₁ = k₂x + b₂");
-                sb.AppendLine($"  {LinearHelper.Fmt(k1)}x + ({LinearHelper.Fmt(b1)}) = {LinearHelper.Fmt(k2)}x + ({LinearHelper.Fmt(b2)})");
+                sb.AppendLine($"  {LinearHelper.Fmt(k1)}x {LinearHelper.FmtTerm(b1)} = {LinearHelper.Fmt(k2)}x {LinearHelper.FmtTerm(b2)}");
                 sb.AppendLine($"  ({LinearHelper.Fmt(k1)} − {LinearHelper.Fmt(k2)})x = {LinearHelper.Fmt(b2)} − {LinearHelper.Fmt(b1)}");
                 sb.AppendLine($"  {LinearHelper.Fmt(k1 - k2)}x = {LinearHelper.Fmt(b2 - b1)}");
                 sb.AppendLine($"  x = {LinearHelper.Fmt(x)}");
-                sb.AppendLine($"  y = {LinearHelper.Fmt(k1)}·{LinearHelper.Fmt(x)} + {LinearHelper.Fmt(b1)} = {LinearHelper.Fmt(y)}");
+                sb.AppendLine($"  y = {LinearHelper.Fmt(k1)}·{LinearHelper.Fmt(x)} {LinearHelper.FmtTerm(b1)} = {LinearHelper.Fmt(y)}");
                 sb.AppendLine();
                 sb.AppendLine($"📌 Графики ПЕРЕСЕКАЮТСЯ в точке ({LinearHelper.Fmt(x)}; {LinearHelper.Fmt(y)}).");
             }
@@ -232,7 +232,7 @@ namespace MathPocket
             }
 
             sb.AppendLine("Шаг 1. Приравниваем:");
-            sb.AppendLine($"  {LinearHelper.Fmt(k1)}x + ({LinearHelper.Fmt(b1)}) = {LinearHelper.Fmt(k2)}x + ({LinearHelper.Fmt(b2)})");
+            sb.AppendLine($"  {LinearHelper.Fmt(k1)}x {LinearHelper.FmtTerm(b1)} = {LinearHelper.Fmt(k2)}x {LinearHelper.FmtTerm(b2)}");
             sb.AppendLine();
             sb.AppendLine("Шаг 2. Переносим x влево, числа вправо:");
             sb.AppendLine($"  {LinearHelper.Fmt(k1)}x − {LinearHelper.Fmt(k2)}x = {LinearHelper.Fmt(b2)} − {LinearHelper.Fmt(b1)}");
@@ -246,7 +246,7 @@ namespace MathPocket
             sb.AppendLine($"  x = {LinearHelper.Fmt(b2 - b1)} / {LinearHelper.Fmt(k1 - k2)} = {LinearHelper.Fmt(x)}");
             sb.AppendLine();
             sb.AppendLine("Шаг 4. Находим y (подставляем в первую функцию):");
-            sb.AppendLine($"  y = {LinearHelper.Fmt(k1)}·{LinearHelper.Fmt(x)} + {LinearHelper.Fmt(b1)} = {LinearHelper.Fmt(y)}");
+            sb.AppendLine($"  y = {LinearHelper.Fmt(k1)}·{LinearHelper.Fmt(x)} {LinearHelper.FmtTerm(b1)} = {LinearHelper.Fmt(y)}");
             sb.AppendLine();
             sb.AppendLine($"📌 Точка пересечения: ({LinearHelper.Fmt(x)}; {LinearHelper.Fmt(y)})");
 
@@ -311,7 +311,7 @@ namespace MathPocket
             sb.AppendLine();
             sb.AppendLine("Доказательство:");
             sb.AppendLine("  Приравниваем правые части:");
-            sb.AppendLine($"  {LinearHelper.Fmt(k1)}x + {LinearHelper.Fmt(b1)} = {LinearHelper.Fmt(k2)}x + {LinearHelper.Fmt(b2)}");
+            sb.AppendLine($"  {LinearHelper.Fmt(k1)}x {LinearHelper.FmtTerm(b1)} = {LinearHelper.Fmt(k2)}x {LinearHelper.FmtTerm(b2)}");
             sb.AppendLine($"  {LinearHelper.Fmt(k1 - k2)}x = {LinearHelper.Fmt(b2 - b1)}");
             sb.AppendLine($"  x = {LinearHelper.Fmt(x)}  — единственное решение");
             sb.AppendLine($"  y = {LinearHelper.Fmt(y)}");
@@ -557,7 +557,7 @@ namespace MathPocket
             double y = k1 * x + b1;
 
             sb.AppendLine("Шаг 1. Находим общую точку функций 1 и 2:");
-            sb.AppendLine($"  {LinearHelper.Fmt(k1)}x + {LinearHelper.Fmt(b1)} = {LinearHelper.Fmt(k2)}x + {LinearHelper.Fmt(b2)}");
+            sb.AppendLine($"  {LinearHelper.Fmt(k1)}x {LinearHelper.FmtTerm(b1)} = {LinearHelper.Fmt(k2)}x {LinearHelper.FmtTerm(b2)}");
             sb.AppendLine($"  x = {LinearHelper.Fmt(x)},  y = {LinearHelper.Fmt(y)}");
             sb.AppendLine();
             sb.AppendLine($"Шаг 2. Подставляем точку ({LinearHelper.Fmt(x)}; {LinearHelper.Fmt(y)}) в y = {LinearHelper.Fmt(k)}x + b:");

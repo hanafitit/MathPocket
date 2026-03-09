@@ -16,6 +16,21 @@ namespace MathPocket
             return v.ToString("G6", CultureInfo.InvariantCulture);
         }
 
+        /// <summary>Форматирует слагаемое со знаком: FmtTerm(-3) → "− 3", FmtTerm(5) → "+ 5"</summary>
+        public static string FmtTerm(double v)
+        {
+            if (v >= 0) return $"+ {Fmt(v)}";
+            return $"− {Fmt(-v)}";
+        }
+
+        /// <summary>Форматирует член уравнения с x: FmtXTerm(-3) → "− 3x", FmtXTerm(5) → "+ 5x"</summary>
+        public static string FmtXTerm(double v)
+        {
+            if (Math.Abs(v) < 1e-12) return "";
+            if (v > 0) return $"+ {Fmt(v)}x";
+            return $"− {Fmt(-v)}x";
+        }
+
         public static string FormatQuadratic(double a)
         {
             if (Math.Abs(a - 1) < 1e-9)  return "y = x²";
@@ -497,7 +512,7 @@ namespace MathPocket
             sb.AppendLine();
 
             double A = a, B = -k, C = -b;
-            sb.AppendLine($"Уравнение: {QuadraticHelper.Fmt(A)}x² {(B >= 0 ? "+" : "")}{QuadraticHelper.Fmt(B)}x {(C >= 0 ? "+" : "")}{QuadraticHelper.Fmt(C)} = 0");
+            sb.AppendLine($"Уравнение: {QuadraticHelper.Fmt(A)}x² {QuadraticHelper.FmtXTerm(B)} {QuadraticHelper.FmtTerm(C)} = 0");
             sb.AppendLine();
 
             double D = B * B - 4 * A * C;
@@ -584,7 +599,7 @@ namespace MathPocket
             double c = QuadraticHelper.ParseNumber(answers[2])!.Value;
 
             var sb = new StringBuilder();
-            sb.AppendLine($"Уравнение: {QuadraticHelper.Fmt(a)}x² {(b >= 0 ? "+" : "")}{QuadraticHelper.Fmt(b)}x {(c >= 0 ? "+" : "")}{QuadraticHelper.Fmt(c)} = 0");
+            sb.AppendLine($"Уравнение: {QuadraticHelper.Fmt(a)}x² {QuadraticHelper.FmtXTerm(b)} {QuadraticHelper.FmtTerm(c)} = 0");
             sb.AppendLine();
             sb.AppendLine("Графический метод:");
             sb.AppendLine($"  {QuadraticHelper.Fmt(a)}x² = {LinearHelper.FormatLinear(-b, -c)}");
@@ -851,7 +866,7 @@ namespace MathPocket
             sb.AppendLine($"Прямая:   y = {QuadraticHelper.Fmt(a)}x − {QuadraticHelper.Fmt(c)}");
             sb.AppendLine();
             sb.AppendLine("Уравнение пересечения:");
-            sb.AppendLine($"  {QuadraticHelper.Fmt(a)}x² − {QuadraticHelper.Fmt(a)}x + {QuadraticHelper.Fmt(c)} = 0");
+            sb.AppendLine($"  {QuadraticHelper.Fmt(a)}x² − {QuadraticHelper.Fmt(a)}x {QuadraticHelper.FmtTerm(c)} = 0");
             sb.AppendLine();
 
             double D = a * a - 4 * a * c;

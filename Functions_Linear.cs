@@ -91,6 +91,16 @@ namespace MathPocket
 
         private static long Gcd(long a, long b) => b == 0 ? a : Gcd(b, a % b);
 
+        /// <summary>
+        /// Форматирует слагаемое со знаком для вставки в выражение после другого члена.
+        /// Например: FmtTerm(-3) → "− 3", FmtTerm(5) → "+ 5"
+        /// </summary>
+        public static string FmtTerm(double v)
+        {
+            if (v >= 0) return $"+ {Fmt(v)}";
+            return $"− {Fmt(-v)}";
+        }
+
         /// <summary>Форматирует линейную функцию y = kx + b в красивый вид</summary>
         public static string FormatLinear(double k, double b)
         {
@@ -245,18 +255,23 @@ namespace MathPocket
             new InputStep
             {
                 Question =
-                    "✏️ Что ищем?\n" +
-                    "  Введи:  y  — если знаешь x и ищешь y\n" +
-                    "          x  — если знаешь y и ищешь x",
+                    "✏️ Выбери задачу:\n\n" +
+                    "  Задача 1 — ЗНАЕШЬ x, ИЩЕШЬ y:\n" +
+                    "    Например: «найди y при x = 2»\n" +
+                    "    → введи:  y\n\n" +
+                    "  Задача 2 — ЗНАЕШЬ y, ИЩЕШЬ x:\n" +
+                    "    Например: «при каком x функция равна 9»\n" +
+                    "    → введи:  x\n\n" +
+                    "Введи y или x:",
                 Validate = s =>
                 {
                     string t = s.Trim().ToLower();
-                    return t == "y" || t == "x" ? null : "Введи: y  или  x";
+                    return t == "y" || t == "x" ? null : "Введи: y  (если ищешь y)  или  x  (если ищешь x)";
                 }
             },
             new InputStep
             {
-                Question = "✏️ Введи известное значение (число):",
+                Question = "✏️ Введи известное число\n  (то что дано в условии задачи):",
                 Validate = LinearHelper.ValidateNumber
             }
         };
@@ -275,8 +290,8 @@ namespace MathPocket
             {
                 double y = k * val + b;
                 sb.AppendLine($"Подставляем x = {LinearHelper.Fmt(val)}:");
-                sb.AppendLine($"  y = {LinearHelper.Fmt(k)}·{LinearHelper.Fmt(val)} + ({LinearHelper.Fmt(b)})");
-                sb.AppendLine($"  y = {LinearHelper.Fmt(k * val)} + {LinearHelper.Fmt(b)}");
+                sb.AppendLine($"  y = {LinearHelper.Fmt(k)}·{LinearHelper.Fmt(val)} {LinearHelper.FmtTerm(b)}");
+                sb.AppendLine($"  y = {LinearHelper.Fmt(k * val)} {LinearHelper.FmtTerm(b)}");
                 sb.AppendLine();
                 sb.AppendLine($"📌 y = {LinearHelper.Fmt(y)}");
             }
@@ -292,7 +307,7 @@ namespace MathPocket
                     return sb.ToString().TrimEnd();
                 }
                 double x = (val - b) / k;
-                sb.AppendLine($"Решаем уравнение: {LinearHelper.Fmt(k)}x + {LinearHelper.Fmt(b)} = {LinearHelper.Fmt(val)}");
+                sb.AppendLine($"Решаем уравнение: {LinearHelper.Fmt(k)}x {LinearHelper.FmtTerm(b)} = {LinearHelper.Fmt(val)}");
                 sb.AppendLine($"  {LinearHelper.Fmt(k)}x = {LinearHelper.Fmt(val)} − {LinearHelper.Fmt(b)}");
                 sb.AppendLine($"  {LinearHelper.Fmt(k)}x = {LinearHelper.Fmt(val - b)}");
                 sb.AppendLine($"  x = {LinearHelper.Fmt(val - b)} / {LinearHelper.Fmt(k)}");
@@ -345,7 +360,7 @@ namespace MathPocket
 
             // Пересечение с Oy
             sb.AppendLine("📍 Пересечение с осью Oy (x = 0):");
-            sb.AppendLine($"  y = {LinearHelper.Fmt(k)}·0 + {LinearHelper.Fmt(b)} = {LinearHelper.Fmt(b)}");
+            sb.AppendLine($"  y = {LinearHelper.Fmt(k)}·0 {LinearHelper.FmtTerm(b)} = {LinearHelper.Fmt(b)}");
             sb.AppendLine($"  Точка A(0; {LinearHelper.Fmt(b)})");
             sb.AppendLine();
 
@@ -360,7 +375,7 @@ namespace MathPocket
             else
             {
                 double x0 = -b / k;
-                sb.AppendLine($"  {LinearHelper.Fmt(k)}x + {LinearHelper.Fmt(b)} = 0");
+                sb.AppendLine($"  {LinearHelper.Fmt(k)}x {LinearHelper.FmtTerm(b)} = 0");
                 sb.AppendLine($"  {LinearHelper.Fmt(k)}x = {LinearHelper.Fmt(-b)}");
                 sb.AppendLine($"  x = {LinearHelper.Fmt(x0)}");
                 sb.AppendLine($"  Точка B({LinearHelper.Fmt(x0)}; 0)");
@@ -512,7 +527,7 @@ namespace MathPocket
 
             double yCalc = k * px + b;
             sb.AppendLine($"Подставляем x = {LinearHelper.Fmt(px)}:");
-            sb.AppendLine($"  y = {LinearHelper.Fmt(k)}·{LinearHelper.Fmt(px)} + ({LinearHelper.Fmt(b)})");
+            sb.AppendLine($"  y = {LinearHelper.Fmt(k)}·{LinearHelper.Fmt(px)} {LinearHelper.FmtTerm(b)}");
             sb.AppendLine($"  y = {LinearHelper.Fmt(yCalc)}");
             sb.AppendLine();
 
@@ -583,7 +598,7 @@ namespace MathPocket
             sb.AppendLine("Подставляем в y = kx + b:");
             sb.AppendLine($"  {LinearHelper.Fmt(py)} = {LinearHelper.Fmt(k)}·{LinearHelper.Fmt(px)} + b");
             sb.AppendLine($"  {LinearHelper.Fmt(py)} = {LinearHelper.Fmt(k * px)} + b");
-            sb.AppendLine($"  b = {LinearHelper.Fmt(py)} − {LinearHelper.Fmt(k * px)}");
+            sb.AppendLine($"  b = {LinearHelper.Fmt(py)} − ({LinearHelper.Fmt(k * px)}) = {LinearHelper.Fmt(b)}");
             sb.AppendLine();
             sb.AppendLine($"📌 b = {LinearHelper.Fmt(b)}");
             sb.AppendLine($"   Функция: {LinearHelper.FormatLinear(k, b)}");
@@ -648,7 +663,7 @@ namespace MathPocket
             double k = (py - b) / px;
 
             sb.AppendLine("Подставляем в y = kx + b:");
-            sb.AppendLine($"  {LinearHelper.Fmt(py)} = k·{LinearHelper.Fmt(px)} + {LinearHelper.Fmt(b)}");
+            sb.AppendLine($"  {LinearHelper.Fmt(py)} = k·{LinearHelper.Fmt(px)} {LinearHelper.FmtTerm(b)}");
             sb.AppendLine($"  k·{LinearHelper.Fmt(px)} = {LinearHelper.Fmt(py)} − {LinearHelper.Fmt(b)}");
             sb.AppendLine($"  k·{LinearHelper.Fmt(px)} = {LinearHelper.Fmt(py - b)}");
             sb.AppendLine($"  k = {LinearHelper.Fmt(py - b)} / {LinearHelper.Fmt(px)}");
@@ -719,7 +734,7 @@ namespace MathPocket
 
             double x0 = -b / k;
             sb.AppendLine($"Шаг 1. Находим нуль функции (y = 0):");
-            sb.AppendLine($"  {LinearHelper.Fmt(k)}x + {LinearHelper.Fmt(b)} = 0");
+            sb.AppendLine($"  {LinearHelper.Fmt(k)}x {LinearHelper.FmtTerm(b)} = 0");
             sb.AppendLine($"  x = {LinearHelper.Fmt(x0)}");
             sb.AppendLine();
 
