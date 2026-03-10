@@ -130,7 +130,7 @@ namespace MathPocket
 
     public class HyperbolaPointBelongsFunction : FunctionBase
     {
-        public override string   Name     => "Точка на графике y = k/x?";
+        public override string   Name     => "Лежит ли точка на гиперболе?";
         public override string   Formula  => "Проверить: принадлежит ли (x₀; y₀) графику y = k/x";
         public override string[] Keywords => new[] { "гипербола", "принадлежит", "точка", "k/x" };
         public override string[] Parameters => [];
@@ -195,7 +195,7 @@ namespace MathPocket
 
     public class HyperbolaPlotFunction : FunctionBase
     {
-        public override string   Name     => "Построить y = k/x (гипербола)";
+        public override string   Name     => "Построить гиперболу y = k/x";
         public override string   Formula  => "y = k/x — гипербола: свойства и график";
         public override string[] Keywords => new[] { "гипербола", "k/x", "построить", "свойства" };
         public override string[] Parameters => [];
@@ -236,7 +236,7 @@ namespace MathPocket
 
     public class HyperbolaTwoGraphsFunction : FunctionBase
     {
-        public override string   Name     => "Два графика y = k₁/x и y = k₂/x";
+        public override string   Name     => "Сравнить две гиперболы";
         public override string   Formula  => "Построить и сравнить две гиперболы";
         public override string[] Keywords => new[] { "гипербола", "два графика", "сравнить" };
         public override string[] Parameters => [];
@@ -303,7 +303,7 @@ namespace MathPocket
 
     public class HyperbolaTableFunction : FunctionBase
     {
-        public override string   Name     => "Заполнить таблицу для y = k/x";
+        public override string   Name     => "Составить таблицу для y = k/x";
         public override string   Formula  => "y = k/x → подставить x, найти y";
         public override string[] Keywords => new[] { "гипербола", "таблица", "заполнить", "k/x" };
         public override string[] Parameters => [];
@@ -381,7 +381,7 @@ namespace MathPocket
 
     public class HyperbolaRootsFunction : FunctionBase
     {
-        public override string   Name     => "Имеет ли уравнение корни (гипербола)";
+        public override string   Name     => "Есть ли решение у уравнения?";
         public override string   Formula  => "k/x = f(x): найти точки пересечения";
         public override string[] Keywords => new[] { "гипербола", "корни", "уравнение", "пересечение" };
         public override string[] Parameters => [];
@@ -562,7 +562,7 @@ namespace MathPocket
 
     public class HyperbolaSolveGraphicallyFunction : FunctionBase
     {
-        public override string   Name     => "Решить уравнение графически (гипербола)";
+        public override string   Name     => "Решить уравнение по графику";
         public override string   Formula  => "k/x = f(x) → строим оба графика";
         public override string[] Keywords => new[] { "гипербола", "решить", "графически", "уравнение" };
         public override string[] Parameters => [];
@@ -607,7 +607,7 @@ namespace MathPocket
 
     public class HyperbolaIntersectFunction : FunctionBase
     {
-        public override string   Name     => "Пересекается ли гипербола с функцией";
+        public override string   Name     => "Пересекается ли гипербола с прямой?";
         public override string   Formula  => "y = k/x и y = f(x): есть ли общие точки?";
         public override string[] Keywords => new[] { "гипербола", "пересекается", "функция" };
         public override string[] Parameters => [];
@@ -663,7 +663,7 @@ namespace MathPocket
 
     public class HyperbolaCanIntersectFunction : FunctionBase
     {
-        public override string   Name     => "Сколько точек пересечения у гиперболы и прямой";
+        public override string   Name     => "Сколько общих точек у гиперболы и прямой?";
         public override string   Formula  => "y = k/x и y = ax+b: 0, 1 или 2 точки?";
         public override string[] Keywords => new[] { "гипербола", "прямая", "сколько точек", "пересечение" };
         public override string[] Parameters => [];
@@ -841,7 +841,7 @@ namespace MathPocket
 
     public class HyperbolaMinMaxFunction : FunctionBase
     {
-        public override string   Name     => "Наибольшее и наименьшее значение y = k/|x|";
+        public override string   Name     => "Наибольшее и наименьшее y = k/|x|";
         public override string   Formula  => "max и min функции y = k/|x| на промежутке";
         public override string[] Keywords => new[] { "гипербола", "наибольшее", "наименьшее", "модуль", "промежуток" };
         public override string[] Parameters => [];
@@ -924,7 +924,7 @@ namespace MathPocket
 
     public class HyperbolaFindKFunction : FunctionBase
     {
-        public override string   Name     => "Найти k по точке на гиперболе";
+        public override string   Name     => "Найти k для гиперболы по точке";
         public override string   Formula  => "k = x₀ · y₀";
         public override string[] Keywords => new[] { "гипербола", "найти k", "по точке", "k/x" };
         public override string[] Parameters => [];

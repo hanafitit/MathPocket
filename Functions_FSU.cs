@@ -90,7 +90,7 @@ namespace MathPocket
     /// </summary>
     public class DiffSqExpandFunction : FunctionBase
     {
-        public override string   Name       => "Раскрыть (a+b)(a−b)";
+        public override string   Name       => "Раскрыть скобки: (a+b)(a−b)";
         public override string   Formula    => "(a + b)(a − b) = a² − b²";
         public override string[] Keywords   => new[] { "разность квадратов", "раскрыть", "умножение", "фсу" };
         public override string[] Parameters => [];
@@ -167,7 +167,7 @@ namespace MathPocket
     /// </summary>
     public class DiffSqFactorFunction : FunctionBase
     {
-        public override string   Name       => "Разложить a²−b² на множители";
+        public override string   Name       => "Разложить разность квадратов";
         public override string   Formula    => "a² − b² = (a + b)(a − b)";
         public override string[] Keywords   => new[] { "разность квадратов", "разложить", "множители", "фсу" };
         public override string[] Parameters => [];
@@ -229,7 +229,7 @@ namespace MathPocket
     /// </summary>
     public class DiffSqComputeFunction : FunctionBase
     {
-        public override string   Name       => "Вычислить a²−b² через формулу";
+        public override string   Name       => "Посчитать a²−b² по формуле";
         public override string   Formula    => "a² − b² = (a − b)(a + b)";
         public override string[] Keywords   => new[] { "разность квадратов", "вычислить", "фсу", "a-b" };
         public override string[] Parameters => [];
@@ -311,7 +311,7 @@ namespace MathPocket
     /// </summary>
     public class DiffSqProductTrickFunction : FunctionBase
     {
-        public override string   Name       => "Вычислить произведение через a²−b²";
+        public override string   Name       => "Посчитать умножение через a²−b²";
         public override string   Formula    => "(a+b)(a−b) = a² − b²";
         public override string[] Keywords   => new[] { "разность квадратов", "произведение", "101 99", "фсу" };
         public override string[] Parameters => [];
@@ -399,7 +399,7 @@ namespace MathPocket
     /// </summary>
     public class DiffSqSimplifyFunction : FunctionBase
     {
-        public override string   Name       => "Упростить выражение с (a+b)(a−b)";
+        public override string   Name       => "Упростить с разностью квадратов";
         public override string   Formula    => "(a+b)(a−b) = a² − b²";
         public override string[] Keywords   => new[] { "разность квадратов", "упростить", "фсу" };
         public override string[] Parameters => [];
@@ -481,7 +481,7 @@ namespace MathPocket
     /// </summary>
     public class DiffSqEvalFunction : FunctionBase
     {
-        public override string   Name       => "Найти значение выражения с a²−b²";
+        public override string   Name       => "Найти значение с a²−b²";
         public override string   Formula    => "упростить, затем подставить";
         public override string[] Keywords   => new[] { "разность квадратов", "значение", "подставить", "фсу" };
         public override string[] Parameters => [];
@@ -613,7 +613,7 @@ namespace MathPocket
     /// </summary>
     public class DiffSqEquationFunction : FunctionBase
     {
-        public override string   Name       => "Решить уравнение a²−b²=0";
+        public override string   Name       => "Решить уравнение с a²−b²";
         public override string   Formula    => "a² − b² = (a+b)(a−b) = 0";
         public override string[] Keywords   => new[] { "разность квадратов", "уравнение", "корни", "фсу" };
         public override string[] Parameters => [];
@@ -697,7 +697,7 @@ namespace MathPocket
     /// </summary>
     public class DiffSqProveIdentityFunction : FunctionBase
     {
-        public override string   Name       => "Доказать тождество с a²−b²";
+        public override string   Name       => "Доказать тождество: a²−b²";
         public override string   Formula    => "a² − b² = (a+b)(a−b)";
         public override string[] Keywords   => new[] { "разность квадратов", "тождество", "доказать", "фсу" };
         public override string[] Parameters => [];
@@ -772,7 +772,7 @@ namespace MathPocket
     /// </summary>
     public class SqSumExpandFunction : FunctionBase
     {
-        public override string   Name       => "Раскрыть (a±b)² в многочлен";
+        public override string   Name       => "Раскрыть квадрат суммы/разности";
         public override string   Formula    => "(a±b)² = a² ± 2ab + b²";
         public override string[] Keywords   => new[] { "квадрат суммы", "квадрат разности", "раскрыть", "фсу" };
         public override string[] Parameters => [];
@@ -880,7 +880,7 @@ namespace MathPocket
     /// </summary>
     public class SqSumComputeFunction : FunctionBase
     {
-        public override string   Name       => "Вычислить n² через (a±b)²";
+        public override string   Name       => "Посчитать n² через (a±b)²";
         public override string   Formula    => "n² = (a ± b)² = a² ± 2ab + b²";
         public override string[] Keywords   => new[] { "квадрат суммы", "вычислить", "101²", "фсу" };
         public override string[] Parameters => [];
@@ -977,7 +977,7 @@ namespace MathPocket
     /// </summary>
     public class SqSumRecognizeFunction : FunctionBase
     {
-        public override string   Name       => "Трёхчлен → квадрат двучлена";
+        public override string   Name       => "Узнать квадрат двучлена в трёхчлене";
         public override string   Formula    => "a² ± 2ab + b² = (a ± b)²";
         public override string[] Keywords   => new[] { "квадрат суммы", "квадрат разности", "трёхчлен", "двучлен", "фсу" };
         public override string[] Parameters => [];
@@ -1062,7 +1062,7 @@ namespace MathPocket
     /// </summary>
     public class SqSumSimplifyFunction : FunctionBase
     {
-        public override string   Name       => "Упростить выражение с (a±b)²";
+        public override string   Name       => "Упростить с квадратом двучлена";
         public override string   Formula    => "(a±b)² = a² ± 2ab + b²";
         public override string[] Keywords   => new[] { "квадрат суммы", "упростить", "фсу" };
         public override string[] Parameters => [];
@@ -1164,7 +1164,7 @@ namespace MathPocket
     /// </summary>
     public class SqSumFactorFunction : FunctionBase
     {
-        public override string   Name       => "Разложить трёхчлен (квадрат двучлена)";
+        public override string   Name       => "Разложить квадратный трёхчлен";
         public override string   Formula    => "a² ± 2ab + b² = (a ± b)²";
         public override string[] Keywords   => new[] { "квадрат суммы", "разложить", "множители", "трёхчлен", "фсу" };
         public override string[] Parameters => [];
@@ -1283,7 +1283,7 @@ namespace MathPocket
     /// </summary>
     public class SqSumAdvancedSimplifyFunction : FunctionBase
     {
-        public override string   Name       => "Упростить сложное выражение с (a±b)²";
+        public override string   Name       => "Упростить сложное выражение";
         public override string   Formula    => "(a+b)² и (a−b)² вместе";
         public override string[] Keywords   => new[] { "квадрат суммы", "упростить", "сложный", "фсу" };
         public override string[] Parameters => [];
@@ -1350,7 +1350,7 @@ namespace MathPocket
     /// </summary>
     public class SqSumPolyToSquareFunction : FunctionBase
     {
-        public override string   Name       => "Трёхчлен с коэффициентами → (a±b)²";
+        public override string   Name       => "Представить трёхчлен как (a±b)²";
         public override string   Formula    => "ka² ± 2√k·√m·ab + mb² = (√k·a ± √m·b)²";
         public override string[] Keywords   => new[] { "квадрат суммы", "квадрат разности", "трёхчлен", "коэффициент", "фсу" };
         public override string[] Parameters => [];
@@ -1430,7 +1430,7 @@ namespace MathPocket
     /// </summary>
     public class SqSumFactorPolyFunction : FunctionBase
     {
-        public override string   Name       => "Разложить многочлен (квадрат двучлена)";
+        public override string   Name       => "Разложить многочлен на множители";
         public override string   Formula    => "вынести общий множитель + (a±b)²";
         public override string[] Keywords   => new[] { "квадрат суммы", "разложить", "множители", "вынести", "фсу" };
         public override string[] Parameters => [];
@@ -1528,7 +1528,7 @@ namespace MathPocket
     /// </summary>
     public class SqSumEquationFunction : FunctionBase
     {
-        public override string   Name       => "Решить уравнение с (a±b)²";
+        public override string   Name       => "Решить уравнение с квадратом двучлена";
         public override string   Formula    => "(a±b)² = c  →  a±b = ±√c";
         public override string[] Keywords   => new[] { "квадрат суммы", "уравнение", "корни", "фсу" };
         public override string[] Parameters => [];
@@ -1693,7 +1693,7 @@ namespace MathPocket
     /// </summary>
     public class SqSumProveSignFunction : FunctionBase
     {
-        public override string   Name       => "Доказать знак выражения с (a±b)²";
+        public override string   Name       => "Доказать знак выражения";
         public override string   Formula    => "(a±b)² ≥ 0";
         public override string[] Keywords   => new[] { "квадрат суммы", "доказать", "отрицательное", "фсу" };
         public override string[] Parameters => [];
@@ -1780,7 +1780,7 @@ namespace MathPocket
     /// </summary>
     public class CubeSumExpandFunction : FunctionBase
     {
-        public override string   Name       => "Раскрыть (a±b)³ в многочлен";
+        public override string   Name       => "Раскрыть куб суммы/разности";
         public override string   Formula    => "(a±b)³ = a³ ± 3a²b + 3ab² ± b³";
         public override string[] Keywords   => new[] { "куб суммы", "куб разности", "раскрыть", "фсу" };
         public override string[] Parameters => [];
@@ -1895,7 +1895,7 @@ namespace MathPocket
     /// </summary>
     public class CubeSumRecognizeFunction : FunctionBase
     {
-        public override string   Name       => "Многочлен → куб двучлена";
+        public override string   Name       => "Узнать куб двучлена в многочлене";
         public override string   Formula    => "a³ ± 3a²b + 3ab² ± b³ = (a ± b)³";
         public override string[] Keywords   => new[] { "куб суммы", "куб разности", "многочлен", "двучлен", "фсу" };
         public override string[] Parameters => [];
@@ -1980,7 +1980,7 @@ namespace MathPocket
     /// </summary>
     public class CubeSumSimplifyEvalFunction : FunctionBase
     {
-        public override string   Name       => "Упростить выражение с (a±b)³ и найти значение";
+        public override string   Name       => "Упростить и вычислить с (a±b)³";
         public override string   Formula    => "(a±b)³ = a³ ± 3a²b + 3ab² ± b³";
         public override string[] Keywords   => new[] { "куб суммы", "упростить", "значение", "фсу" };
         public override string[] Parameters => [];
@@ -2098,7 +2098,7 @@ namespace MathPocket
     /// </summary>
     public class CubeSumEquationFunction : FunctionBase
     {
-        public override string   Name       => "Решить уравнение с (a±b)³";
+        public override string   Name       => "Решить уравнение с кубом двучлена";
         public override string   Formula    => "(a±b)³ = a³ ± 3a²b + 3ab² ± b³";
         public override string[] Keywords   => new[] { "куб суммы", "уравнение", "фсу" };
         public override string[] Parameters => [];
@@ -2237,7 +2237,7 @@ namespace MathPocket
     /// </summary>
     public class CubeSumSimplifyFunction : FunctionBase
     {
-        public override string   Name       => "Упростить выражение с (a±b)³";
+        public override string   Name       => "Упростить с кубом двучлена";
         public override string   Formula    => "(a±b)³ = a³ ± 3a²b + 3ab² ± b³";
         public override string[] Keywords   => new[] { "куб суммы", "упростить", "фсу" };
         public override string[] Parameters => [];
@@ -2319,7 +2319,7 @@ namespace MathPocket
     /// </summary>
     public class CubeSumEquationAdvancedFunction : FunctionBase
     {
-        public override string   Name       => "Решить сложное уравнение с (a±b)³";
+        public override string   Name       => "Решить уравнение (сложное) с (a±b)³";
         public override string   Formula    => "раскрыть кубы → линейное уравнение";
         public override string[] Keywords   => new[] { "куб суммы", "уравнение", "сложный", "фсу" };
         public override string[] Parameters => [];
@@ -2469,7 +2469,7 @@ namespace MathPocket
     /// </summary>
     public class CubeSumProveZeroFunction : FunctionBase
     {
-        public override string   Name       => "Доказать что выражение = 0 (кубы)";
+        public override string   Name       => "Доказать, что выражение равно 0";
         public override string   Formula    => "(a±b)³ = a³ ± 3a²b + 3ab² ± b³";
         public override string[] Keywords   => new[] { "куб суммы", "доказать", "равно нулю", "фсу" };
         public override string[] Parameters => [];
@@ -2550,7 +2550,7 @@ namespace MathPocket
     /// </summary>
     public class CubeSumFactorFunction : FunctionBase
     {
-        public override string   Name       => "Разложить a³±b³ на множители";
+        public override string   Name       => "Разложить сумму/разность кубов";
         public override string   Formula    => "a³±b³ = (a±b)(a²∓ab+b²)";
         public override string[] Keywords   => new[] { "сумма кубов", "разность кубов", "разложить", "фсу" };
         public override string[] Parameters => [];
@@ -2662,7 +2662,7 @@ namespace MathPocket
     /// </summary>
     public class CubeSumProductExpandFunction : FunctionBase
     {
-        public override string   Name       => "Произведение (a±b)(a²∓ab+b²) → многочлен";
+        public override string   Name       => "Раскрыть произведение кубов";
         public override string   Formula    => "(a+b)(a²−ab+b²) = a³+b³";
         public override string[] Keywords   => new[] { "сумма кубов", "произведение", "многочлен", "фсу" };
         public override string[] Parameters => [];
@@ -2737,7 +2737,7 @@ namespace MathPocket
     /// </summary>
     public class CubeSumSimplify2Function : FunctionBase
     {
-        public override string   Name       => "Упростить выражение с a³±b³";
+        public override string   Name       => "Упростить с суммой/разностью кубов";
         public override string   Formula    => "a³±b³ = (a±b)(a²∓ab+b²)";
         public override string[] Keywords   => new[] { "сумма кубов", "разность кубов", "упростить", "фсу" };
         public override string[] Parameters => [];
@@ -2839,7 +2839,7 @@ namespace MathPocket
     /// </summary>
     public class CubeSumFactorEquationFunction : FunctionBase
     {
-        public override string   Name       => "Решить уравнение с a³±b³";
+        public override string   Name       => "Решить уравнение с кубами";
         public override string   Formula    => "a³±b³ = (a±b)(a²∓ab+b²)";
         public override string[] Keywords   => new[] { "сумма кубов", "разность кубов", "уравнение", "фсу" };
         public override string[] Parameters => [];
@@ -2910,7 +2910,7 @@ namespace MathPocket
     /// </summary>
     public class CubeSumFactorInequalityFunction : FunctionBase
     {
-        public override string   Name       => "Решить неравенство с a³±b³";
+        public override string   Name       => "Решить неравенство с кубами";
         public override string   Formula    => "a³±b³ = (a±b)(a²∓ab+b²)";
         public override string[] Keywords   => new[] { "сумма кубов", "разность кубов", "неравенство", "фсу" };
         public override string[] Parameters => [];
@@ -2992,7 +2992,7 @@ namespace MathPocket
     /// </summary>
     public class CubeSumFactorProveFunction : FunctionBase
     {
-        public override string   Name       => "Доказать тождество с a³±b³";
+        public override string   Name       => "Доказать тождество с кубами";
         public override string   Formula    => "a³±b³ = (a±b)(a²∓ab+b²)";
         public override string[] Keywords   => new[] { "сумма кубов", "разность кубов", "тождество", "доказать", "фсу" };
         public override string[] Parameters => [];
@@ -3059,7 +3059,7 @@ namespace MathPocket
     /// </summary>
     public class CubeSumWriteAsProductFunction : FunctionBase
     {
-        public override string   Name       => "Записать в виде произведения (кубы)";
+        public override string   Name       => "Записать как произведение (кубы)";
         public override string   Formula    => "a³±b³ = (a±b)(a²∓ab+b²)";
         public override string[] Keywords   => new[] { "сумма кубов", "разность кубов", "произведение", "фсу" };
         public override string[] Parameters => [];
@@ -3136,7 +3136,7 @@ namespace MathPocket
     /// </summary>
     public class CubeSumAllFSUSimplifyFunction : FunctionBase
     {
-        public override string   Name       => "Упростить с применением всех ФСУ";
+        public override string   Name       => "Упростить, используя все формулы";
         public override string   Formula    => "все формулы: ±кубы, ±квадраты, куб двучлена";
         public override string[] Keywords   => new[] { "сумма кубов", "все фсу", "упростить", "фсу" };
         public override string[] Parameters => [];
@@ -3222,7 +3222,7 @@ namespace MathPocket
     /// </summary>
     public class CubeSumAdvancedEquationFunction : FunctionBase
     {
-        public override string   Name       => "Решить сложное уравнение (все ФСУ)";
+        public override string   Name       => "Решить сложное уравнение";
         public override string   Formula    => "все формулы ФСУ";
         public override string[] Keywords   => new[] { "сумма кубов", "уравнение", "сложный", "все фсу", "фсу" };
         public override string[] Parameters => [];
@@ -3290,7 +3290,7 @@ namespace MathPocket
     /// </summary>
     public class CubeSumAllFSUProveFunction : FunctionBase
     {
-        public override string   Name       => "Доказать тождество (все ФСУ)";
+        public override string   Name       => "Доказать тождество";
         public override string   Formula    => "все формулы ФСУ";
         public override string[] Keywords   => new[] { "сумма кубов", "тождество", "все фсу", "доказать", "фсу" };
         public override string[] Parameters => [];
@@ -3363,7 +3363,7 @@ namespace MathPocket
     /// </summary>
     public class IdentitySimplify2Function : FunctionBase
     {
-        public override string   Name       => "Упростить выражение (все ФСУ вместе)";
+        public override string   Name       => "Упростить выражение (всё вместе)";
         public override string   Formula    => "все ФСУ: a²−b², (a±b)², (a±b)³, a³±b³";
         public override string[] Keywords   => new[] { "тождественные преобразования", "упростить", "все фсу", "фсу" };
         public override string[] Parameters => [];
@@ -3562,7 +3562,7 @@ namespace MathPocket
     /// </summary>
     public class IdentityFindRootsFunction : FunctionBase
     {
-        public override string   Name       => "Найти корни уравнения (a±b)²=c";
+        public override string   Name       => "Решить уравнение (a±b)² = c";
         public override string   Formula    => "(a±b)² = c  →  a±b = ±√c";
         public override string[] Keywords   => new[] { "тождественные преобразования", "корни", "уравнение", "фсу" };
         public override string[] Parameters => [];
@@ -3667,7 +3667,7 @@ namespace MathPocket
     /// </summary>
     public class IdentityProductZeroFunction : FunctionBase
     {
-        public override string   Name       => "Решить уравнение P·Q=0 (ФСУ)";
+        public override string   Name       => "Решить P·Q = 0";
         public override string   Formula    => "AB=0 → A=0 или B=0";
         public override string[] Keywords   => new[] { "тождественные преобразования", "уравнение", "произведение нуль", "фсу" };
         public override string[] Parameters => [];
@@ -3743,7 +3743,7 @@ namespace MathPocket
     /// </summary>
     public class IdentityComplexEquationFunction : FunctionBase
     {
-        public override string   Name       => "Решить сложное уравнение (все ФСУ)";
+        public override string   Name       => "Решить сложное уравнение";
         public override string   Formula    => "раскрыть все ФСУ → привести подобные";
         public override string[] Keywords   => new[] { "тождественные преобразования", "сложное уравнение", "фсу" };
         public override string[] Parameters => [];
@@ -3815,7 +3815,7 @@ namespace MathPocket
     /// </summary>
     public class IdentityInequalityFunction : FunctionBase
     {
-        public override string   Name       => "Решить неравенство (все ФСУ)";
+        public override string   Name       => "Решить неравенство (все формулы)";
         public override string   Formula    => "раскрыть ФСУ → линейное/квадратное неравенство";
         public override string[] Keywords   => new[] { "тождественные преобразования", "неравенство", "все фсу", "фсу" };
         public override string[] Parameters => [];
@@ -3902,7 +3902,7 @@ namespace MathPocket
     /// </summary>
     public class IdentityProveAllFSUFunction : FunctionBase
     {
-        public override string   Name       => "Доказать тождество (все ФСУ)";
+        public override string   Name       => "Доказать тождество";
         public override string   Formula    => "преобразовать левую часть к правой";
         public override string[] Keywords   => new[] { "тождественные преобразования", "тождество", "доказать", "все фсу", "фсу" };
         public override string[] Parameters => [];
@@ -3972,7 +3972,7 @@ namespace MathPocket
     /// </summary>
     public class IdentityAdvancedSimplifyFunction : FunctionBase
     {
-        public override string   Name       => "Упростить сложное выражение (уровень Б)";
+        public override string   Name       => "Упростить выражение (уровень Б)";
         public override string   Formula    => "многократное применение ФСУ";
         public override string[] Keywords   => new[] { "тождественные преобразования", "упростить", "уровень б", "фсу" };
         public override string[] Parameters => [];
@@ -4060,7 +4060,7 @@ namespace MathPocket
     /// </summary>
     public class IdentityHighDegreeEquationFunction : FunctionBase
     {
-        public override string   Name       => "Решить уравнение высокой степени (ФСУ)";
+        public override string   Name       => "Решить уравнение высокой степени";
         public override string   Formula    => "разложение на множители через ФСУ";
         public override string[] Keywords   => new[] { "тождественные преобразования", "уравнение высокой степени", "фсу" };
         public override string[] Parameters => [];
@@ -4130,7 +4130,7 @@ namespace MathPocket
     /// </summary>
     public class IdentityAdvancedInequalityFunction : FunctionBase
     {
-        public override string   Name       => "Решить сложное неравенство (уровень Б)";
+        public override string   Name       => "Решить неравенство (уровень Б)";
         public override string   Formula    => "все ФСУ → привести подобные";
         public override string[] Keywords   => new[] { "тождественные преобразования", "сложное неравенство", "уровень б", "фсу" };
         public override string[] Parameters => [];
@@ -4214,7 +4214,7 @@ namespace MathPocket
     /// </summary>
     public class IdentityIntegerSolutionFunction : FunctionBase
     {
-        public override string   Name       => "Найти целое число — решение неравенства";
+        public override string   Name       => "Найти целое число из неравенства";
         public override string   Formula    => "решить неравенство → найти целое";
         public override string[] Keywords   => new[] { "тождественные преобразования", "целое число", "неравенство", "фсу" };
         public override string[] Parameters => [];
@@ -4318,7 +4318,7 @@ namespace MathPocket
     /// </summary>
     public class IdentityProveAdvancedFunction : FunctionBase
     {
-        public override string   Name       => "Доказать сложное тождество (уровень В)";
+        public override string   Name       => "Доказать тождество (уровень В)";
         public override string   Formula    => "все ФСУ + замена переменной";
         public override string[] Keywords   => new[] { "тождественные преобразования", "тождество", "сложный", "уровень в", "фсу" };
         public override string[] Parameters => [];
@@ -4389,7 +4389,7 @@ namespace MathPocket
 
     public class IdentitySimplifyFunction : FunctionBase
     {
-        public override string   Name       => "Тождества: упростить выражение";
+        public override string   Name       => "Упростить тождество";
         public override string   Formula    => "ФСУ → упрощение";
         public override string[] Keywords   => ["тождество", "упростить", "выражение", "фсу"];
         public override string[] Parameters => [];
@@ -4483,7 +4483,7 @@ namespace MathPocket
 
     public class IdentitySumAsProductFunction : FunctionBase
     {
-        public override string   Name       => "Тождества: сумму представить как произведение";
+        public override string   Name       => "Сумму записать как произведение";
         public override string   Formula    => "a²−b² = (a+b)(a−b)";
         public override string[] Keywords   => ["тождество", "сумма", "произведение", "представить"];
         public override string[] Parameters => [];
@@ -4559,7 +4559,7 @@ namespace MathPocket
 
     public class IdentityInequalityIntegerFunction : FunctionBase
     {
-        public override string   Name       => "Тождества: неравенство с целыми числами";
+        public override string   Name       => "Неравенство с целыми числами";
         public override string   Formula    => "a² + b² ≥ 2ab";
         public override string[] Keywords   => ["тождество", "неравенство", "целые", "доказать"];
         public override string[] Parameters => [];

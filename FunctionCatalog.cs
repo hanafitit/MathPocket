@@ -6,7 +6,7 @@ namespace MathPocket
         [
             new()
             {
-                Name = "⚡ Степень",
+                Name = "⚡ Степени и основания",
                 Functions =
                 [
                     new PowerFunction(),
@@ -41,7 +41,7 @@ namespace MathPocket
                 [
                     new()
                     {
-                        Name = "🔣 Основы многочленов",
+                        Name = "🔣 Что такое многочлен",
                         Functions =
                         [
                             new PolynomialFromMonomialsFunction(),
@@ -55,7 +55,7 @@ namespace MathPocket
                     },
                     new()
                     {
-                        Name = "➕ Сложение и вычитание",
+                        Name = "➕ Сложение и вычитание многочленов",
                         Functions =
                         [
                             new PolynomialLikeTermsFunction(),
@@ -78,7 +78,7 @@ namespace MathPocket
                     },
                     new()
                     {
-                        Name = "➗ Деление на одночлен",
+                        Name = "➗ Деление многочлена на одночлен",
                         Functions =
                         [
                             new MonomialDividePolyFunction(),
@@ -102,7 +102,7 @@ namespace MathPocket
                     },
                     new()
                     {
-                        Name = "🔄 Тождественные преобразования",
+                        Name = "🔄 Упрощение и тождества",
                         Functions =
                         [
                             new IdentitySimplifyFunction(),
@@ -130,7 +130,7 @@ namespace MathPocket
                 [
                     new()
                     {
-                        Name = "📌 Понятие функции",
+                        Name = "📌 Что такое функция",
                         Functions =
                         [
                             new IsFunctionFunction(),
@@ -144,7 +144,7 @@ namespace MathPocket
                     },
                     new()
                     {
-                        Name = "📊 Табличная функция",
+                        Name = "📊 Функция задана таблицей",
                         Functions =
                         [
                             new TableAnalysisFunction(),
@@ -153,7 +153,7 @@ namespace MathPocket
                     },
                     new()
                     {
-                        Name = "📏 Линейная функция и её график",
+                        Name = "📏 Линейная функция y = kx + b",
                         Functions =
                         [
                             new IsLinearFunction(),             // 1. понятие
@@ -167,7 +167,7 @@ namespace MathPocket
                     },
                     new()
                     {
-                        Name = "🔀 Взаимное расположение функций",
+                        Name = "🔀 Две прямые: параллельность и пересечение",
                         Functions =
                         [
                             new LinearRelationFunction(),               // 1. теория: виды расположения
@@ -185,7 +185,7 @@ namespace MathPocket
                     },
                     new()
                     {
-                        Name = "📐 Системы уравнений (графический способ)",
+                        Name = "📐 Система уравнений (по графику)",
                         Functions =
                         [
                             new SystemGraphOxFunction(),
@@ -198,7 +198,7 @@ namespace MathPocket
                     },
                     new()
                     {
-                        Name = "📐 Функция y = ax²",
+                        Name = "📐 Парабола y = ax²",
                         Functions =
                         [
                             new QuadraticPointBelongsFunction(),
@@ -215,7 +215,7 @@ namespace MathPocket
                     },
                     new()
                     {
-                        Name = "📉 Функция y = k/x (гипербола)",
+                        Name = "📉 Гипербола y = k/x",
                         Functions =
                         [
                             new HyperbolaPointBelongsFunction(),
@@ -236,12 +236,12 @@ namespace MathPocket
 
             new()
             {
-                Name = "✂️ Формулы сокращённого умножения",
+                Name = "✂️ Формулы сокращённого умножения (ФСУ)",
                 SubSections =
                 [
                     new()
                     {
-                        Name = "➖ Разность квадратов",
+                        Name = "➖ Разность квадратов: (a+b)(a−b) = a²−b²",
                         Functions =
                         [
                             new DiffSqExpandFunction(),
@@ -256,7 +256,7 @@ namespace MathPocket
                     },
                     new()
                     {
-                        Name = "🔲 Квадрат суммы и квадрат разности",
+                        Name = "🔲 Квадрат суммы и разности: (a±b)²",
                         Functions =
                         [
                             new SqSumExpandFunction(),
@@ -274,7 +274,7 @@ namespace MathPocket
                     },
                     new()
                     {
-                        Name = "🔷 Куб суммы и куб разности",
+                        Name = "🔷 Куб суммы и разности: (a±b)³",
                         Functions =
                         [
                             new CubeSumExpandFunction(),
@@ -290,7 +290,7 @@ namespace MathPocket
                     },
                     new()
                     {
-                        Name = "🔶 Сумма и разность кубов",
+                        Name = "🔶 Сумма и разность кубов: a³±b³",
                         Functions =
                         [
                             new CubeSumFactorFunction(),
@@ -307,7 +307,7 @@ namespace MathPocket
                     },
                     new()
                     {
-                        Name = "⚗️ Тождественные преобразования",
+                        Name = "⚗️ Все ФСУ вместе",
                         Functions =
                         [
                             new IdentitySimplify2Function(),
@@ -341,12 +341,12 @@ namespace MathPocket
             },
             new()
             {
-                Name = "📊 Элементы статистики",
+                Name = "📊 Статистика",
                 SubSections =
                 [
                     new()
                     {
-                        Name = "📋 Вариационные ряды",
+                        Name = "📋 Упорядоченные ряды данных",
                         Functions =
                         [
                             new PopulationAndSampleFunction(),
@@ -361,7 +361,7 @@ namespace MathPocket
                     },
                     new()
                     {
-                        Name = "📊 Абсолютная и относительная частота",
+                        Name = "📊 Частота появления значения",
                         Functions =
                         [
                             new AbsRelFrequencyFunction(),

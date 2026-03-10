@@ -128,7 +128,7 @@ namespace MathPocket
 
     public class MonomialStandardFormFunction : FunctionBase
     {
-        public override string   Name       => "Стандартный вид одночлена";
+        public override string   Name       => "Привести одночлен к стандартному виду";
         public override string   Formula    => "k·aᵖ·bq,  степень = p + q";
         public override string[] Keywords   => ["стандартный", "вид", "одночлен"];
         public override string[] Parameters => [];
@@ -218,7 +218,7 @@ namespace MathPocket
 
     public class MonomialPowerFunction : FunctionBase
     {
-        public override string   Name       => "Степень одночлена";
+        public override string   Name       => "Найти степень одночлена";
         public override string   Formula    => "(k·aᵖ·bq)ⁿ = kⁿ·aᵖⁿ·bqⁿ";
         public override string[] Keywords   => ["степень", "одночлен", "возведение"];
         public override string[] Parameters => [];
@@ -343,7 +343,7 @@ namespace MathPocket
 
     public class MonomialMultiplyFunction : FunctionBase
     {
-        public override string   Name       => "Умножение одночленов";
+        public override string   Name       => "Перемножить одночлены";
         public override string   Formula    => "(k₁·aᵖ·bq) · (k₂·aʳ·bˢ) = k₁k₂·aᵖ⁺ʳ·bq⁺ˢ";
         public override string[] Keywords   => ["умножение", "одночлен", "произведение"];
         public override string[] Parameters => [];
@@ -492,7 +492,7 @@ namespace MathPocket
 
     public class MonomialDivideFunction : FunctionBase
     {
-        public override string   Name       => "Деление одночленов";
+        public override string   Name       => "Разделить одночлены";
         public override string   Formula    => "k₁aᵖbq ÷ k₂aʳbˢ";
         public override string[] Parameters => [];
         public override string[] Keywords   => ["делить", "деление одночлен", "частное"];
@@ -601,7 +601,7 @@ namespace MathPocket
 
     public class MonomialDivideEvalFunction : FunctionBase
     {
-        public override string   Name       => "Значение частного при a, b";
+        public override string   Name       => "Вычислить частное при заданных a и b";
         public override string   Formula    => "k₁aᵐbⁿ ÷ k₂aᵖbq при a=…, b=…";
         public override string[] Parameters => [];
         public override string[] Keywords   => ["значение деления", "подставить частное"];

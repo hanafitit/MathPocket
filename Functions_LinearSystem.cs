@@ -169,7 +169,7 @@ namespace MathPocket
             sb.AppendLine();
 
             // ax + b·0 = c  →  ax = c
-            sb.AppendLine($"  {LinearHelper.Fmt(a)}x {LinearHelper.FmtTerm(b)}·0 = {LinearHelper.Fmt(c)}");
+            sb.AppendLine($"  {LinearHelper.Fmt(a)}x + {LinearHelper.Fmt(b)}·0 = {LinearHelper.Fmt(c)}");
             sb.AppendLine($"  {LinearHelper.Fmt(a)}x = {LinearHelper.Fmt(c)}");
 
             if (Math.Abs(a) < 1e-12)
@@ -226,7 +226,7 @@ namespace MathPocket
             sb.AppendLine("Пересечение с осью Oy: подставляем x = 0");
             sb.AppendLine();
 
-            sb.AppendLine($"  {LinearHelper.Fmt(a)}·0 {LinearHelper.FmtTerm(b)}y = {LinearHelper.Fmt(c)}");
+            sb.AppendLine($"  {LinearHelper.Fmt(a)}·0 + {LinearHelper.Fmt(b)}y = {LinearHelper.Fmt(c)}");
             sb.AppendLine($"  {LinearHelper.Fmt(b)}y = {LinearHelper.Fmt(c)}");
 
             if (Math.Abs(b) < 1e-12)
@@ -306,7 +306,7 @@ namespace MathPocket
             var (k, bVal) = yForm.Value;
             sb.AppendLine("Выражаем y через x:");
             sb.AppendLine($"  {LinearHelper.Fmt(b)}y = {LinearHelper.Fmt(c)} − {LinearHelper.Fmt(a)}x");
-            sb.AppendLine($"  y = {LinearHelper.Fmt(k)}x {LinearHelper.FmtTerm(bVal)}");
+            sb.AppendLine($"  y = {LinearHelper.Fmt(k)}x + {LinearHelper.Fmt(bVal)}");
             sb.AppendLine();
 
             // Таблица двух точек
@@ -447,12 +447,12 @@ namespace MathPocket
                 double y = k1 * x + bv1;
 
                 sb.AppendLine("Шаг 2. Приравниваем правые части:");
-                sb.AppendLine($"  {LinearHelper.Fmt(k1)}x {LinearHelper.FmtTerm(bv1)} = {LinearHelper.Fmt(k2)}x {LinearHelper.FmtTerm(bv2)}");
+                sb.AppendLine($"  {LinearHelper.Fmt(k1)}x + {LinearHelper.Fmt(bv1)} = {LinearHelper.Fmt(k2)}x + {LinearHelper.Fmt(bv2)}");
                 sb.AppendLine($"  {LinearHelper.Fmt(k1 - k2)}x = {LinearHelper.Fmt(bv2 - bv1)}");
                 sb.AppendLine($"  x = {LinearHelper.Fmt(x)}");
                 sb.AppendLine();
                 sb.AppendLine("Шаг 3. Находим y:");
-                sb.AppendLine($"  y = {LinearHelper.Fmt(k1)}·{LinearHelper.Fmt(x)} {LinearHelper.FmtTerm(bv1)} = {LinearHelper.Fmt(y)}");
+                sb.AppendLine($"  y = {LinearHelper.Fmt(k1)}·{LinearHelper.Fmt(x)} + {LinearHelper.Fmt(bv1)} = {LinearHelper.Fmt(y)}");
                 sb.AppendLine();
                 sb.AppendLine($"📌 Решение системы: ({LinearHelper.Fmt(x)}; {LinearHelper.Fmt(y)})");
                 sb.AppendLine($"   Ответ: {{{LinearHelper.Fmt(x)}; {LinearHelper.Fmt(y)}}}");

@@ -42,7 +42,7 @@ namespace MathPocket
 
     public class IsFunctionFunction : FunctionBase
     {
-        public override string   Name       => "Является ли функцией";
+        public override string   Name       => "Это функция или нет?";
         public override string   Formula    => "каждому x — ровно одно y";
         public override string[] Keywords   => new[] { "функция", "является", "таблица" };
         public override string[] Parameters => [];
@@ -138,7 +138,7 @@ namespace MathPocket
 
     public class IsIncreasingDecreasingFunction : FunctionBase
     {
-        public override string   Name       => "Возрастающая или убывающая";
+        public override string   Name       => "Растёт или убывает?";
         public override string   Formula    => "x₁ < x₂ → f(x₁) < f(x₂)";
         public override string[] Keywords   => new[] { "возрастающая", "убывающая", "функция" };
         public override string[] Parameters => [];
@@ -242,7 +242,7 @@ namespace MathPocket
 
     public class TableAnalysisFunction : FunctionBase
     {
-        public override string   Name       => "Анализ функции по таблице";
+        public override string   Name       => "Разобрать таблицу функции";
         public override string   Formula    => "D(f), E(f), возрастание/убывание";
         public override string[] Keywords   => new[] { "таблица", "функция", "анализ", "возрастающая", "убывающая", "область" };
         public override string[] Parameters => [];
@@ -423,7 +423,7 @@ namespace MathPocket
 
     public class DomainFunction : FunctionBase
     {
-        public override string   Name       => "Область определения";
+        public override string   Name       => "При каких x функция существует?";
         public override string   Formula    => "D(f): при каких x функция существует";
         public override string[] Keywords   => new[] { "область определения", "D(f)", "функция" };
         public override string[] Parameters => [];
@@ -444,10 +444,9 @@ namespace MathPocket
                     "  1/(2x-6)         → x ≠ 3\n" +
                     "  x/(x^2-5x+6)     → x ≠ 2 и x ≠ 3\n" +
                     "  1/(x^3-x)        → x ≠ −1, 0, 1\n\n" +
-                    "Как записывать степени:\n" +
-                    "  x² → x^2   (знак ^)\n" +
-                    "  x³ → x^3\n" +
-                    "  дробь:  числитель/(знаменатель)\n\n" +
+                    "Как записывать:\n" +
+                    "  · x² → x^2,  x³ → x^3\n" +
+                    "  · дробь: числитель/(знаменатель)\n\n" +
                     "✏️ Введи правую часть формулы (после y =):",
                 Validate = ValidateInput
             }
@@ -727,7 +726,7 @@ namespace MathPocket
 
     public class DomainFromTableFunction : FunctionBase
     {
-        public override string   Name       => "Область определения по таблице";
+        public override string   Name       => "Все значения x и y из таблицы";
         public override string   Formula    => "D(f) = {x₁; x₂; ...},  E(f) = {y₁; y₂; ...}";
         public override string[] Keywords   => new[] { "область определения", "множество значений", "таблица" };
         public override string[] Parameters => [];
@@ -792,7 +791,7 @@ namespace MathPocket
 
     public class DetectFormulaFunction : FunctionBase
     {
-        public override string   Name       => "Назвать функцию по таблице";
+        public override string   Name       => "Какая формула у таблицы?";
         public override string   Formula    => "y = ? (бот находит сам)";
         public override string[] Keywords   => new[] { "закономерность", "формула", "определить", "найти" };
         public override string[] Parameters => [];
@@ -984,7 +983,7 @@ namespace MathPocket
 
     public class FormulaFromTableFunction : FunctionBase
     {
-        public override string   Name       => "Угадать формулу по таблице";
+        public override string   Name       => "Найти формулу по таблице";
         public override string   Formula    => "y = kx + b";
         public override string[] Keywords   => new[] { "формула", "таблица", "угадать", "найти" };
         public override string[] Parameters => [];
@@ -1141,7 +1140,7 @@ namespace MathPocket
 
     public class TableFromFormulaFunction : FunctionBase
     {
-        public override string   Name       => "Заполнить таблицу по формуле";
+        public override string   Name       => "Подставить x в формулу → найти y";
         public override string   Formula    => "y = f(x) → подставляем x, находим y";
         public override string[] Keywords   => new[] { "таблица", "формула", "заполнить", "подставить" };
         public override string[] Parameters => [];
@@ -1274,7 +1273,7 @@ namespace MathPocket
 
     public class GraphDomainFunction : FunctionBase
     {
-        public override string   Name       => "Записать область определения по графику";
+        public override string   Name       => "Записать D(f) по графику";
         public override string   Formula    => "D(f) = [a; b] / (a; b) / [a; +∞) / ...";
         public override string[] Keywords   => new[] { "область определения", "график", "отрезок", "луч" };
         public override string[] Parameters => [];
@@ -1293,31 +1292,31 @@ namespace MathPocket
                     "  Отрезок от −2 до 5     → D(f) = [−2; 5]\n" +
                     "  Луч вправо от 0        → D(f) = [0; +∞)\n" +
                     "  Вся числовая прямая    → D(f) = (−∞; +∞)\n\n" +
-                    "✏️ Введи ЛЕВУЮ границу:\n" +
-                    "  Число (например: -2)  ИЛИ  слово: inf  (если уходит влево)",
+                    "✏️ Введи левую границу:\n" +
+                    "  Число (например: -2) или слово: бесконечность",
                 Validate = ValidateBound
             },
             new InputStep
             {
                 Question =
-                    "✏️ Левая граница ВКЛЮЧЕНА в область?\n" +
+                    "✏️ Левая граница включена в область?\n" +
                     "  Введи: да  или  нет\n\n" +
-                    "  🔴 Закрашенная точка на графике → да (скобка [)\n" +
-                    "  ⚪ Пустая точка                → нет (скобка ()\n" +
-                    "  Если ввёл inf                  → всегда нет",
+                    "  Закрашенная точка на графике → да (включена, скобка [)\n" +
+                    "  Пустая точка                → нет (исключена, скобка ()\n" +
+                    "  Если ввёл бесконечность      → всегда нет",
                 Validate = ValidateYesNo
             },
             new InputStep
             {
                 Question =
-                    "✏️ Введи ПРАВУЮ границу:\n" +
-                    "  Число (например: 5)  ИЛИ  слово: inf  (если уходит вправо)",
+                    "✏️ Введи правую границу:\n" +
+                    "  Число (например: 5) или слово: бесконечность",
                 Validate = ValidateBound
             },
             new InputStep
             {
                 Question =
-                    "✏️ Правая граница ВКЛЮЧЕНА в область?\n" +
+                    "✏️ Правая граница включена в область?\n" +
                     "  Введи: да  или  нет",
                 Validate = ValidateYesNo
             },
@@ -1368,7 +1367,7 @@ namespace MathPocket
         }
 
         private static bool IsInfinity(string s) =>
-            s == "бесконечность" || s == "inf" || s == "∞" || s == "-∞" || s == "+∞" || s == "infinity";
+            s == "бесконечность" || s == "inf" || s == "∞" || s == "-∞" || s == "+∞";
 
         private static string FormatBound(string s)
         {
@@ -1391,7 +1390,7 @@ namespace MathPocket
             if (IsInfinity(t)) return null;
             if (double.TryParse(t, System.Globalization.NumberStyles.Any,
                     System.Globalization.CultureInfo.InvariantCulture, out _)) return null;
-            return $"Не понимаю «{s}». Введи число (например: -3) или слово: inf (для бесконечности)";
+            return $"Не понимаю «{s}». Введи число (например: -3) или слово: бесконечность";
         }
 
         private static string? ValidateYesNo(string s)
