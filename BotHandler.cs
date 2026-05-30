@@ -27,17 +27,31 @@ namespace MathPocket
         public bool HasSubSections => SubSections.Length > 0;
     }
 
+    internal sealed class UserSession
+    {
+        public string State { get; set; } = string.Empty;
+        public MathCategory? SelectedCategory { get; set; }
+        public MathSection? SelectedSection { get; set; }
+        public FunctionBase? SelectedFunction { get; set; }
+        public StepInputSession? InputSession { get; set; }
+
+        public void Clear()
+        {
+            State = string.Empty;
+            SelectedCategory = null;
+            SelectedSection = null;
+            SelectedFunction = null;
+            InputSession = null;
+        }
+    }
+
     internal sealed class BotHandler
     {
         private readonly ITelegramBotClient _bot;
         private readonly MathCategory[] _categories;
         private readonly Material[] _materials;
 
-        private readonly ConcurrentDictionary<long, string> _userState = new();
-        private readonly ConcurrentDictionary<long, MathCategory> _selectedCategory = new();
-        private readonly ConcurrentDictionary<long, MathSection> _selectedSection = new();
-        private readonly ConcurrentDictionary<long, FunctionBase> _selectedFunction = new();
-        private readonly ConcurrentDictionary<long, StepInputSession> _inputSession = new();
+        private readonly ConcurrentDictionary<long, UserSession> _sessions = new();
 
         private readonly Dictionary<string, Func<Message, Task>> _stateHandlers;
 
@@ -147,8 +161,9 @@ namespace MathPocket
                 return;
             }
 
-            var text   = msg.Text.Trim();
+            var text = msg.Text.Trim();
             var chatId = msg.Chat.Id;
+            var session = _sessions.GetOrAdd(chatId, _ => new UserSession());
 
             WriteLog($"[{DateTime.Now:HH:mm:ss}] [СООБЩЕНИЕ] user={chatId} (@{msg.Chat.Username ?? "no_username"}) | текст=\"{text}\"");
 
@@ -168,7 +183,7 @@ namespace MathPocket
             if (text == BtnSections)
             {
                 ClearState(chatId);
-                _userState[chatId] = "choose_category";
+                session.State = "choose_category";
                 await SendCategoryMenu(chatId);
                 return;
             }
@@ -176,15 +191,14 @@ namespace MathPocket
             if (text == BtnCalculator)
             {
                 ClearState(chatId);
-                _userState[chatId] = "universal_calc";
+                session.State = "universal_calc";
                 await _bot.SendMessage(chatId,
                     "Введите выражение для вычисления:\n(например: 2 + 3 * (4 - 1))",
                     replyMarkup: BackKeyboard());
                 return;
             }
 
-            if (_userState.TryGetValue(chatId, out var state) &&
-                _stateHandlers.TryGetValue(state, out var handler))
+            if (!string.IsNullOrEmpty(session.State) && _stateHandlers.TryGetValue(session.State, out var handler))
             {
                 await handler(msg);
                 return;
@@ -203,26 +217,30 @@ namespace MathPocket
 
         private async Task HandleBack(long chatId)
         {
-            _userState.TryGetValue(chatId, out var state);
+            if (!_sessions.TryGetValue(chatId, out var session))
+            {
+                await SendStartMessage(chatId);
+                return;
+            }
 
-            switch (state)
+            switch (session.State)
             {
                 case "input_data":
-                    await HandleBackFromInput(chatId);
+                    await HandleBackFromInput(chatId, session);
                     break;
 
                 case "choose_function":
-                    HandleBackFromFunction(chatId);
-                    if (_selectedCategory.TryGetValue(chatId, out var cat) && cat.HasSubSections)
-                        await SendSubSectionMenu(chatId, cat);
+                    HandleBackFromFunction(session);
+                    if (session.SelectedCategory?.HasSubSections == true)
+                        await SendSubSectionMenu(chatId, session.SelectedCategory);
                     else
                         await SendCategoryMenu(chatId);
                     break;
 
                 case "choose_subsection":
-                    _selectedSection.TryRemove(chatId, out _);
-                    _selectedCategory.TryRemove(chatId, out _);
-                    _userState[chatId] = "choose_category";
+                    session.SelectedSection = null;
+                    session.SelectedCategory = null;
+                    session.State = "choose_category";
                     await SendCategoryMenu(chatId);
                     break;
 
@@ -233,29 +251,29 @@ namespace MathPocket
             }
         }
 
-        private async Task HandleBackFromInput(long chatId)
+        private async Task HandleBackFromInput(long chatId, UserSession session)
         {
-            _inputSession.TryGetValue(chatId, out var session);
-            _selectedFunction.TryGetValue(chatId, out var func);
+            var input = session.InputSession;
+            var func = session.SelectedFunction;
 
-            if (session is not null && func?.Steps is not null && session.CurrentStep > 0)
+            if (input is not null && func?.Steps is not null && input.CurrentStep > 0)
             {
-                func.RollbackStep(session);
+                func.RollbackStep(input);
 
-                WriteLog($"[{DateTime.Now:HH:mm:ss}] [ОТКАТ] user={chatId} | func=\"{func.Name}\" | возврат к шагу {session.CurrentStep + 1} | накоплено={session.Answers.Count}");
-                await AskCurrentStep(chatId, func, session);
+                WriteLog($"[{DateTime.Now:HH:mm:ss}] [ОТКАТ] user={chatId} | func=\"{func.Name}\" | возврат к шагу {input.CurrentStep + 1} | накоплено={input.Answers.Count}");
+                await AskCurrentStep(chatId, func, input);
                 return;
             }
 
-            if (session is not null && func is not null)
-                WriteLog($"[{DateTime.Now:HH:mm:ss}] [ОТМЕНА] user={chatId} | func=\"{func.Name}\" | прервано на шаге {session.CurrentStep + 1}");
+            if (input is not null && func is not null)
+                WriteLog($"[{DateTime.Now:HH:mm:ss}] [ОТМЕНА] user={chatId} | func=\"{func.Name}\" | прервано на шаге {input.CurrentStep + 1}");
 
-            _inputSession.TryRemove(chatId, out _);
-            _selectedFunction.TryRemove(chatId, out _);
-            _userState[chatId] = "choose_function";
+            session.InputSession = null;
+            session.SelectedFunction = null;
+            session.State = "choose_function";
 
-            if (_selectedSection.TryGetValue(chatId, out var sec))
-                await SendFunctionMenu(chatId, sec);
+            if (session.SelectedSection is not null)
+                await SendFunctionMenu(chatId, session.SelectedSection);
             else
             {
                 ClearState(chatId);
@@ -263,17 +281,17 @@ namespace MathPocket
             }
         }
 
-        private void HandleBackFromFunction(long chatId)
+        private void HandleBackFromFunction(UserSession session)
         {
-            _selectedFunction.TryRemove(chatId, out _);
-            _selectedSection.TryRemove(chatId, out _);
+            session.SelectedFunction = null;
+            session.SelectedSection = null;
 
-            if (_selectedCategory.TryGetValue(chatId, out var cat) && cat.HasSubSections)
-                _userState[chatId] = "choose_subsection";
+            if (session.SelectedCategory?.HasSubSections == true)
+                session.State = "choose_subsection";
             else
             {
-                _selectedCategory.TryRemove(chatId, out _);
-                _userState[chatId] = "choose_category";
+                session.SelectedCategory = null;
+                session.State = "choose_category";
             }
         }
 
@@ -281,104 +299,109 @@ namespace MathPocket
 
         private async Task HandleChooseCategory(Message msg)
         {
+            var chatId = msg.Chat.Id;
+            var session = _sessions.GetOrAdd(chatId, _ => new UserSession());
+
             var category = _categories.FirstOrDefault(c =>
                 c.Name.Equals(msg.Text, StringComparison.OrdinalIgnoreCase));
 
             if (category is null)
             {
-                await _bot.SendMessage(msg.Chat.Id, "Выберите раздел из предложенных кнопок.");
+                await _bot.SendMessage(chatId, "Выберите раздел из предложенных кнопок.");
                 return;
             }
 
-            _selectedCategory[msg.Chat.Id] = category;
+            session.SelectedCategory = category;
 
             if (category.HasSubSections)
             {
-                _userState[msg.Chat.Id] = "choose_subsection";
-                await SendSubSectionMenu(msg.Chat.Id, category);
+                session.State = "choose_subsection";
+                await SendSubSectionMenu(chatId, category);
                 return;
             }
 
             if (category.Functions.Length == 0)
             {
-                await _bot.SendMessage(msg.Chat.Id,
+                await _bot.SendMessage(chatId,
                     $"📭 Раздел «{category.Name}» пока не содержит функций.\n" +
                     "Выберите другой раздел или нажмите «◀️ Назад».");
                 return;
             }
 
             var section = new MathSection { Name = category.Name, Functions = category.Functions };
-            _selectedSection[msg.Chat.Id] = section;
-            _userState[msg.Chat.Id]       = "choose_function";
-            await SendFunctionMenu(msg.Chat.Id, section);
+            session.SelectedSection = section;
+            session.State = "choose_function";
+            await SendFunctionMenu(chatId, section);
         }
 
         private async Task HandleChooseSubSection(Message msg)
         {
-            if (!_selectedCategory.TryGetValue(msg.Chat.Id, out var category))
+            var chatId = msg.Chat.Id;
+            if (!_sessions.TryGetValue(chatId, out var session) || session.SelectedCategory == null)
             {
-                await _bot.SendMessage(msg.Chat.Id, "Произошла ошибка. Попробуйте /start");
+                await _bot.SendMessage(chatId, "Произошла ошибка. Попробуйте /start");
                 return;
             }
 
-            var section = category.SubSections.FirstOrDefault(s =>
+            var section = session.SelectedCategory.SubSections.FirstOrDefault(s =>
                 s.Name.Equals(msg.Text, StringComparison.OrdinalIgnoreCase));
 
             if (section is null)
             {
-                await _bot.SendMessage(msg.Chat.Id, "Выберите подраздел из предложенных кнопок.");
+                await _bot.SendMessage(chatId, "Выберите подраздел из предложенных кнопок.");
                 return;
             }
 
             if (section.Functions.Length == 0)
             {
-                await _bot.SendMessage(msg.Chat.Id,
+                await _bot.SendMessage(chatId,
                     $"📭 Подраздел «{section.Name}» пока не содержит функций.\n" +
                     "Выберите другой или нажмите «◀️ Назад».");
                 return;
             }
 
-            _selectedSection[msg.Chat.Id] = section;
-            _userState[msg.Chat.Id]       = "choose_function";
-            await SendFunctionMenu(msg.Chat.Id, section);
+            session.SelectedSection = section;
+            session.State = "choose_function";
+            await SendFunctionMenu(chatId, section);
         }
 
         private async Task HandleChooseFunction(Message msg)
         {
-            if (!_selectedSection.TryGetValue(msg.Chat.Id, out var section))
+            var chatId = msg.Chat.Id;
+            if (!_sessions.TryGetValue(chatId, out var session) || session.SelectedSection == null)
             {
-                await _bot.SendMessage(msg.Chat.Id, "Произошла ошибка. Попробуйте /start");
+                await _bot.SendMessage(chatId, "Произошла ошибка. Попробуйте /start");
                 return;
             }
 
-            var func = section.Functions.FirstOrDefault(f =>
+            var func = session.SelectedSection.Functions.FirstOrDefault(f =>
                 f.Name.Equals(msg.Text, StringComparison.OrdinalIgnoreCase));
 
             if (func is null)
             {
-                await _bot.SendMessage(msg.Chat.Id, "Выберите функцию из предложенных кнопок.");
+                await _bot.SendMessage(chatId, "Выберите функцию из предложенных кнопок.");
                 return;
             }
 
-            _selectedFunction[msg.Chat.Id] = func;
-            _userState[msg.Chat.Id]        = "input_data";
+            session.SelectedFunction = func;
+            session.State = "input_data";
 
             if (func.Steps is not null)
             {
-                var session = new StepInputSession();
-                _inputSession[msg.Chat.Id] = session;
+                var input = new StepInputSession();
+                session.InputSession = input;
 
-                WriteLog($"[{DateTime.Now:HH:mm:ss}] [СТАРТ] user={msg.Chat.Id} | func=\"{func.Name}\" | шагов={func.Steps.Length}");
+                WriteLog($"[{DateTime.Now:HH:mm:ss}] [СТАРТ] user={chatId} | func=\"{func.Name}\" | шагов={func.Steps.Length}");
 
-                await _bot.SendMessage(msg.Chat.Id,
+                await _bot.SendMessage(chatId,
                     $"✅ {func.Name}\nФормула: {func.Formula}",
                     replyMarkup: BackKeyboard());
 
-                await AskCurrentStep(msg.Chat.Id, func, session);
+                await AskCurrentStep(chatId, func, input);
             }
             else
             {
-                await _bot.SendMessage(msg.Chat.Id,
+                await _bot.SendMessage(chatId,
                     $"✅ {func.Name}\n" +
                     $"Формула: {func.Formula}\n\n" +
                     $"Введите через пробел: {string.Join(", ", func.Parameters)}",
@@ -390,31 +413,34 @@ namespace MathPocket
 
         private async Task HandleInputData(Message msg)
         {
-            if (!_selectedFunction.TryGetValue(msg.Chat.Id, out var func))
+            var chatId = msg.Chat.Id;
+            if (!_sessions.TryGetValue(chatId, out var session) || session.SelectedFunction == null)
             {
-                await _bot.SendMessage(msg.Chat.Id, "Произошла ошибка. Попробуйте /start");
+                await _bot.SendMessage(chatId, "Произошла ошибка. Попробуйте /start");
                 return;
             }
 
-            if (func.Steps is not null &&
-                _inputSession.TryGetValue(msg.Chat.Id, out var session))
+            var func = session.SelectedFunction;
+
+            if (func.Steps is not null && session.InputSession != null)
             {
-                await HandleStepInput(msg, func, session);
+                await HandleStepInput(msg, func, session.InputSession, session);
                 return;
             }
 
             await HandleSingleLineInput(msg, func);
         }
 
-        private async Task HandleStepInput(Message msg, FunctionBase func, StepInputSession session)
+        private async Task HandleStepInput(Message msg, FunctionBase func, StepInputSession input, UserSession session)
         {
-            int stepIndex = GetStepIndex(func, session);
+            var chatId = msg.Chat.Id;
+            int stepIndex = GetStepIndex(func, input);
 
             if (stepIndex < 0 || stepIndex >= func.Steps!.Length)
             {
-                WriteError($"[{DateTime.Now:HH:mm:ss}] [GUARD] user={msg.Chat.Id} | func=\"{func.Name}\" | stepIndex={stepIndex} вышел за границы Steps[{func.Steps.Length}] | CurrentStep={session.CurrentStep} | answers={session.Answers.Count}");
-                _inputSession.TryRemove(msg.Chat.Id, out _);
-                await _bot.SendMessage(msg.Chat.Id,
+                WriteError($"[{DateTime.Now:HH:mm:ss}] [GUARD] user={chatId} | func=\"{func.Name}\" | stepIndex={stepIndex} вышел за границы Steps[{func.Steps.Length}] | CurrentStep={input.CurrentStep} | answers={input.Answers.Count}");
+                session.InputSession = null;
+                await _bot.SendMessage(chatId,
                     "⚠️ Произошла внутренняя ошибка. Начнём заново.",
                     replyMarkup: BackKeyboard());
                 return;
@@ -426,34 +452,34 @@ namespace MathPocket
             var error = step.Validate(answer);
             if (error is not null)
             {
-                LogStep("ОШИБКА_ВАЛИДАЦИИ", msg.Chat.Id, func, session,
+                LogStep("ОШИБКА_ВАЛИДАЦИИ", chatId, func, input,
                     userAnswer: answer, extra: $"причина=\"{error}\"");
-                await _bot.SendMessage(msg.Chat.Id,
+                await _bot.SendMessage(chatId,
                     $"⚠️ {error}\n\nПопробуй ещё раз:",
                     replyMarkup: BackKeyboard());
                 return;
             }
 
-            LogStep("ОТВЕТ", msg.Chat.Id, func, session, userAnswer: answer);
-            session.Answers.Add(answer);
-            session.CurrentStep++;
+            LogStep("ОТВЕТ", chatId, func, input, userAnswer: answer);
+            input.Answers.Add(answer);
+            input.CurrentStep++;
 
-            int total = GetTotalSteps(func, session);
+            int total = GetTotalSteps(func, input);
 
-            if (session.CurrentStep >= total)
+            if (input.CurrentStep >= total)
             {
-                await FinishStepSession(msg.Chat.Id, func, session);
+                await FinishStepSession(chatId, func, input, session);
                 return;
             }
 
-            LogStep("СЛЕДУЮЩИЙ_ШАГ", msg.Chat.Id, func, session);
-            await AskCurrentStep(msg.Chat.Id, func, session);
+            LogStep("СЛЕДУЮЩИЙ_ШАГ", chatId, func, input);
+            await AskCurrentStep(chatId, func, input);
         }
 
-        private async Task FinishStepSession(long chatId, FunctionBase func, StepInputSession session)
+        private async Task FinishStepSession(long chatId, FunctionBase func, StepInputSession input, UserSession session)
         {
             byte[]? plotBytes = null;
-            try { plotBytes = func.GetPlotBytes(session.Answers); }
+            try { plotBytes = func.GetPlotBytes(input.Answers); }
             catch { /* если график не вышел — продолжаем без него */ }
 
             if (plotBytes is not null)
@@ -464,38 +490,38 @@ namespace MathPocket
                     await _bot.SendPhoto(chatId,
                         new InputFileStream(ms, "plot.png"),
                         replyMarkup: BackKeyboard());
-                    LogSessionEnd("ИТОГ_ГРАФИК", chatId, func, session.Answers);
+                    LogSessionEnd("ИТОГ_ГРАФИК", chatId, func, input.Answers);
                 }
                 catch (Exception ex)
                 {
-                    LogSessionEnd("ИТОГ_ГРАФИК", chatId, func, session.Answers, error: ex.Message);
+                    LogSessionEnd("ИТОГ_ГРАФИК", chatId, func, input.Answers, error: ex.Message);
                     await _bot.SendMessage(chatId,
                         $"⚠️ Не удалось отправить график: {ex.Message}",
                         replyMarkup: BackKeyboard());
                 }
-                _inputSession.TryRemove(chatId, out _);
-                _selectedFunction.TryRemove(chatId, out _);
-                _userState[chatId] = "choose_function";
-                if (_selectedSection.TryGetValue(chatId, out var secAfterPlot))
-                    await SendFunctionMenu(chatId, secAfterPlot, "Выбери функцию снова или нажми «◀️ Назад»:");
+                session.InputSession = null;
+                session.SelectedFunction = null;
+                session.State = "choose_function";
+                if (session.SelectedSection != null)
+                    await SendFunctionMenu(chatId, session.SelectedSection, "Выбери функцию снова или нажми «◀️ Назад»:");
                 return;
             }
 
             string result;
             try
             {
-                int expected = func.ActiveStepCount(session.Answers);
-                if (session.Answers.Count != expected)
+                int expected = func.ActiveStepCount(input.Answers);
+                if (input.Answers.Count != expected)
                     throw new InvalidOperationException(
-                        $"Ожидалось {expected} ответов, получено {session.Answers.Count}.");
+                        $"Ожидалось {expected} ответов, получено {input.Answers.Count}.");
 
-                result = func.CalculateFromAnswers(session.Answers);
-                LogSessionEnd("ИТОГ", chatId, func, session.Answers, result: result);
+                result = func.CalculateFromAnswers(input.Answers);
+                LogSessionEnd("ИТОГ", chatId, func, input.Answers, result: result);
             }
             catch (Exception ex)
             {
-                LogSessionEnd("ИТОГ", chatId, func, session.Answers, error: ex.Message);
-                _inputSession.TryRemove(chatId, out _);
+                LogSessionEnd("ИТОГ", chatId, func, input.Answers, error: ex.Message);
+                session.InputSession = null;
                 await _bot.SendMessage(chatId,
                     $"⚠️ Что-то пошло не так: {ex.Message}",
                     replyMarkup: BackKeyboard());
@@ -503,11 +529,11 @@ namespace MathPocket
             }
 
             await _bot.SendMessage(chatId, result, replyMarkup: BackKeyboard());
-            _inputSession.TryRemove(chatId, out _);
-            _selectedFunction.TryRemove(chatId, out _);
-            _userState[chatId] = "choose_function";
-            if (_selectedSection.TryGetValue(chatId, out var secAfterResult))
-                await SendFunctionMenu(chatId, secAfterResult, "Выбери функцию снова или нажми «◀️ Назад»:");
+            session.InputSession = null;
+            session.SelectedFunction = null;
+            session.State = "choose_function";
+            if (session.SelectedSection != null)
+                await SendFunctionMenu(chatId, session.SelectedSection, "Выбери функцию снова или нажми «◀️ Назад»:");
         }
 
         private async Task HandleSingleLineInput(Message msg, FunctionBase func)
@@ -558,25 +584,27 @@ namespace MathPocket
             }
         }
 
-        private async Task AskCurrentStep(long chatId, FunctionBase func, StepInputSession session)
+        private async Task AskCurrentStep(long chatId, FunctionBase func, StepInputSession input)
         {
-            int stepIndex = GetStepIndex(func, session);
+            int stepIndex = GetStepIndex(func, input);
 
             if (stepIndex < 0 || stepIndex >= func.Steps!.Length)
             {
-                WriteError($"[{DateTime.Now:HH:mm:ss}] [GUARD] user={chatId} | func=\"{func.Name}\" | stepIndex={stepIndex} вышел за границы Steps[{func.Steps.Length}] | CurrentStep={session.CurrentStep} | answers={session.Answers.Count}");
-                _inputSession.TryRemove(chatId, out _);
+                WriteError($"[{DateTime.Now:HH:mm:ss}] [GUARD] user={chatId} | func=\"{func.Name}\" | stepIndex={stepIndex} вышел за границы Steps[{func.Steps.Length}] | CurrentStep={input.CurrentStep} | answers={input.Answers.Count}");
+                if (_sessions.TryGetValue(chatId, out var session))
+                    session.InputSession = null;
+
                 await _bot.SendMessage(chatId,
                     "⚠️ Произошла внутренняя ошибка. Начнём заново.",
                     replyMarkup: BackKeyboard());
                 return;
             }
 
-            var step  = func.Steps![stepIndex];
-            int total = GetTotalSteps(func, session);
+            var step = func.Steps![stepIndex];
+            int total = GetTotalSteps(func, input);
 
             await _bot.SendMessage(chatId,
-                $"Шаг {session.CurrentStep + 1} из {total}\n\n{step.Question}",
+                $"Шаг {input.CurrentStep + 1} из {total}\n\n{step.Question}",
                 replyMarkup: BackKeyboard());
         }
 
@@ -586,16 +614,16 @@ namespace MathPocket
                 return MonomialMultiplyFunction.StepIndex(session.Answers, session.CurrentStep);
 
             // MonomialPowerFunction: Steps = [выбор, коэфф, degA, degB, степень] (5 эл.)
-            // При !twoVars нужен порядок 0→1→2→4, поэтому прыгаем через degB (индекс 3).
+            // При !twoVariables нужен порядок 0→1→2→4, поэтому прыгаем через degB (индекс 3).
             if (func is MonomialPowerFunction)
             {
-                bool twoVars = session.Answers.Count > 0 && session.Answers[0] == "2";
-                if (!twoVars && session.CurrentStep >= 3)
+                bool twoVariables = session.Answers.Count > 0 && session.Answers[0] == "2";
+                if (!twoVariables && session.CurrentStep >= 3)
                     return session.CurrentStep + 1;
             }
 
             // MonomialStandardFormFunction: Steps = [выбор, коэфф, degA, degB] (4 эл.)
-            // При !twoVars ActiveStepCount=3, сессия завершается на CurrentStep==3 — прыгать некуда.
+            // При !twoVariables ActiveStepCount=3, сессия завершается на CurrentStep==3 — прыгать некуда.
 
             return session.CurrentStep;
         }
@@ -665,11 +693,8 @@ namespace MathPocket
 
         private void ClearState(long chatId)
         {
-            _userState.TryRemove(chatId, out _);
-            _selectedCategory.TryRemove(chatId, out _);
-            _selectedSection.TryRemove(chatId, out _);
-            _selectedFunction.TryRemove(chatId, out _);
-            _inputSession.TryRemove(chatId, out _);
+            if (_sessions.TryGetValue(chatId, out var session))
+                session.Clear();
         }
     }
 }
