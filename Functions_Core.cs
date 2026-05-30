@@ -42,7 +42,7 @@ namespace MathPocket
 
     public class IsFunctionFunction : FunctionBase
     {
-        public override string   Name       => "Является ли функцией";
+        public override string   Name       => "Это функция или нет?";
         public override string   Formula    => "каждому x — ровно одно y";
         public override string[] Keywords   => new[] { "функция", "является", "таблица" };
         public override string[] Parameters => [];
@@ -138,7 +138,7 @@ namespace MathPocket
 
     public class IsIncreasingDecreasingFunction : FunctionBase
     {
-        public override string   Name       => "Возрастающая или убывающая";
+        public override string   Name       => "Растёт или убывает?";
         public override string   Formula    => "x₁ < x₂ → f(x₁) < f(x₂)";
         public override string[] Keywords   => new[] { "возрастающая", "убывающая", "функция" };
         public override string[] Parameters => [];
@@ -242,7 +242,7 @@ namespace MathPocket
 
     public class TableAnalysisFunction : FunctionBase
     {
-        public override string   Name       => "Анализ функции по таблице";
+        public override string   Name       => "Разобрать таблицу функции";
         public override string   Formula    => "D(f), E(f), возрастание/убывание";
         public override string[] Keywords   => new[] { "таблица", "функция", "анализ", "возрастающая", "убывающая", "область" };
         public override string[] Parameters => [];
@@ -423,7 +423,7 @@ namespace MathPocket
 
     public class DomainFunction : FunctionBase
     {
-        public override string   Name       => "Область определения";
+        public override string   Name       => "При каких x функция существует?";
         public override string   Formula    => "D(f): при каких x функция существует";
         public override string[] Keywords   => new[] { "область определения", "D(f)", "функция" };
         public override string[] Parameters => [];
@@ -726,7 +726,7 @@ namespace MathPocket
 
     public class DomainFromTableFunction : FunctionBase
     {
-        public override string   Name       => "Область определения по таблице";
+        public override string   Name       => "Все значения x и y из таблицы";
         public override string   Formula    => "D(f) = {x₁; x₂; ...},  E(f) = {y₁; y₂; ...}";
         public override string[] Keywords   => new[] { "область определения", "множество значений", "таблица" };
         public override string[] Parameters => [];
@@ -791,7 +791,7 @@ namespace MathPocket
 
     public class DetectFormulaFunction : FunctionBase
     {
-        public override string   Name       => "Назвать функцию по таблице";
+        public override string   Name       => "Какая формула у таблицы?";
         public override string   Formula    => "y = ? (бот находит сам)";
         public override string[] Keywords   => new[] { "закономерность", "формула", "определить", "найти" };
         public override string[] Parameters => [];
@@ -983,7 +983,7 @@ namespace MathPocket
 
     public class FormulaFromTableFunction : FunctionBase
     {
-        public override string   Name       => "Угадать формулу по таблице";
+        public override string   Name       => "Найти формулу по таблице";
         public override string   Formula    => "y = kx + b";
         public override string[] Keywords   => new[] { "формула", "таблица", "угадать", "найти" };
         public override string[] Parameters => [];
@@ -1140,7 +1140,7 @@ namespace MathPocket
 
     public class TableFromFormulaFunction : FunctionBase
     {
-        public override string   Name       => "Заполнить таблицу по формуле";
+        public override string   Name       => "Подставить x в формулу → найти y";
         public override string   Formula    => "y = f(x) → подставляем x, находим y";
         public override string[] Keywords   => new[] { "таблица", "формула", "заполнить", "подставить" };
         public override string[] Parameters => [];
@@ -1273,7 +1273,7 @@ namespace MathPocket
 
     public class GraphDomainFunction : FunctionBase
     {
-        public override string   Name       => "Записать область определения по графику";
+        public override string   Name       => "Записать D(f) по графику";
         public override string   Formula    => "D(f) = [a; b] / (a; b) / [a; +∞) / ...";
         public override string[] Keywords   => new[] { "область определения", "график", "отрезок", "луч" };
         public override string[] Parameters => [];

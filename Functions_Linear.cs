@@ -131,7 +131,7 @@ namespace MathPocket
 
     public class IsLinearFunction : FunctionBase
     {
-        public override string   Name       => "Является ли линейной функцией";
+        public override string   Name       => "Линейная ли это функция?";
         public override string   Formula    => "y = kx + b";
         public override string[] Keywords   => new[] { "линейная", "является", "функция" };
         public override string[] Parameters => [];
@@ -222,7 +222,7 @@ namespace MathPocket
 
     public class LinearEvalFunction : FunctionBase
     {
-        public override string   Name       => "Найти y по x или x по y";
+        public override string   Name       => "Найти y или x в функции";
         public override string   Formula    => "y = kx + b";
         public override string[] Keywords   => new[] { "линейная", "найти", "значение", "подставить" };
         public override string[] Parameters => [];
@@ -308,7 +308,7 @@ namespace MathPocket
 
     public class LinearPlotFunction : FunctionBase
     {
-        public override string   Name       => "Построить график функции";
+        public override string   Name       => "Построить прямую (y = kx + b)";
         public override string   Formula    => "y = kx + b → график + пересечения с осями";
         public override string[] Keywords   => new[] { "линейная", "построить", "график", "пересечение", "оси" };
         public override string[] Parameters => [];
@@ -465,7 +465,7 @@ namespace MathPocket
 
     public class LinearPointBelongsFunction : FunctionBase
     {
-        public override string   Name       => "Принадлежит ли точка графику";
+        public override string   Name       => "Лежит ли точка на графике?";
         public override string   Formula    => "Подставить x, проверить y";
         public override string[] Keywords   => new[] { "линейная", "точка", "принадлежит", "график" };
         public override string[] Parameters => [];
@@ -538,7 +538,7 @@ namespace MathPocket
 
     public class LinearFindBFunction : FunctionBase
     {
-        public override string   Name       => "Найти b по точке и k";
+        public override string   Name       => "Найти b, зная точку и k";
         public override string   Formula    => "b = y − kx";
         public override string[] Keywords   => new[] { "линейная", "найти b", "свободный член" };
         public override string[] Parameters => [];
@@ -596,7 +596,7 @@ namespace MathPocket
 
     public class LinearFindKFunction : FunctionBase
     {
-        public override string   Name       => "Найти k по точке и b";
+        public override string   Name       => "Найти k, зная точку и b";
         public override string   Formula    => "k = (y − b) / x";
         public override string[] Keywords   => new[] { "линейная", "найти k", "угловой коэффициент" };
         public override string[] Parameters => [];
@@ -664,7 +664,7 @@ namespace MathPocket
 
     public class LinearSignFunction : FunctionBase
     {
-        public override string   Name       => "Знак функции (y > 0 и y < 0)";
+        public override string   Name       => "Когда y > 0, а когда y < 0?";
         public override string   Formula    => "y = kx + b: при каких x положительна/отрицательна";
         public override string[] Keywords   => new[] { "линейная", "знак", "положительная", "отрицательная" };
         public override string[] Parameters => [];

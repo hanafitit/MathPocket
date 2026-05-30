@@ -19,101 +19,105 @@ namespace MathPocket
 
     //  Дробь  (числитель / знаменатель) — неизменяемый тип
 
-    public sealed class Fraction
+    public sealed class Fraction : IEquatable<Fraction>
     {
-        public int Numerator   { get; private set; }
-        public int Denominator { get; private set; }
+        public int Numerator { get; }
+        public int Denominator { get; }
 
-        // ─── Конструкторы ─────────────────────────────────────────
+        // ─── Constructors ─────────────────────────────────────────
 
-        /// <summary>Разбирает строку вида "3", "3/4" или "1.5".</summary>
+        /// <summary>Parses strings like "3", "3/4" or "1.5".</summary>
         public Fraction(string text)
         {
             if (text.Contains('/'))
             {
                 var parts = text.Split('/');
-                Numerator   = int.Parse(parts[0]);
+                Numerator = int.Parse(parts[0]);
                 Denominator = int.Parse(parts[1]);
             }
             else if (text.Contains('.'))
             {
-                // 36.7 → 367/10
-                int dotPos  = text.IndexOf('.');
-                int decimals = text.Length - dotPos - 1;
-                Denominator = (int)Math.Pow(10, decimals);
-                Numerator   = int.Parse(text.Replace(".", ""));
+                int dotIndex = text.IndexOf('.');
+                int decimalPlaces = text.Length - dotIndex - 1;
+                Denominator = (int)Math.Pow(10, decimalPlaces);
+                Numerator = int.Parse(text.Replace(".", ""));
             }
             else
             {
-                Numerator   = int.Parse(text);
+                Numerator = int.Parse(text);
                 Denominator = 1;
             }
-            Reduce();
+
+            (Numerator, Denominator) = Simplify(Numerator, Denominator);
         }
 
-        public Fraction(int num, int den)
+        public Fraction(int numerator, int denominator)
         {
-            if (den == 0) throw new DivideByZeroException();
-            if (den < 0) { num = -num; den = -den; }
-            int gcd     = MathUtils.GCD(Math.Abs(num), den);
-            Numerator   = num / gcd;
-            Denominator = den / gcd;
+            if (denominator == 0) throw new DivideByZeroException();
+            (Numerator, Denominator) = Simplify(numerator, denominator);
         }
 
-        // ─── Нормализация ─────────────────────────────────────────
+        // ─── Normalization ─────────────────────────────────────────
 
-        private void Reduce()
+        private static (int num, int den) Simplify(int numerator, int denominator)
         {
-            if (Denominator < 0) { Numerator = -Numerator; Denominator = -Denominator; }
-            int gcd = MathUtils.GCD(Math.Abs(Numerator), Denominator);
-            Numerator   /= gcd;
-            Denominator /= gcd;
+            if (denominator < 0)
+            {
+                numerator = -numerator;
+                denominator = -denominator;
+            }
+
+            int commonDivisor = MathUtils.GCD(Math.Abs(numerator), denominator);
+            return (numerator / commonDivisor, denominator / commonDivisor);
         }
 
-        // ─── Операторы ────────────────────────────────────────────
+        // ─── Operators ────────────────────────────────────────────
 
-        public static Fraction operator +(Fraction a, Fraction b) =>
-            new(a.Numerator * b.Denominator + b.Numerator * a.Denominator,
-                a.Denominator * b.Denominator);
+        public static Fraction operator +(Fraction left, Fraction right) =>
+            new(left.Numerator * right.Denominator + right.Numerator * left.Denominator,
+                left.Denominator * right.Denominator);
 
-        public static Fraction operator -(Fraction a, Fraction b) =>
-            new(a.Numerator * b.Denominator - b.Numerator * a.Denominator,
-                a.Denominator * b.Denominator);
+        public static Fraction operator -(Fraction left, Fraction right) =>
+            new(left.Numerator * right.Denominator - right.Numerator * left.Denominator,
+                left.Denominator * right.Denominator);
 
-        public static Fraction operator *(Fraction a, Fraction b) =>
-            new(a.Numerator * b.Numerator, a.Denominator * b.Denominator);
+        public static Fraction operator *(Fraction left, Fraction right) =>
+            new(left.Numerator * right.Numerator, left.Denominator * right.Denominator);
 
-        public static Fraction operator /(Fraction a, Fraction b) =>
-            new(a.Numerator * b.Denominator, a.Denominator * b.Numerator);
+        public static Fraction operator /(Fraction left, Fraction right) =>
+            new(left.Numerator * right.Denominator, left.Denominator * right.Numerator);
 
-        public static bool operator ==(Fraction a, Fraction b) =>
-            a.Numerator == b.Numerator && a.Denominator == b.Denominator;
+        public static bool operator ==(Fraction? left, Fraction? right) =>
+            ReferenceEquals(left, right) || (left is not null && right is not null && left.Equals(right));
 
-        public static bool operator !=(Fraction a, Fraction b) => !(a == b);
+        public static bool operator !=(Fraction? left, Fraction? right) => !(left == right);
 
-        public override bool Equals(object? obj) => obj is Fraction f && this == f;
-        public override int  GetHashCode() => HashCode.Combine(Numerator, Denominator);
+        public bool Equals(Fraction? other) =>
+            other is not null && Numerator == other.Numerator && Denominator == other.Denominator;
 
-        // ─── Свойства ─────────────────────────────────────────────
+        public override bool Equals(object? obj) => obj is Fraction other && Equals(other);
 
-        public bool IsZero    => Numerator == 0;
-        public bool IsOne     => Numerator == 1  && Denominator == 1;
+        public override int GetHashCode() => HashCode.Combine(Numerator, Denominator);
+
+        // ─── Properties ─────────────────────────────────────────────
+
+        public bool IsZero => Numerator == 0;
+        public bool IsOne => Numerator == 1 && Denominator == 1;
         public bool IsMinusOne => Numerator == -1 && Denominator == 1;
 
-        // ─── Конвертация ──────────────────────────────────────────
+        // ─── Conversion ──────────────────────────────────────────
 
         public double ToDecimal() => (double)Numerator / Denominator;
 
-        /// <summary>Формат "числитель/знаменатель" без сокращений до смешанного числа.</summary>
-        public string ToRawString() =>
-            Denominator == 1 ? $"{Numerator}" : $"{Numerator}/{Denominator}";
+        /// <summary>Returns "numerator/denominator" format without converting to mixed number.</summary>
+        public string ToRawString() => Denominator == 1 ? $"{Numerator}" : $"{Numerator}/{Denominator}";
 
         public override string ToString()
         {
             if (Denominator == 1) return $"{Numerator}";
             if (Math.Abs(Numerator) < Denominator) return $"{Numerator}/{Denominator}";
 
-            int whole     = Numerator / Denominator;
+            int whole = Numerator / Denominator;
             int remainder = Math.Abs(Numerator % Denominator);
             return remainder == 0 ? $"{whole}" : $"{whole} {remainder}/{Denominator}";
         }
@@ -334,38 +338,40 @@ namespace MathPocket
     {
         public static object Add(object left, object right)
         {
-            left  = MathNormalizer.Normalize(left);
+            left = MathNormalizer.Normalize(left);
             right = MathNormalizer.Normalize(right);
 
-            if (left is Fraction fl && right is Fraction fr) return fl + fr;
+            return (left, right) switch
+            {
+                (Fraction fl, Fraction fr) => fl + fr,
+                (Radical rl, Radical rr) when rl.Radicand == rr.Radicand =>
+                    MathNormalizer.Normalize(new Radical(rl.Coefficient + rr.Coefficient, rl.Radicand)),
+                (Fraction f, Radical r) => new MixedResult(f, [r]),
+                (Radical r, Fraction f) => new MixedResult(f, [r]),
+                _ => ComplexAdd(left, right)
+            };
+        }
 
-            if (left is Radical rl && right is Radical rr && rl.Radicand == rr.Radicand)
-                return MathNormalizer.Normalize(
-                    new Radical(rl.Coefficient + rr.Coefficient, rl.Radicand));
-
-            if (left is Fraction f1 && right is Radical r1)
-                return new MixedResult(f1, [r1]);
-
-            if (left is Radical r2 && right is Fraction f2)
-                return new MixedResult(f2, [r2]);
-
-            // Обобщённый путь: собираем все слагаемые
+        private static object ComplexAdd(object left, object right)
+        {
+            // Generalized path: collect all terms
             var fracSum = new Fraction(0, 1);
             var radicals = new Dictionary<int, Fraction>();
 
-            void AddTerm(object t)
+            void AddTerm(object term)
             {
-                t = MathNormalizer.Normalize(t);
-                if      (t is Fraction f)  fracSum = fracSum + f;
-                else if (t is Radical r)
+                term = MathNormalizer.Normalize(term);
+                if (term is Fraction f)
+                    fracSum += f;
+                else if (term is Radical r)
                 {
-                    radicals[r.Radicand] = radicals.TryGetValue(r.Radicand, out var ex)
-                        ? ex + r.Coefficient
+                    radicals[r.Radicand] = radicals.TryGetValue(r.Radicand, out var existing)
+                        ? existing + r.Coefficient
                         : r.Coefficient;
                 }
             }
 
-            foreach (var t in MathNormalizer.GetTerms(left))  AddTerm(t);
+            foreach (var t in MathNormalizer.GetTerms(left)) AddTerm(t);
             foreach (var t in MathNormalizer.GetTerms(right)) AddTerm(t);
 
             var radList = radicals
@@ -398,36 +404,35 @@ namespace MathPocket
 
         public static object Multiply(object left, object right)
         {
-            left  = MathNormalizer.Normalize(left);
+            left = MathNormalizer.Normalize(left);
             right = MathNormalizer.Normalize(right);
 
-            if (left is Fraction fl && right is Fraction fr) return fl * fr;
-            if (left is Radical  rl && right is Radical  rr) return MathNormalizer.Normalize(rl * rr);
-            if (left is Fraction f1 && right is Radical  r1)
-                return MathNormalizer.Normalize(new Radical(f1 * r1.Coefficient, r1.Radicand));
-            if (left is Radical && right is Fraction)        return Multiply(right, left);
+            if (left is MixedResult || right is MixedResult)
+            {
+                // Distributive law
+                object res = new Fraction(0, 1);
+                foreach (var lt in MathNormalizer.GetTerms(left))
+                    foreach (var rt in MathNormalizer.GetTerms(right))
+                        res = Add(res, MultiplySimple(lt, rt));
+                return res;
+            }
 
-            // Дистрибутивный закон
-            object result = new Fraction(0, 1);
-            foreach (var lt in MathNormalizer.GetTerms(left))
-                foreach (var rt in MathNormalizer.GetTerms(right))
-                    result = Add(result, MultiplySimple(lt, rt));
-            return result;
+            return MultiplySimple(left, right);
         }
 
         private static object MultiplySimple(object left, object right)
         {
-            left  = MathNormalizer.Normalize(left);
+            left = MathNormalizer.Normalize(left);
             right = MathNormalizer.Normalize(right);
 
-            if (left is Fraction fl && right is Fraction fr) return fl * fr;
-            if (left is Radical  rl && right is Radical  rr) return MathNormalizer.Normalize(rl * rr);
-            if (left is Fraction f1 && right is Radical  r1)
-                return MathNormalizer.Normalize(new Radical(f1 * r1.Coefficient, r1.Radicand));
-            if (left is Radical && right is Fraction) return MultiplySimple(right, left);
-
-            throw new InvalidOperationException(
-                $"MultiplySimple: типы {left.GetType().Name} и {right.GetType().Name} не поддерживаются");
+            return (left, right) switch
+            {
+                (Fraction fl, Fraction fr) => fl * fr,
+                (Radical rl, Radical rr) => MathNormalizer.Normalize(rl * rr),
+                (Fraction f, Radical r) => MathNormalizer.Normalize(new Radical(f * r.Coefficient, r.Radicand)),
+                (Radical r, Fraction f) => MathNormalizer.Normalize(new Radical(f * r.Coefficient, r.Radicand)),
+                _ => throw new InvalidOperationException($"MultiplySimple: types {left.GetType().Name} and {right.GetType().Name} not supported")
+            };
         }
 
         public static object Power(object baseVal, object expVal)
@@ -514,36 +519,33 @@ namespace MathPocket
 
         public static object Divide(object left, object right)
         {
-            left  = MathNormalizer.Normalize(left);
+            left = MathNormalizer.Normalize(left);
             right = MathNormalizer.Normalize(right);
 
-            if (left is Fraction fl && right is Fraction fr) return fl / fr;
-
-            if (right is Fraction fRight)
+            return (left, right) switch
             {
-                if (fRight.IsZero) throw new DivideByZeroException();
-                return Multiply(left, new Fraction(fRight.Denominator, fRight.Numerator));
-            }
+                (Fraction fl, Fraction fr) => fl / fr,
+                (_, Fraction fRight) => DivideByFraction(left, fRight),
+                (Radical rl, Radical rr) when rl.Radicand == rr.Radicand => rl.Coefficient / rr.Coefficient,
+                (Radical rl, Radical rr) => MathNormalizer.Normalize(
+                    new Radical(rl.Coefficient / (rr.Coefficient * new Fraction(rr.Radicand, 1)), rl.Radicand * rr.Radicand)),
+                (_, Radical rDiv) => DivideByRadical(left, rDiv),
+                (_, MixedResult) => RationalizeByConjugate(left, right, maxDepth: 6),
+                _ => throw new InvalidOperationException($"Division: types {left.GetType().Name} and {right.GetType().Name} not supported")
+            };
+        }
 
-            if (left is Radical rl && right is Radical rr)
-            {
-                if (rl.Radicand == rr.Radicand) return rl.Coefficient / rr.Coefficient;
-                var newCoeff = rl.Coefficient / (rr.Coefficient * new Fraction(rr.Radicand, 1));
-                return MathNormalizer.Normalize(new Radical(newCoeff, rl.Radicand * rr.Radicand));
-            }
+        private static object DivideByFraction(object left, Fraction right)
+        {
+            if (right.IsZero) throw new DivideByZeroException();
+            return Multiply(left, new Fraction(right.Denominator, right.Numerator));
+        }
 
-            if (right is Radical rDiv)
-            {
-                var numerator   = Multiply(left, new Radical(1, rDiv.Radicand));
-                var denominator = rDiv.Coefficient * new Fraction(rDiv.Radicand, 1);
-                return Divide(numerator, denominator);
-            }
-
-            if (right is MixedResult)
-                return RationalizeByConjugate(left, right, maxDepth: 6);
-
-            throw new InvalidOperationException(
-                $"Деление: типы {left.GetType().Name} и {right.GetType().Name} не поддерживаются");
+        private static object DivideByRadical(object left, Radical right)
+        {
+            var numerator = Multiply(left, new Radical(1, right.Radicand));
+            var denominator = right.Coefficient * new Fraction(right.Radicand, 1);
+            return Divide(numerator, denominator);
         }
 
         private static object RationalizeByConjugate(object numerator, object denominator, int maxDepth)

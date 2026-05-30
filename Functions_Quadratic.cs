@@ -133,7 +133,7 @@ namespace MathPocket
 
     public class QuadraticPointBelongsFunction : FunctionBase
     {
-        public override string   Name     => "Точка на графике y = ax²?";
+        public override string   Name     => "Лежит ли точка на параболе?";
         public override string   Formula  => "Проверить: принадлежит ли (x₀; y₀) графику y = ax²";
         public override string[] Keywords => new[] { "парабола", "принадлежит", "точка", "ax²" };
         public override string[] Parameters => [];
@@ -191,7 +191,7 @@ namespace MathPocket
 
     public class QuadraticPlotFunction : FunctionBase
     {
-        public override string   Name     => "Построить y = ax²";
+        public override string   Name     => "Построить параболу y = ax²";
         public override string   Formula  => "y = ax² — парабола: свойства и график";
         public override string[] Keywords => new[] { "парабола", "ax²", "построить", "квадратичная", "возрастание" };
         public override string[] Parameters => [];
@@ -231,7 +231,7 @@ namespace MathPocket
 
     public class QuadraticTwoGraphsFunction : FunctionBase
     {
-        public override string   Name     => "Два графика y = a₁x² и y = a₂x²";
+        public override string   Name     => "Сравнить две параболы";
         public override string   Formula  => "Построить и сравнить две параболы в одной системе";
         public override string[] Keywords => new[] { "парабола", "два графика", "сравнить", "растяжение" };
         public override string[] Parameters => [];
@@ -308,7 +308,7 @@ namespace MathPocket
 
     public class QuadraticCompareValuesFunction : FunctionBase
     {
-        public override string   Name     => "Сравнить значения y = ax² при двух x";
+        public override string   Name     => "Где парабола выше при двух x?";
         public override string   Formula  => "Сравнить ax₁² и ax₂² используя свойства параболы";
         public override string[] Keywords => new[] { "парабола", "сравнить", "значения", "ax²" };
         public override string[] Parameters => [];
@@ -381,7 +381,7 @@ namespace MathPocket
 
     public class QuadraticRootsCountFunction : FunctionBase
     {
-        public override string   Name     => "Число корней ax² = c (графически)";
+        public override string   Name     => "Сколько решений у ax² = c?";
         public override string   Formula  => "Пересечение параболы y = ax² с прямой y = c";
         public override string[] Keywords => new[] { "парабола", "корни", "число корней", "ax²=c" };
         public override string[] Parameters => [];
@@ -451,7 +451,7 @@ namespace MathPocket
 
     public class QuadraticIntersectsLinearFunction : FunctionBase
     {
-        public override string   Name     => "Пересечение y = ax² и y = kx + b";
+        public override string   Name     => "Пересекаются ли парабола и прямая?";
         public override string   Formula  => "Найти точки пересечения параболы и прямой";
         public override string[] Keywords => new[] { "парабола", "прямая", "пересечение", "ax²" };
         public override string[] Parameters => [];
@@ -536,7 +536,7 @@ namespace MathPocket
 
     public class QuadraticFindRootsFunction : FunctionBase
     {
-        public override string   Name     => "Корни ax² + bx + c = 0 (графически)";
+        public override string   Name     => "Решить ax² + bx + c = 0 по графику";
         public override string   Formula  => "Пересечение y = ax² с y = −bx − c";
         public override string[] Keywords => new[] { "парабола", "корни", "уравнение", "графически", "квадратное" };
         public override string[] Parameters => [];
@@ -628,7 +628,7 @@ namespace MathPocket
 
     public class QuadraticMonotonicFunction : FunctionBase
     {
-        public override string   Name     => "Монотонность y = ax² на промежутке";
+        public override string   Name     => "Растёт или убывает парабола?";
         public override string   Formula  => "Возрастающая или убывающая на [a; b]?";
         public override string[] Keywords => new[] { "парабола", "возрастающая", "убывающая", "промежуток", "ax²" };
         public override string[] Parameters => [];
@@ -725,7 +725,7 @@ namespace MathPocket
 
     public class QuadraticMinMaxFunction : FunctionBase
     {
-        public override string   Name     => "Наибольшее и наименьшее значение y = ax²";
+        public override string   Name     => "Наибольшее и наименьшее y на отрезке";
         public override string   Formula  => "max и min функции y = ax² на промежутке [a; b]";
         public override string[] Keywords => new[] { "парабола", "наибольшее", "наименьшее", "максимум", "минимум" };
         public override string[] Parameters => [];
@@ -808,7 +808,7 @@ namespace MathPocket
 
     public class QuadraticCanIntersectFunction : FunctionBase
     {
-        public override string   Name     => "Пересечение y = ax² и y = ax − c";
+        public override string   Name     => "Пересекаются ли две функции?";
         public override string   Formula  => "Могут ли пересечься y = ax² и y = ax − c?";
         public override string[] Keywords => new[] { "парабола", "пересечение", "ax²", "ax−c" };
         public override string[] Parameters => [];

@@ -71,7 +71,7 @@ namespace MathPocket
 
     public class IsVariationRowFunction : FunctionBase
     {
-        public override string   Name     => "Является ли вариационным рядом";
+        public override string   Name     => "Ряд упорядочен или нет?";
         public override string   Formula  => "Проверить упорядоченность последовательности";
         public override string[] Keywords => new[] { "вариационный ряд", "упорядоченный", "является" };
         public override string[] Parameters => [];
@@ -159,7 +159,7 @@ namespace MathPocket
 
     public class MakeVariationRowFunction : FunctionBase
     {
-        public override string   Name     => "Составить вариационный ряд";
+        public override string   Name     => "Упорядочить числа по возрастанию";
         public override string   Formula  => "Упорядочить данные по невозрастанию или убыванию";
         public override string[] Keywords => new[] { "вариационный ряд", "составить", "упорядочить", "сортировка" };
         public override string[] Parameters => [];
@@ -218,7 +218,7 @@ namespace MathPocket
 
     public class MinMaxVariantFunction : FunctionBase
     {
-        public override string   Name     => "Наибольшая и наименьшая варианта";
+        public override string   Name     => "Наибольшее и наименьшее значение";
         public override string   Formula  => "min и max вариационного ряда";
         public override string[] Keywords => new[] { "варианта", "наибольшая", "наименьшая", "вариационный ряд" };
         public override string[] Parameters => [];
@@ -286,7 +286,7 @@ namespace MathPocket
 
     public class FrequencyVariantFunction : FunctionBase
     {
-        public override string   Name     => "Варианта, повторяющаяся чаще/реже всего";
+        public override string   Name     => "Какое значение встречается чаще всего?";
         public override string   Formula  => "Найти моду вариационного ряда";
         public override string[] Keywords => new[] { "варианта", "повторяется", "чаще", "реже", "мода" };
         public override string[] Parameters => [];
@@ -353,7 +353,7 @@ namespace MathPocket
 
     public class VariationRowFromTableFunction : FunctionBase
     {
-        public override string   Name     => "Вариационный ряд из таблицы данных";
+        public override string   Name     => "Упорядочить данные из таблицы";
         public override string   Formula  => "Упорядочить данные из таблицы";
         public override string[] Keywords => new[] { "вариационный ряд", "таблица", "составить" };
         public override string[] Parameters => [];
@@ -405,7 +405,7 @@ namespace MathPocket
 
     public class VariationRowAnalysisFunction : FunctionBase
     {
-        public override string   Name     => "Полный анализ вариационного ряда";
+        public override string   Name     => "Полный анализ ряда данных";
         public override string   Formula  => "Ряд, варианты, наиб/наим значения, частоты";
         public override string[] Keywords => new[] { "анализ", "вариационный ряд", "варианта", "частота", "наибольшее", "наименьшее" };
         public override string[] Parameters => [];
@@ -477,7 +477,7 @@ namespace MathPocket
 
     public class PopulationAndSampleFunction : FunctionBase
     {
-        public override string   Name     => "Генеральная совокупность и выборка";
+        public override string   Name     => "Что такое выборка и совокупность?";
         public override string   Formula  => "Объяснение понятий с примерами";
         public override string[] Keywords => new[] { "генеральная совокупность", "выборка", "случайная", "понятие" };
         public override string[] Parameters => [];
@@ -544,7 +544,7 @@ namespace MathPocket
 
     public class FillTableThreeFunctionsFunction : FunctionBase
     {
-        public override string   Name     => "Заполнить таблицу для трёх функций";
+        public override string   Name     => "Заполнить таблицу частот";
         public override string   Formula  => "y = 2x−1, y = x², y = 2/x при заданных x";
         public override string[] Keywords => new[] { "таблица", "заполнить", "функции", "значения" };
         public override string[] Parameters => [];
@@ -608,7 +608,7 @@ namespace MathPocket
 
     public class AbsRelFrequencyFunction : FunctionBase
     {
-        public override string   Name     => "Абсолютная и относительная частота";
+        public override string   Name     => "Посчитать частоту значения";
         public override string   Formula  => "w = n_i / n  (относительная частота)";
         public override string[] Keywords => new[] { "частота", "абсолютная", "относительная", "варианта" };
         public override string[] Parameters => [];
@@ -685,7 +685,7 @@ namespace MathPocket
 
     public class FrequencyTableFunction : FunctionBase
     {
-        public override string   Name     => "Таблица частот (абс. и отн.)";
+        public override string   Name     => "Составить таблицу частот";
         public override string   Formula  => "Варианты → абсолютные и относительные частоты";
         public override string[] Keywords => new[] { "таблица частот", "абсолютная", "относительная", "составить" };
         public override string[] Parameters => [];
@@ -762,7 +762,7 @@ namespace MathPocket
 
     public class SpecificVariantFrequencyFunction : FunctionBase
     {
-        public override string   Name     => "Частота конкретной варианты";
+        public override string   Name     => "Найти частоту одного значения";
         public override string   Formula  => "Найти абс. и отн. частоту заданного значения";
         public override string[] Keywords => new[] { "частота", "варианта", "конкретная", "найти" };
         public override string[] Parameters => [];
@@ -838,7 +838,7 @@ namespace MathPocket
 
     public class StatRowToFreqTableFunction : FunctionBase
     {
-        public override string   Name     => "Статистический ряд → таблица частот";
+        public override string   Name     => "Из ряда данных → таблица частот";
         public override string   Formula  => "Вариационный ряд + абс./отн. частоты по варианте";
         public override string[] Keywords => new[] { "статистический ряд", "вариационный ряд", "таблица", "частота" };
         public override string[] Parameters => [];
@@ -936,7 +936,7 @@ namespace MathPocket
 
     public class FindRelFreqFromTableFunction : FunctionBase
     {
-        public override string   Name     => "Найти относительную частоту по таблице";
+        public override string   Name     => "Найти относительную частоту";
         public override string   Formula  => "w_i = n_i / n,  n = Σ n_i";
         public override string[] Keywords => new[] { "относительная частота", "таблица", "найти w", "дополнить" };
         public override string[] Parameters => [];
@@ -1021,7 +1021,7 @@ namespace MathPocket
 
     public class HomeworkFrequencyFunction : FunctionBase
     {
-        public override string   Name     => "Абс. частота за серию наблюдений";
+        public override string   Name     => "Частота за несколько наблюдений";
         public override string   Formula  => "n_i — число результатов с заданным значением";
         public override string[] Keywords => new[] { "абсолютная частота", "четверть", "оценка", "задание" };
         public override string[] Parameters => [];
