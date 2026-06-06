@@ -417,7 +417,6 @@ namespace MathPocket
             sb.AppendLine("Шаг 1. Делим каждый член:");
 
             var quotients = new List<PolyTerm>();
-            bool allOk    = true;
             foreach (var t in poly)
             {
                 int  nd = t.Degree - monoDeg;
@@ -433,7 +432,6 @@ namespace MathPocket
                     double kD   = (double)t.Coeff / monoK;
                     string kStr = kD.ToString("G6");
                     sb.AppendLine($"  {t.ToStringFirst()} ÷ {divisorStr} = {kStr}{(nd > 0 ? "x" + (nd > 1 ? PolyTerm.Sup(nd) : "") : "")}  (нецелое)");
-                    allOk = false;
                 }
             }
 

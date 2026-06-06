@@ -436,9 +436,9 @@ namespace MathPocket
             var chatId = msg.Chat.Id;
             int stepIndex = GetStepIndex(func, input);
 
-            if (stepIndex < 0 || stepIndex >= func.Steps!.Length)
+            if (stepIndex < 0 || stepIndex >= (func.Steps?.Length ?? 0))
             {
-                WriteError($"[{DateTime.Now:HH:mm:ss}] [GUARD] user={chatId} | func=\"{func.Name}\" | stepIndex={stepIndex} вышел за границы Steps[{func.Steps.Length}] | CurrentStep={input.CurrentStep} | answers={input.Answers.Count}");
+                WriteError($"[{DateTime.Now:HH:mm:ss}] [GUARD] user={chatId} | func=\"{func.Name}\" | stepIndex={stepIndex} вышел за границы Steps[{func.Steps?.Length ?? 0}] | CurrentStep={input.CurrentStep} | answers={input.Answers.Count}");
                 session.InputSession = null;
                 await _bot.SendMessage(chatId,
                     "⚠️ Произошла внутренняя ошибка. Начнём заново.",
@@ -588,9 +588,9 @@ namespace MathPocket
         {
             int stepIndex = GetStepIndex(func, input);
 
-            if (stepIndex < 0 || stepIndex >= func.Steps!.Length)
+            if (stepIndex < 0 || stepIndex >= (func.Steps?.Length ?? 0))
             {
-                WriteError($"[{DateTime.Now:HH:mm:ss}] [GUARD] user={chatId} | func=\"{func.Name}\" | stepIndex={stepIndex} вышел за границы Steps[{func.Steps.Length}] | CurrentStep={input.CurrentStep} | answers={input.Answers.Count}");
+                WriteError($"[{DateTime.Now:HH:mm:ss}] [GUARD] user={chatId} | func=\"{func.Name}\" | stepIndex={stepIndex} вышел за границы Steps[{func.Steps?.Length ?? 0}] | CurrentStep={input.CurrentStep} | answers={input.Answers.Count}");
                 if (_sessions.TryGetValue(chatId, out var session))
                     session.InputSession = null;
 
