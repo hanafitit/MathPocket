@@ -327,8 +327,16 @@ namespace MathPocket
                 ]
             },
             new() { Name = "➗ Алгебраические дроби" },
-            new() { Name = "√ Квадратные корни" },
-            new() { Name = "🔲 Квадратные уравнения" },
+            new()
+            {
+                Name = "√ Квадратные корни",
+                Functions = [ new SquareRootSimplifyFunction() ]
+            },
+            new()
+            {
+                Name = "🔲 Квадратные уравнения",
+                Functions = [ new QuadraticAlgebraicSolverFunction() ]
+            },
             new() { Name = "⚖️ Неравенства" },
             new() { Name = "🔀 Системы уравнений и неравенств" },
             new() { Name = "🎲 Комбинаторика" },

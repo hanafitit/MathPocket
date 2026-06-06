@@ -129,6 +129,82 @@ namespace MathPocket
         }
     }
 
+    //  Квадратное уравнение ax² + bx + c = 0
+
+    public class QuadraticAlgebraicSolverFunction : FunctionBase
+    {
+        public override string   Name     => "Решить квадратное уравнение";
+        public override string   Formula  => "ax² + bx + c = 0";
+        public override string[] Keywords => new[] { "уравнение", "квадратное", "дискриминант", "решить", "корни" };
+        public override string[] Parameters => [];
+        public override double   Calculate(double[] _) => throw new NotSupportedException();
+
+        public override InputStep[] Steps => new[]
+        {
+            new InputStep
+            {
+                Question =
+                    "📘 Решение квадратного уравнения ax² + bx + c = 0\n\n" +
+                    "Используем формулу дискриминанта: D = b² − 4ac\n\n" +
+                    "✏️ Введи коэффициент a (при x²):",
+                Validate = QuadraticHelper.ValidateNonZeroNumber
+            },
+            new InputStep
+            {
+                Question = "✏️ Введи коэффициент b (при x):",
+                Validate = QuadraticHelper.ValidateNumber
+            },
+            new InputStep
+            {
+                Question = "✏️ Введи свободный член c:",
+                Validate = QuadraticHelper.ValidateNumber
+            }
+        };
+
+        public override string CalculateFromAnswers(List<string> answers)
+        {
+            double a = QuadraticHelper.ParseNumber(answers[0])!.Value;
+            double b = QuadraticHelper.ParseNumber(answers[1])!.Value;
+            double c = QuadraticHelper.ParseNumber(answers[2])!.Value;
+
+            var sb = new StringBuilder();
+            sb.AppendLine($"Уравнение: {QuadraticHelper.Fmt(a)}x² {(b >= 0 ? "+" : "")}{QuadraticHelper.Fmt(b)}x {(c >= 0 ? "+" : "")}{QuadraticHelper.Fmt(c)} = 0");
+            sb.AppendLine();
+            sb.AppendLine("Шаг 1. Находим дискриминант:");
+            double D = b * b - 4 * a * c;
+            sb.AppendLine($"  D = {QuadraticHelper.Fmt(b)}² − 4·{QuadraticHelper.Fmt(a)}·{QuadraticHelper.Fmt(c)}");
+            sb.AppendLine($"  D = {QuadraticHelper.Fmt(b * b)} {( -4 * a * c >= 0 ? "+" : "" )}{QuadraticHelper.Fmt(-4 * a * c)}");
+            sb.AppendLine($"  D = {QuadraticHelper.Fmt(D)}");
+            sb.AppendLine();
+
+            if (D < -1e-9)
+            {
+                sb.AppendLine("Так как D < 0, уравнение не имеет действительных корней.");
+                sb.AppendLine("\n✅ Ответ: корней нет.");
+            }
+            else if (Math.Abs(D) < 1e-9)
+            {
+                double x = -b / (2 * a);
+                sb.AppendLine("Так как D = 0, уравнение имеет один корень:");
+                sb.AppendLine($"  x = −b / 2a = {QuadraticHelper.Fmt(-b)} / {QuadraticHelper.Fmt(2 * a)}");
+                sb.AppendLine($"\n✅ Ответ: x = {QuadraticHelper.Fmt(x)}");
+            }
+            else
+            {
+                double sqrtD = Math.Sqrt(D);
+                double x1 = (-b - sqrtD) / (2 * a);
+                double x2 = (-b + sqrtD) / (2 * a);
+                sb.AppendLine("Так как D > 0, уравнение имеет два корня:");
+                sb.AppendLine($"  √D = {QuadraticHelper.Fmt(sqrtD)}");
+                sb.AppendLine($"  x₁ = (−b − √D) / 2a = ({QuadraticHelper.Fmt(-b)} − {QuadraticHelper.Fmt(sqrtD)}) / {QuadraticHelper.Fmt(2 * a)} = {QuadraticHelper.Fmt(x1)}");
+                sb.AppendLine($"  x₂ = (−b + √D) / 2a = ({QuadraticHelper.Fmt(-b)} + {QuadraticHelper.Fmt(sqrtD)}) / {QuadraticHelper.Fmt(2 * a)} = {QuadraticHelper.Fmt(x2)}");
+                sb.AppendLine($"\n✅ Ответ: x₁ = {QuadraticHelper.Fmt(x1)}, x₂ = {QuadraticHelper.Fmt(x2)}");
+            }
+
+            return sb.ToString().TrimEnd();
+        }
+    }
+
     //  25.1  Принадлежит ли точка графику y = ax²
 
     public class QuadraticPointBelongsFunction : FunctionBase

@@ -724,8 +724,8 @@ namespace MathPocket
             int    pq      = f.Numerator * f.Denominator;
             var    radical = MathNormalizer.Normalize(new Radical(1, pq));
             var    result  = MathNormalizer.Normalize(MathOps.Divide(radical, new Fraction(f.Denominator, 1)));
-            string radSimp = Fmt.Val(radical);
-            string step2   = StepBuilder.RadicalSimplify(pq, radical);
+            string  radSimp = Fmt.Val(radical);
+            string? step2   = StepBuilder.RadicalSimplify(pq, radical);
             if (step2 is not null) allSteps.Add(step2);
             allSteps.Add($"√({f.ToRawString()}) = √({f.Numerator}·{f.Denominator})/{f.Denominator} = {radSimp}/{f.Denominator} = {Fmt.Val(result)}");
             return (result, allSteps);
